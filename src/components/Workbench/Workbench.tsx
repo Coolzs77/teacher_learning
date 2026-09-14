@@ -113,8 +113,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<StudyStatus | 'all'>('all');
   const [expandedUnits, setExpandedUnits] = useState<Record<number, boolean>>({ [currentLesson.unit]: true });
 
-  // Floating TOC Drawer state (Problem 4: 目录应该浮动, 不要固定)
-  const [isTOCDrawerOpen, setIsTOCDrawerOpen] = useState<boolean>(false);
+  // Left Sidebar Collapsible state (左侧目录一栏，支持收起后完全隐藏不占位)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   // Font Size Scaler state (Problem 5: 标准 大 特大)
   const [fontSize, setFontSize] = useState<FontSizeLevel>(() => {
@@ -157,9 +157,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     setTimeout(() => setFontToast(null), 2500);
   };
 
-  const handleSelectLessonFromTOC = (lesson: Lesson) => {
+  const handleSelectLesson = (lesson: Lesson) => {
     onSelectLesson(lesson);
-    setIsTOCDrawerOpen(false);
+    if (window.innerWidth < 1024) {
+      setSidebarCollapsed(true);
+    }
   };
 
   const handleSaveParagraphNote = (paraId: number) => {
@@ -252,12 +254,21 @@ ${currentLesson.speedPlan.homework}`;
           {/* Left: Sidebar toggle + Title & Meta */}
           <div className="flex items-center space-x-3 min-w-0">
             <button
-              onClick={() => setIsTOCDrawerOpen(true)}
-              className="p-2 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm flex-shrink-0"
-              title="打开浮动课文目录"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm flex-shrink-0"
+              title={sidebarCollapsed ? '展开课文目录' : '收起课文目录'}
             >
-              <BookOpen className="w-4 h-4 text-bamboo-700" />
-              <span className="text-xs font-serif font-bold text-bamboo-900 hidden sm:inline">课文目录 (158篇)</span>
+              {sidebarCollapsed ? (
+                <>
+                  <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
+                  <span className="text-xs font-serif font-bold text-bamboo-900 hidden sm:inline">展开目录 (158篇)</span>
+                </>
+              ) : (
+                <>
+                  <PanelLeftClose className="w-4 h-4 text-wood-600" />
+                  <span className="text-xs font-serif font-medium text-wood-700 hidden sm:inline">收起目录</span>
+                </>
+              )}
             </button>
 
             <div className="min-w-0">
@@ -390,184 +401,162 @@ ${currentLesson.speedPlan.homework}`;
         </div>
       </div>
 
-      {/* Floating TOC Trigger Button on Left Screen Edge (Problem 4: 浮动目录，不要固定) */}
-      <button
-        onClick={() => setIsTOCDrawerOpen(true)}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-wood-900/95 hover:bg-wood-800 text-amber-100 px-2 py-3.5 rounded-r-2xl shadow-xl backdrop-blur-sm border-r border-t border-b border-amber-600/30 transition-all cursor-pointer flex flex-col items-center space-y-1.5 group hover:pl-2.5"
-        title="点击展开课文浮动目录"
-      >
-        <BookOpen className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform" />
-        <span className="text-[11px] font-serif font-medium leading-tight flex flex-col items-center">
-          <span>课</span>
-          <span>文</span>
-          <span>目</span>
-          <span>录</span>
-        </span>
-      </button>
-
-      {/* Floating TOC Slide-over Drawer (Problem 4 & Problem 1) */}
-      {isTOCDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex animate-fadeIn">
-          {/* Backdrop Blur */}
-          <div
-            onClick={() => setIsTOCDrawerOpen(false)}
-            className="fixed inset-0 bg-wood-950/40 backdrop-blur-xs transition-opacity cursor-pointer"
-          />
-
-          {/* Slide-over Drawer Panel */}
-          <div className="relative z-50 w-84 sm:w-96 max-w-[88vw] h-full bg-paper-card border-r border-paper-border shadow-2xl flex flex-col animate-fadeIn">
-            {/* Drawer Header */}
-            <div className="p-4 border-b border-paper-border flex items-center justify-between bg-paper-100/70">
+      {/* Main Layout: Left Column (Directory) + Right Column (Stacked Upper & Lower sections) */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ================= 左边一栏: 课文目录导航 (折叠后彻底隐藏不占地方) ================= */}
+        {!sidebarCollapsed && (
+          <aside className="w-full lg:w-80 shrink-0 bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-4 space-y-3.5 sticky top-20 max-h-[calc(100vh-6rem)] flex flex-col animate-fadeIn">
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-paper-border">
               <div className="flex items-center space-x-2">
                 <BookOpen className="w-4 h-4 text-bamboo-700" />
-                <span className="font-serif font-bold text-sm text-wood-900">初中语文统编教材目录</span>
+                <span className="font-serif font-bold text-sm text-wood-900">初中语文教材目录</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-serif font-medium">158篇</span>
               </div>
               <button
-                onClick={() => setIsTOCDrawerOpen(false)}
-                className="p-1 rounded-lg hover:bg-paper-200 text-wood-600 transition cursor-pointer"
-                title="关闭目录"
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-1 rounded-lg hover:bg-paper-200 text-wood-600 transition cursor-pointer flex items-center space-x-1 text-xs"
+                title="收起目录"
               >
-                <X className="w-4 h-4" />
+                <PanelLeftClose className="w-3.5 h-3.5" />
+                <span className="text-[11px]">收起</span>
               </button>
             </div>
 
-            {/* Drawer Body */}
-            <div className="p-4 space-y-3.5 overflow-y-auto flex-1">
-              {/* Book Selector Tabs (Horizontal Scroll Single Row - Problem 1) */}
-              <div className="flex items-center space-x-1.5 p-1 bg-paper-100 rounded-xl border border-paper-border text-xs font-serif overflow-x-auto scrollbar-none flex-nowrap">
-                {BOOKS.map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setSelectedBook(b.id)}
-                    className={`px-3 py-1.5 text-center rounded-lg transition cursor-pointer font-medium whitespace-nowrap flex-shrink-0 ${
-                      selectedBook === b.id
-                        ? 'bg-wood-800 text-paper-50 shadow-sm font-bold'
-                        : 'text-wood-700 hover:bg-paper-200'
-                    }`}
-                  >
-                    {b.name.replace('年级', '')}
-                  </button>
-                ))}
-              </div>
-
-              {/* Search Input */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-wood-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="搜索篇目 / 作者..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 bg-white border border-paper-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif"
-                />
-              </div>
-
-              {/* Filters Row */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <select
-                  value={selectedGenre}
-                  onChange={(e) => setSelectedGenre(e.target.value as any)}
-                  className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
+            {/* Book Selector Tabs (Horizontal Scroll Single Row) */}
+            <div className="flex items-center space-x-1.5 p-1 bg-paper-100 rounded-xl border border-paper-border text-xs font-serif overflow-x-auto scrollbar-none flex-nowrap shrink-0">
+              {BOOKS.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setSelectedBook(b.id)}
+                  className={`px-3 py-1.5 text-center rounded-lg transition cursor-pointer font-medium whitespace-nowrap flex-shrink-0 ${
+                    selectedBook === b.id
+                      ? 'bg-wood-800 text-paper-50 shadow-sm font-bold'
+                      : 'text-wood-700 hover:bg-paper-200'
+                  }`}
                 >
-                  {GENRES.map((g) => (
-                    <option key={g.value} value={g.value}>
-                      {g.label}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedStatusFilter}
-                  onChange={(e) => setSelectedStatusFilter(e.target.value as any)}
-                  className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
-                >
-                  <option value="all">全部备考状态</option>
-                  <option value="unlearned">⚪ 未学习</option>
-                  <option value="practicing">🟡 备课中</option>
-                  <option value="mastered">🟢 已掌握</option>
-                  <option value="review_needed">🔴 需复习</option>
-                </select>
-              </div>
-
-              {/* Lesson Tree by Units */}
-              <div className="space-y-2.5 max-h-[calc(100vh-270px)] overflow-y-auto pr-1">
-                {unitsInBook.map((unitNum) => {
-                  const lessonsInUnit = filteredLessons.filter((l) => l.unit === unitNum);
-                  if (lessonsInUnit.length === 0) return null;
-                  const unitTitle = lessonsInUnit[0].unitTitle;
-                  const isExpanded = expandedUnits[unitNum] ?? true;
-
-                  return (
-                    <div key={unitNum} className="border border-paper-border rounded-xl overflow-hidden bg-white/50">
-                      <button
-                        onClick={() => toggleUnit(unitNum)}
-                        className="w-full flex items-center justify-between p-2.5 bg-paper-100/70 hover:bg-paper-200 text-left text-xs font-serif font-bold text-wood-900 cursor-pointer"
-                      >
-                        <span className="flex items-center space-x-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-bamboo-700" />
-                          <span>{unitTitle}</span>
-                        </span>
-                        <span className="text-wood-400">
-                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                        </span>
-                      </button>
-
-                      {isExpanded && (
-                        <div className="p-1.5 space-y-1">
-                          {lessonsInUnit.map((lesson) => {
-                            const isSelected = lesson.id === currentLesson.id;
-                            const st = studyStatuses[lesson.id] || 'unlearned';
-
-                            return (
-                              <button
-                                key={lesson.id}
-                                onClick={() => handleSelectLessonFromTOC(lesson)}
-                                className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                                    : 'hover:bg-paper-100 text-wood-800'
-                                }`}
-                              >
-                                <div className="truncate flex-1 pr-2">
-                                  <div className="text-xs font-serif truncate">
-                                    《{lesson.title}》
-                                  </div>
-                                  <div className={`text-[10px] ${isSelected ? 'text-bamboo-100' : 'text-wood-500'}`}>
-                                    {lesson.author} · {lesson.genre}
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center space-x-1.5 flex-shrink-0">
-                                  <span className={`text-[10px] ${isSelected ? 'text-amber-200' : 'text-amber-600'}`}>
-                                    {'★'.repeat(lesson.star)}
-                                  </span>
-                                  {st === 'mastered' && (
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500" title="已攻克" />
-                                  )}
-                                  {st === 'practicing' && (
-                                    <span className="w-2 h-2 rounded-full bg-amber-500" title="备课中" />
-                                  )}
-                                  {st === 'review_needed' && (
-                                    <span className="w-2 h-2 rounded-full bg-rose-500" title="需复习" />
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                  {b.name.replace('年级', '')}
+                </button>
+              ))}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Main Workbench Stage (Full width, spacious & unconstrained - Problem 6) */}
-      <div className="w-full space-y-6">
+            {/* Search Input */}
+            <div className="relative shrink-0">
+              <Search className="w-4 h-4 text-wood-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="搜索篇目 / 作者..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-paper-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif"
+              />
+            </div>
+
+            {/* Filters Row */}
+            <div className="grid grid-cols-2 gap-2 text-xs shrink-0">
+              <select
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value as any)}
+                className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
+              >
+                {GENRES.map((g) => (
+                  <option key={g.value} value={g.value}>
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedStatusFilter}
+                onChange={(e) => setSelectedStatusFilter(e.target.value as any)}
+                className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
+              >
+                <option value="all">全部备考状态</option>
+                <option value="unlearned">⚪ 未学习</option>
+                <option value="practicing">🟡 备课中</option>
+                <option value="mastered">🟢 已掌握</option>
+                <option value="review_needed">🔴 需复习</option>
+              </select>
+            </div>
+
+            {/* Lesson Tree by Units */}
+            <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+              {unitsInBook.map((unitNum) => {
+                const lessonsInUnit = filteredLessons.filter((l) => l.unit === unitNum);
+                if (lessonsInUnit.length === 0) return null;
+                const unitTitle = lessonsInUnit[0].unitTitle;
+                const isExpanded = expandedUnits[unitNum] ?? true;
+
+                return (
+                  <div key={unitNum} className="border border-paper-border rounded-xl overflow-hidden bg-white/50">
+                    <button
+                      onClick={() => toggleUnit(unitNum)}
+                      className="w-full flex items-center justify-between p-2.5 bg-paper-100/70 hover:bg-paper-200 text-left text-xs font-serif font-bold text-wood-900 cursor-pointer"
+                    >
+                      <span className="flex items-center space-x-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-bamboo-700" />
+                        <span>{unitTitle}</span>
+                      </span>
+                      <span className="text-wood-400">
+                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                      </span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="p-1.5 space-y-1">
+                        {lessonsInUnit.map((lesson) => {
+                          const isSelected = lesson.id === currentLesson.id;
+                          const st = studyStatuses[lesson.id] || 'unlearned';
+
+                          return (
+                            <button
+                              key={lesson.id}
+                              onClick={() => handleSelectLesson(lesson)}
+                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition cursor-pointer ${
+                                isSelected
+                                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                                  : 'hover:bg-paper-100 text-wood-800'
+                              }`}
+                            >
+                              <div className="truncate flex-1 pr-2">
+                                <div className="text-xs font-serif truncate">
+                                  《{lesson.title}》
+                                </div>
+                                <div className={`text-[10px] ${isSelected ? 'text-bamboo-100' : 'text-wood-500'}`}>
+                                  {lesson.author} · {lesson.genre}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-1.5 flex-shrink-0">
+                                <span className={`text-[10px] ${isSelected ? 'text-amber-200' : 'text-amber-600'}`}>
+                                  {'★'.repeat(lesson.star)}
+                                </span>
+                                {st === 'mastered' && (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="已攻克" />
+                                )}
+                                {st === 'practicing' && (
+                                  <span className="w-2 h-2 rounded-full bg-amber-500" title="备课中" />
+                                )}
+                                {st === 'review_needed' && (
+                                  <span className="w-2 h-2 rounded-full bg-rose-500" title="需复习" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
+        )}
+
+        {/* ================= 右边主体区域: 两栏一上一下 ================= */}
+        <main className="flex-1 w-full min-w-0 space-y-6">
+          {/* ---------------- 右侧上栏: 核心研读选项卡区 ---------------- */}
+          <section className="space-y-6">
           {/* Triple Tabs Navigation */}
           <div className="flex items-center border-b border-paper-border space-x-1 sm:space-x-2 bg-paper-card p-1.5 rounded-2xl border shadow-sm overflow-x-auto">
             <button
@@ -809,26 +798,6 @@ ${currentLesson.speedPlan.homework}`;
                   </div>
                 </div>
               </div>
-
-              {/* 5. 黑板板书设计 (Chalkboard Component - Problem 11) */}
-              <div className="bg-paper-card p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
-                <div className="flex items-center justify-between pb-1">
-                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
-                    <Edit3 className="w-4 h-4 text-bamboo-700" />
-                    <span>五、黑板板书设计参考（结构化黑板呈现）</span>
-                  </div>
-                  <span className="text-xs text-wood-500 font-serif">
-                    左侧主板书呈现行文脉络与切片，右侧副板书呈现字词与技法
-                  </span>
-                </div>
-
-                <Chalkboard
-                  title={currentLesson.title}
-                  author={currentLesson.author}
-                  rawMainBoard={currentLesson.blackboard.mainBoard}
-                  subBoard={currentLesson.blackboard.subBoard}
-                />
-              </div>
             </div>
           )}
 
@@ -964,37 +933,6 @@ ${currentLesson.speedPlan.homework}`;
                     );
                   })}
                 </div>
-
-                {/* Overall Lesson Note Box */}
-                <div className="p-5 rounded-2xl bg-paper-50 border border-paper-border space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif font-bold text-sm text-wood-900 flex items-center space-x-1.5">
-                      <Edit3 className="w-4 h-4 text-bamboo-700" />
-                      <span>本课备课总笔记（自动保存到浏览器本地）：</span>
-                    </span>
-                    {noteSavedToast && (
-                      <span className="text-xs text-bamboo-700 font-bold flex items-center space-x-1">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>笔记已保存</span>
-                      </span>
-                    )}
-                  </div>
-                  <textarea
-                    rows={4}
-                    placeholder="在此记录本篇课文个人的试讲提问设计、导入语调整或板书心得..."
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    className={`w-full p-3 bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed ${currentScale.tab2Note}`}
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      onClick={handleSaveUserNote}
-                      className="btn-tactile px-4 py-2 bg-bamboo-700 text-white rounded-xl text-xs md:text-sm font-serif font-bold cursor-pointer shadow"
-                    >
-                      保存备课笔记
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -1019,7 +957,63 @@ ${currentLesson.speedPlan.homework}`;
               </Suspense>
             </div>
           )}
-        </div>
-      </div>
-    );
-  };
+        </section>
+
+        {/* ---------------- 右侧下栏: 全真黑板板书设计与随堂备课总笔记 ---------------- */}
+        <section className="space-y-6">
+          {/* 五、黑板板书设计参考 (Chalkboard Component) */}
+          <div className="bg-paper-card p-5 md:p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
+                <Edit3 className="w-4 h-4 text-bamboo-700" />
+                <span>五、全真黑板板书设计参考（结构化黑板呈现）</span>
+              </div>
+              <span className="text-xs text-wood-500 font-serif hidden sm:inline">
+                左侧主板书呈现行文脉络与切片，右侧副板书呈现字词与技法
+              </span>
+            </div>
+
+            <Chalkboard
+              title={currentLesson.title}
+              author={currentLesson.author}
+              rawMainBoard={currentLesson.blackboard.mainBoard}
+              subBoard={currentLesson.blackboard.subBoard}
+            />
+          </div>
+
+          {/* 随堂备课总笔记 (持久化保存) */}
+          <div className="bg-paper-card p-5 md:p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-serif font-bold text-sm md:text-base text-wood-900 flex items-center space-x-1.5">
+                <Edit3 className="w-4 h-4 text-bamboo-700" />
+                <span>《{currentLesson.title}》备课总笔记（自动保存到本地）：</span>
+              </span>
+              {noteSavedToast && (
+                <span className="text-xs text-bamboo-700 font-bold flex items-center space-x-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>笔记已保存</span>
+                </span>
+              )}
+            </div>
+            <textarea
+              rows={4}
+              placeholder="在此记录本篇课文个人的试讲提问设计、导入语微调、现场互动模拟或板书心得..."
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              className={`w-full p-3 bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed ${currentScale.tab2Note}`}
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveUserNote}
+                className="btn-tactile px-4 py-2 bg-bamboo-700 text-white rounded-xl text-xs md:text-sm font-serif font-bold cursor-pointer shadow"
+              >
+                保存备课笔记
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  );
+};

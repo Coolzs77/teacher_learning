@@ -23,165 +23,217 @@ export const Chalkboard: React.FC<ChalkboardProps> = ({
   subBoard,
   className = ''
 }) => {
-  // Parse rawMainBoard if mainBoardNodes not directly passed
-  const parsedNodes: ChalkNode[] = mainBoardNodes || (() => {
-    if (!rawMainBoard) {
-      return [
-        { title: '教学重点', points: ['抓住核心词句展开研读', '体会情感表达与写作技法'] },
-        { title: '教学过程', points: ['初读感知 -> 精读品味 -> 朗读深化'] },
-        { title: '思想主旨', points: ['理解作者思想情怀，落实一课一得'] }
-      ];
+  // Format blackboard lines for authentic classroom presentation
+  const formattedLines = React.useMemo(() => {
+    if (rawMainBoard) {
+      // Split raw mainboard and clean any box borders
+      const lines = rawMainBoard
+        .split('\n')
+        .map(l => l.trimEnd())
+        .filter(l => {
+          const t = l.trim();
+          return t && !t.includes('┌───────') && !t.includes('└───────') && !t.includes('───────────────');
+        });
+
+      return lines.map(line => {
+        let clean = line.replace(/^[|│\s]+/, '  ').replace(/[|│\s]+$/, '');
+        if (clean.includes(title) && clean.includes(author)) {
+          return null; // Don't repeat title if already at top of blackboard
+        }
+        return clean;
+      }).filter(Boolean) as string[];
     }
 
-    // Clean up ASCII borders from raw string
-    const lines = rawMainBoard
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l && !l.includes('┌') && !l.includes('└') && !l.includes('─') && !l.includes('│'));
-
-    const nodes: ChalkNode[] = [];
-    let currentCategory: ChalkNode | null = null;
-
-    for (const line of lines) {
-      const cleanLine = line.replace(/^[|│├├──└──\s*]+/, '').replace(/[|│]+$/, '').trim();
-      if (!cleanLine || cleanLine.includes(title)) continue;
-
-      if (cleanLine.startsWith('【') && cleanLine.endsWith('】')) {
-        if (currentCategory) nodes.push(currentCategory);
-        currentCategory = { title: cleanLine.replace(/[【】]/g, ''), points: [] };
-      } else if (currentCategory) {
-        currentCategory.points.push(cleanLine);
-      } else {
-        nodes.push({ title: '核心板书', points: [cleanLine] });
-      }
+    if (mainBoardNodes && mainBoardNodes.length > 0) {
+      const generated: string[] = [];
+      mainBoardNodes.forEach((node, idx) => {
+        generated.push(`【${node.title}】${node.tag ? ` (${node.tag})` : ''}`);
+        node.points.forEach((pt, pIdx) => {
+          const prefix = pIdx === node.points.length - 1 ? '  └── ' : '  ├── ';
+          generated.push(`${prefix}${pt}`);
+        });
+        if (idx < mainBoardNodes.length - 1) generated.push('');
+      });
+      return generated;
     }
 
-    if (currentCategory) nodes.push(currentCategory);
-    return nodes.length > 0 ? nodes : [
-      { title: '核心要点', points: lines.slice(1) }
+    return [
+      `【核心脉络】`,
+      `  ├── 抓住关键语句展开研读，体会作者思想情感`,
+      `  ├── 分析核心表达手法，落实一课一得`,
+      `  └── 指导有感情朗读，深化文本理解`,
+      ``,
+      `【主旨升华】 落实语文学科核心素养 · 融汇真情实感`
     ];
-  })();
+  }, [rawMainBoard, mainBoardNodes, title, author]);
+
+  // Determine line color and style based on blackboard chalk conventions
+  const renderChalkLine = (line: string, index: number) => {
+    const trimmed = line.trim();
+
+    // 1. Topic / Section Header (Chalk Golden Yellow)
+    if (trimmed.startsWith('【') || trimmed.startsWith('一、') || trimmed.startsWith('二、') || trimmed.startsWith('三、')) {
+      return (
+        <div key={index} className="text-[#FFEAA7] font-bold text-sm md:text-base tracking-wide my-1 flex items-center">
+          <span className="text-[#FFEAA7] mr-1.5 opacity-90">✦</span>
+          <span>{trimmed}</span>
+        </div>
+      );
+    }
+
+    // 2. Sublimation / Theme Climax (Chalk Coral Pink/Red)
+    if (trimmed.includes('主旨') || trimmed.includes('思想情怀') || trimmed.includes('情感态度') || trimmed.includes('中心立意') || trimmed.includes('写作精妙')) {
+      return (
+        <div key={index} className="text-[#FF7675] font-bold text-xs md:text-sm tracking-wide mt-2 pt-1 border-t border-dashed border-white/20 flex items-center">
+          <span className="text-[#FF7675] mr-1.5 font-mono">★</span>
+          <span>{trimmed.replace(/^[|│\s*•\-]+/, '')}</span>
+        </div>
+      );
+    }
+
+    // 3. Structural Branches (Chalk White / Mint Cyan)
+    const isBranch = line.includes('├') || line.includes('└') || line.includes('┌') || line.includes('┼') || line.includes('➔') || line.includes('──');
+    
+    return (
+      <div
+        key={index}
+        className={`font-serif text-xs md:text-[13.5px] leading-relaxed tracking-wide whitespace-pre-wrap ${
+          isBranch ? 'text-[#FAF9F5]' : 'text-stone-200'
+        }`}
+      >
+        {line.split(/(├──|└──|┌──|┼──|➔|──)/g).map((part, pIdx) => {
+          if (part === '├──' || part === '└──' || part === '┌──' || part === '┼──' || part === '➔' || part === '──') {
+            return (
+              <span key={pIdx} className="text-[#81ECEC] font-mono font-bold select-none px-0.5">
+                {part}
+              </span>
+            );
+          }
+          if (part.includes('：') || part.includes(':')) {
+            const [label, ...rest] = part.split(/[:：]/);
+            return (
+              <span key={pIdx}>
+                <span className="text-[#FFEAA7] font-medium">{label}：</span>
+                <span className="text-[#FAF9F5]">{rest.join('：')}</span>
+              </span>
+            );
+          }
+          return <span key={pIdx}>{part}</span>;
+        })}
+      </div>
+    );
+  };
 
   return (
-    <div className={`relative rounded-2xl bg-[#1A2820] border-8 border-[#3D2C20] shadow-2xl p-6 md:p-8 text-[#FAF9F5] font-serif overflow-hidden select-none ${className}`}>
-      {/* Chalkboard Slate Texture Overlay */}
-      <div 
-        className="absolute inset-0 opacity-10 pointer-events-none"
+    <div className={`relative rounded-xl bg-[#1E2D24] border-8 border-[#3A291E] shadow-2xl p-4 md:p-6 text-[#FAF9F5] font-serif overflow-hidden select-none ${className}`}>
+      {/* Authentic Chalkboard Slate Texture & Smudge Overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
+          backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(255,255,255,0.1) 100%)'
         }}
       />
 
-      {/* Board Header: Title & Author Calligraphy */}
-      <div className="relative pb-5 border-b border-white/20 flex flex-wrap items-baseline justify-between gap-4">
-        <div className="space-y-1">
-          <div className="text-xs uppercase tracking-widest text-[#7ED6DF]/80 font-sans font-semibold">
-            初中语文试讲结构化板书设计
-          </div>
-          <h3 className="text-2xl md:text-3xl font-bold tracking-wider text-[#F9F7E8] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+      {/* Classroom Blackboard Header: Large Center Title */}
+      <div className="relative pb-3 border-b border-white/20 text-center space-y-1">
+        <div className="text-[10px] uppercase tracking-widest text-[#81ECEC]/70 font-sans font-semibold">
+          全真考场规范板书设计 · 结构图示化教学
+        </div>
+        <div className="flex items-center justify-center space-x-3">
+          <h3 className="text-xl md:text-2xl font-bold tracking-widest text-[#FAF9F5] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
             《{title.replace(/[《》]/g, '')}》
-            {author && <span className="text-lg md:text-xl font-normal text-[#F9F7E8]/80 ml-3">· {author}</span>}
           </h3>
-        </div>
-
-        <div className="flex items-center space-x-3 text-xs text-white/60">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/10 text-[#FFEAA7] border border-white/15">
-            ✏️ 规范粉笔书写 · 重点突出
-          </span>
+          {author && (
+            <span className="text-sm md:text-base font-normal text-[#FFEAA7] opacity-90 tracking-wider">
+              {author}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Main Grid: Left 70% Main Board + Right 30% Sub Board */}
-      <div className="relative pt-6 grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
-        {/* Left 70%: 主板书区 (Main Blackboard) */}
-        <div className="lg:col-span-7 space-y-4 pr-0 lg:pr-4">
-          <div className="flex items-center justify-between pb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#FCEBA4] flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FFEAA7] inline-block" />
-              <span>【主板书区 · 教学脉络与核心切片】</span>
+      {/* Blackboard Core Area: 72% Main Board + 28% Auxiliary Board */}
+      <div className="relative pt-4 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left 72%: 主板书区 (Authentic Slate Layout) */}
+        <div className="lg:col-span-8 space-y-2 pr-0 lg:pr-3">
+          <div className="flex items-center justify-between pb-1 text-[11px] text-white/50 border-b border-white/10">
+            <span className="text-[#FFEAA7] font-bold flex items-center space-x-1">
+              <span>【主板书 · 教学脉络与核心切片】</span>
             </span>
-            <span className="text-[11px] text-white/50">居中书写，占黑板约 70%</span>
+            <span>占黑板约 70% · 居中工整书写</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {parsedNodes.map((node, idx) => (
-              <div
-                key={idx}
-                className="relative rounded-xl border border-white/25 bg-white/[0.04] p-4 backdrop-blur-sm space-y-2.5 shadow-inner"
-              >
-                <div className="flex items-center justify-between border-b border-white/15 pb-2">
-                  <h4 className="font-bold text-sm md:text-base text-[#FFEAA7] tracking-wide flex items-center space-x-2">
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-[#FFEAA7]/20 text-[#FFEAA7] font-mono">
-                      0{idx + 1}
-                    </span>
-                    <span>{node.title}</span>
-                  </h4>
-                  {node.tag && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      {node.tag}
-                    </span>
-                  )}
-                </div>
-
-                <ul className="space-y-1.5 text-xs md:text-sm text-stone-200 leading-relaxed">
-                  {node.points.map((p, pIdx) => (
-                    <li key={pIdx} className="flex items-start space-x-2">
-                      <span className="text-[#55E6C1] select-none text-xs mt-0.5">▪</span>
-                      <span className="flex-1">{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          {/* Genuine Chalk Written Lines */}
+          <div className="p-3.5 rounded-lg bg-black/15 border border-white/10 space-y-1.5 shadow-inner min-h-[180px]">
+            {formattedLines.map((line, idx) => renderChalkLine(line, idx))}
           </div>
         </div>
 
-        {/* Vertical Chalk Divider for Desktop */}
-        <div className="hidden lg:block absolute top-6 bottom-0 left-[70%] border-l-2 border-dashed border-white/20" />
+        {/* Vertical Chalk Dotted Line Divider for Desktop */}
+        <div className="hidden lg:block absolute top-4 bottom-0 left-[68%] border-l border-dashed border-white/25" />
 
-        {/* Right 30%: 副板书区 (Auxiliary Blackboard) */}
-        <div className="lg:col-span-3 space-y-4 pl-0 lg:pl-4 border-t lg:border-t-0 border-white/20 pt-4 lg:pt-0">
-          <div className="flex items-center justify-between pb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#FF7675] flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FF7675] inline-block" />
-              <span>【副板书区】</span>
+        {/* Right 28%: 副板书区 (生字词、重点技法) */}
+        <div className="lg:col-span-4 space-y-2 pl-0 lg:pl-3 border-t lg:border-t-0 border-white/20 pt-3 lg:pt-0">
+          <div className="flex items-center justify-between pb-1 text-[11px] text-white/50 border-b border-white/10">
+            <span className="text-[#FF7675] font-bold flex items-center space-x-1">
+              <span>【副板书】</span>
             </span>
-            <span className="text-[11px] text-white/50">占约 30%</span>
+            <span>占约 30% · 随讲随写</span>
           </div>
 
-          <div className="rounded-xl border border-white/20 bg-black/20 p-4 space-y-3 shadow-inner">
-            <div className="text-xs text-[#FAB1A0] font-bold pb-1 border-b border-white/10">
-              难字注音 · 词义释难 · 技法小结
+          <div className="p-3 rounded-lg bg-black/25 border border-white/10 space-y-2.5 shadow-inner">
+            <div className="text-[11px] text-[#FAB1A0] font-bold pb-1 border-b border-white/10 flex items-center justify-between">
+              <span>生字正音 · 重点词义 · 技法</span>
+              <span className="text-[10px] text-white/40">考场留存</span>
             </div>
 
-            <ul className="space-y-2 text-xs md:text-sm text-stone-200">
-              {subBoard.map((item, idx) => (
-                <li key={idx} className="flex items-start space-x-2 group">
-                  <span className="text-[#FF7675] font-bold select-none">•</span>
-                  <span className="group-hover:text-white transition-colors">{item}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-1.5 text-xs text-stone-200">
+              {subBoard && subBoard.length > 0 ? (
+                subBoard.map((item, idx) => (
+                  <div key={idx} className="flex items-start space-x-1.5 group">
+                    <span className="text-[#FFEAA7] font-bold text-xs select-none">▪</span>
+                    <span className="group-hover:text-white transition-colors">{item}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex items-start space-x-1.5">
+                    <span className="text-[#FFEAA7] font-bold text-xs select-none">▪</span>
+                    <span>重点字音：读准字音，写规范字</span>
+                  </div>
+                  <div className="flex items-start space-x-1.5">
+                    <span className="text-[#FFEAA7] font-bold text-xs select-none">▪</span>
+                    <span>表达技法：抓核心动词，体会修辞</span>
+                  </div>
+                </>
+              )}
+            </div>
 
-            <div className="pt-2 border-t border-white/10 text-[11px] text-white/40 italic">
-              提示：考场试讲时，随讲随写难读生字与词义，试讲结束前保留在副板书区域。
+            <div className="pt-2 border-t border-white/10 text-[10px] text-white/50 leading-tight">
+              考官考查要点：试讲时板书不可擦掉，右侧副板书随课堂互动生成并保留至结课。
             </div>
           </div>
         </div>
       </div>
 
-      {/* Chalk Tray Simulation */}
-      <div className="mt-8 pt-3 border-t-4 border-[#2A1E16] flex items-center justify-between text-[11px] text-white/40">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <div className="w-8 h-2 rounded-sm bg-[#F5F5F0] shadow-sm" title="白粉笔" />
-            <div className="w-8 h-2 rounded-sm bg-[#FFEAA7] shadow-sm" title="黄粉笔" />
-            <div className="w-8 h-2 rounded-sm bg-[#55E6C1] shadow-sm" title="绿粉笔" />
+      {/* Chalk Tray Simulation with Chalk Sticks */}
+      <div className="mt-5 pt-2 border-t-4 border-[#2A1E16] flex items-center justify-between text-[10px] text-white/40">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1.5 bg-[#17221A] px-2 py-0.5 rounded border border-black/30">
+            <div className="w-6 h-1.5 rounded-xs bg-[#FAF9F5] shadow-xs" title="白粉笔" />
+            <div className="w-6 h-1.5 rounded-xs bg-[#FFEAA7] shadow-xs" title="黄粉笔" />
+            <div className="w-6 h-1.5 rounded-xs bg-[#81ECEC] shadow-xs" title="青粉笔" />
+            <div className="w-6 h-1.5 rounded-xs bg-[#FF7675] shadow-xs" title="红粉笔" />
           </div>
-          <span>黑板下沿槽位 · 规范示范</span>
+          <span className="hidden sm:inline">粉笔槽 · 规范书写</span>
         </div>
-        <span>一课一得 · 师生互动板书</span>
+        <span>教资面试标准板书规范 · 层次分明 · 一课一得</span>
       </div>
     </div>
   );

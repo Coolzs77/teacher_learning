@@ -86,7 +86,12 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
       for (const url of candidateUrls) {
         if (!isMounted) return;
         try {
-          const task = pdfjsLib.getDocument(url);
+          const task = pdfjsLib.getDocument({
+            url,
+            rangeChunkSize: 65536, // 64KB on-demand chunk streaming
+            disableAutoFetch: true, // Do not download the entire 15MB file upfront
+            disableStream: true
+          });
           loadedDoc = await task.promise;
           if (loadedDoc) break;
         } catch {
@@ -451,9 +456,22 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
         className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-[540px] bg-stone-200/70"
       >
         {loading && (
-          <div className="flex flex-col items-center justify-center space-y-3 p-8">
+          <div className="flex flex-col items-center justify-center space-y-3 p-8 text-center max-w-md">
             <div className="w-10 h-10 border-4 border-bamboo-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="font-serif text-sm text-wood-700">正在加载教材原貌第 {pageNum} 页...</p>
+            <p className="font-serif text-sm font-bold text-wood-800">正在流式加载教材原貌第 {pageNum} 页...</p>
+            <p className="font-serif text-xs text-wood-500 leading-relaxed">
+              系统采用按需切片加载技术。若遇网络延迟，您亦可直接秒开本地教材：
+            </p>
+            <label className="btn-tactile inline-flex items-center space-x-2 px-4 py-2 bg-bamboo-700 text-white rounded-xl text-xs font-serif font-bold cursor-pointer shadow hover:bg-bamboo-800 transition">
+              <Upload className="w-4 h-4" />
+              <span>⚡ 本地教材秒开（{fileName}）</span>
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </label>
           </div>
         )}
 

@@ -558,37 +558,67 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
 
-            {/* Dynamic Countdown Grid */}
-            <div className="p-4 bg-paper-50 rounded-xl border border-paper-border space-y-3">
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-white p-2.5 rounded-lg border border-paper-border shadow-xs">
-                  <div className="font-mono text-2xl font-black text-wood-900">
+            {/* Separated Countdown: 1. Days Hero Block + 2. Hours/Minutes/Seconds Dynamic Ticker */}
+            <div className="space-y-3">
+              {/* Part 1: Days Hero Block (天数主视觉) */}
+              <div className="p-5 bg-gradient-to-br from-paper-50 via-paper-100 to-bamboo-50/40 rounded-xl border border-bamboo-200/70 text-center shadow-xs space-y-1.5">
+                <div className="text-xs text-wood-600 font-serif">
+                  距离 12 月下半年教师资格证面试试讲还剩
+                </div>
+                <div className="flex items-baseline justify-center space-x-1.5 my-1">
+                  <span className="font-mono text-5xl md:text-6xl font-black text-wood-900 tracking-tight drop-shadow-xs">
                     {countdownDays}
-                  </div>
-                  <div className="text-[10px] text-wood-500 font-serif">天</div>
+                  </span>
+                  <span className="font-serif font-bold text-lg text-bamboo-800">
+                    天
+                  </span>
                 </div>
-                <div className="bg-white p-2.5 rounded-lg border border-paper-border shadow-xs">
-                  <div className="font-mono text-2xl font-black text-wood-900">
-                    {String(countdownHours).padStart(2, '0')}
-                  </div>
-                  <div className="text-[10px] text-wood-500 font-serif">时</div>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-paper-border shadow-xs">
-                  <div className="font-mono text-2xl font-black text-wood-900">
-                    {String(countdownMinutes).padStart(2, '0')}
-                  </div>
-                  <div className="text-[10px] text-wood-500 font-serif">分</div>
-                </div>
-                <div className="bg-bamboo-50 p-2.5 rounded-lg border border-bamboo-200 shadow-xs">
-                  <div className="font-mono text-2xl font-black text-bamboo-800">
-                    {String(countdownSeconds).padStart(2, '0')}
-                  </div>
-                  <div className="text-[10px] text-bamboo-700 font-serif">秒</div>
+                <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-bamboo-100/80 text-bamboo-900 text-[11px] font-serif">
+                  <span>重点突破：每天练透1篇文体 · 规范板书字迹</span>
                 </div>
               </div>
 
-              <div className="text-center text-[11px] text-wood-500 font-serif pt-1">
-                考场关键：沉着开场 · 切忌念教案 · 突出师生对话与板书生成
+              {/* Part 2: Hours / Minutes / Seconds Clock Ticker (独立动态走字条) */}
+              <div className="p-3.5 bg-paper-50 rounded-xl border border-paper-border space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-wood-500 font-serif">
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>今日精准动态时钟</span>
+                  </span>
+                  <span className="font-mono text-[10px] text-wood-400">精确到秒</span>
+                </div>
+
+                {/* 3 Digital Clock Tiles */}
+                <div className="flex items-center justify-center space-x-2 font-mono">
+                  <div className="flex-1 bg-white py-2 px-1 text-center rounded-lg border border-paper-border shadow-2xs">
+                    <div className="text-xl font-black text-wood-800">
+                      {String(countdownHours).padStart(2, '0')}
+                    </div>
+                    <div className="text-[10px] text-wood-400 font-serif">时</div>
+                  </div>
+
+                  <span className="font-bold text-wood-400 text-lg select-none">:</span>
+
+                  <div className="flex-1 bg-white py-2 px-1 text-center rounded-lg border border-paper-border shadow-2xs">
+                    <div className="text-xl font-black text-wood-800">
+                      {String(countdownMinutes).padStart(2, '0')}
+                    </div>
+                    <div className="text-[10px] text-wood-400 font-serif">分</div>
+                  </div>
+
+                  <span className="font-bold text-wood-400 text-lg select-none">:</span>
+
+                  <div className="flex-1 bg-bamboo-50 py-2 px-1 text-center rounded-lg border border-bamboo-300 shadow-2xs">
+                    <div className="text-xl font-black text-bamboo-800">
+                      {String(countdownSeconds).padStart(2, '0')}
+                    </div>
+                    <div className="text-[10px] text-bamboo-700 font-serif font-medium">秒</div>
+                  </div>
+                </div>
+
+                <div className="text-center text-[10.5px] text-wood-500 font-serif pt-1">
+                  考场建议：把握 10 分钟试讲节奏，8 分半留时间小结并规范板书
+                </div>
               </div>
             </div>
 

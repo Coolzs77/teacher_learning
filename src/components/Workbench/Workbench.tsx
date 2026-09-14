@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Lesson, Genre, StudyStatus, BookId } from '../../types';
 import { LESSONS_DATA } from '../../data/lessonsData';
-import { PdfViewer } from './PdfViewer';
 import { Chalkboard } from '../Common/Chalkboard';
 import {
   BookOpen,
@@ -27,6 +26,8 @@ import {
   RotateCcw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const PdfViewer = lazy(() => import('./PdfViewer').then(m => ({ default: m.PdfViewer })));
 
 interface WorkbenchProps {
   currentLesson: Lesson;
@@ -61,6 +62,39 @@ const GENRES: { label: string; value: Genre | 'all' }[] = [
 
 type FontSizeLevel = 'normal' | 'large' | 'xlarge';
 
+const FONT_SCALE_CONFIG = {
+  normal: {
+    label: '标准字号',
+    tab1Requirement: 'text-xs',
+    tab1Body: 'text-xs md:text-sm leading-relaxed',
+    tab1Heading: 'text-sm md:text-base font-bold',
+    tab1Script: 'text-xs md:text-sm leading-relaxed',
+    tab2Para: 'text-sm md:text-base leading-relaxed',
+    tab2Note: 'text-xs md:text-sm',
+    tab2Word: 'text-xs',
+  },
+  large: {
+    label: '护眼大字',
+    tab1Requirement: 'text-sm',
+    tab1Body: 'text-sm md:text-base leading-loose',
+    tab1Heading: 'text-base md:text-lg font-bold',
+    tab1Script: 'text-sm md:text-base leading-loose',
+    tab2Para: 'text-base md:text-lg leading-loose tracking-wide',
+    tab2Note: 'text-sm md:text-base leading-relaxed',
+    tab2Word: 'text-sm',
+  },
+  xlarge: {
+    label: '特大字号',
+    tab1Requirement: 'text-base',
+    tab1Body: 'text-base md:text-lg leading-loose',
+    tab1Heading: 'text-lg md:text-xl font-bold',
+    tab1Script: 'text-base md:text-lg leading-loose',
+    tab2Para: 'text-lg md:text-xl leading-loose tracking-wider',
+    tab2Note: 'text-base md:text-lg leading-relaxed',
+    tab2Word: 'text-base',
+  }
+};
+
 export const Workbench: React.FC<WorkbenchProps> = ({
   currentLesson,
   onSelectLesson,
@@ -81,10 +115,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   // Sidebar Collapse state (Problem 7)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
-  // Font Size Scaler state (Problem 10)
+  // Font Size Scaler state (Problem 1)
   const [fontSize, setFontSize] = useState<FontSizeLevel>(() => {
     return (localStorage.getItem('tl_font_size') as FontSizeLevel) || 'large';
   });
+  const [fontToast, setFontToast] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'bible' | 'text' | 'pdf'>('bible');
   const [copiedPlan, setCopiedPlan] = useState(false);
@@ -117,6 +152,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const handleFontSizeChange = (level: FontSizeLevel) => {
     setFontSize(level);
     localStorage.setItem('tl_font_size', level);
+    setFontToast(`已切换至【${FONT_SCALE_CONFIG[level].label}】，教案与全文已同步放大`);
+    setTimeout(() => setFontToast(null), 2500);
   };
 
   const handleSaveParagraphNote = (paraId: number) => {
@@ -198,144 +235,161 @@ ${currentLesson.speedPlan.homework}`;
   };
 
   const currentStatus = studyStatuses[currentLesson.id] || 'unlearned';
-
-  // Font size classes
-  const fontClass = {
-    normal: 'text-sm md:text-base leading-relaxed',
-    large: 'text-base md:text-[17px] leading-loose',
-    xlarge: 'text-lg md:text-[19px] leading-loose'
-  }[fontSize];
+  const currentScale = FONT_SCALE_CONFIG[fontSize];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fadeIn space-y-6">
-      {/* Top Banner Toolbar */}
-      <div className="bg-paper-card p-4 md:p-5 rounded-2xl border border-paper-border shadow-scholarly flex flex-wrap items-center justify-between gap-4">
-        {/* Left Lesson Info & Sidebar Toggle */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="p-2 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm"
-            title={isSidebarCollapsed ? '展开课文目录' : '收起课文目录以获得沉浸研读视野'}
-          >
-            {isSidebarCollapsed ? (
-              <>
-                <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
-                <span className="text-xs font-serif font-bold text-bamboo-800">展开目录</span>
-              </>
-            ) : (
-              <>
-                <PanelLeftClose className="w-4 h-4 text-wood-600" />
-                <span className="text-xs font-serif text-wood-600">收起目录</span>
-              </>
-            )}
-          </button>
+      {/* Top Banner Toolbar (Responsive 2-tier layout) */}
+      <div className="bg-paper-card p-4 md:p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
+        {/* Row 1: Title, Meta & Primary Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Left: Sidebar toggle + Title & Meta */}
+          <div className="flex items-center space-x-3 min-w-0">
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="p-2 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm flex-shrink-0"
+              title={isSidebarCollapsed ? '展开课文目录' : '收起课文目录以获得沉浸研读视野'}
+            >
+              {isSidebarCollapsed ? (
+                <>
+                  <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
+                  <span className="text-xs font-serif font-bold text-bamboo-800 hidden sm:inline">展开目录</span>
+                </>
+              ) : (
+                <>
+                  <PanelLeftClose className="w-4 h-4 text-wood-600" />
+                  <span className="text-xs font-serif text-wood-600 hidden sm:inline">收起目录</span>
+                </>
+              )}
+            </button>
 
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs px-2 py-0.5 rounded bg-wood-200 text-wood-800 font-serif">
-                {currentLesson.bookName} · {currentLesson.unitTitle}
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-bamboo-100 text-bamboo-800 font-serif font-medium">
-                {currentLesson.genre}
-              </span>
-              <span className="text-amber-700 text-xs font-bold font-mono">
-                {'★'.repeat(currentLesson.star)}
-              </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] px-2 py-0.5 rounded bg-wood-200 text-wood-800 font-serif">
+                  {currentLesson.bookName} · {currentLesson.unitTitle}
+                </span>
+                <span className="text-[11px] px-2 py-0.5 rounded bg-bamboo-100 text-bamboo-800 font-serif font-medium">
+                  {currentLesson.genre}
+                </span>
+                <span className="text-amber-700 text-xs font-bold font-mono">
+                  {'★'.repeat(currentLesson.star)}
+                </span>
+              </div>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-wood-900 mt-1 truncate">
+                《{currentLesson.title}》
+                <span className="text-xs sm:text-sm font-normal text-wood-600 ml-2">作者：{currentLesson.author}</span>
+              </h1>
             </div>
-            <h1 className="text-xl md:text-2xl font-serif font-bold text-wood-900 mt-1">
-              《{currentLesson.title}》
-              <span className="text-sm font-normal text-wood-600 ml-2">作者：{currentLesson.author}</span>
-            </h1>
+          </div>
+
+          {/* Right: Quick Trial CTA Button */}
+          <div className="flex items-center space-x-2 flex-shrink-0 self-end sm:self-auto">
+            <button
+              onClick={() => onAddToDaily(currentLesson)}
+              className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif cursor-pointer shadow-sm"
+              title="加入今日模拟练待办"
+            >
+              <CalendarPlus className="w-3.5 h-3.5 text-bamboo-700" />
+              <span className="hidden sm:inline">加入待办</span>
+            </button>
+
+            <button
+              onClick={onStartTrialTimer}
+              className="btn-tactile flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-bamboo-700 text-white hover:bg-bamboo-800 text-xs font-serif font-bold shadow cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+              <span>开启10分钟试讲</span>
+            </button>
           </div>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Font Size Adjuster (Problem 10) */}
-          <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-0.5 shadow-sm">
-            <Type className="w-3.5 h-3.5 text-wood-500 ml-1 mr-0.5" />
-            <button
-              onClick={() => handleFontSizeChange('normal')}
-              className={`px-2 py-0.5 text-xs rounded-lg font-serif transition cursor-pointer ${
-                fontSize === 'normal' ? 'bg-white shadow text-wood-900 font-bold' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-              title="标准字号"
-            >
-              标准
-            </button>
-            <button
-              onClick={() => handleFontSizeChange('large')}
-              className={`px-2 py-0.5 text-xs rounded-lg font-serif transition cursor-pointer ${
-                fontSize === 'large' ? 'bg-white shadow text-wood-900 font-bold' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-              title="护眼大字"
-            >
-              大
-            </button>
-            <button
-              onClick={() => handleFontSizeChange('xlarge')}
-              className={`px-2 py-0.5 text-xs rounded-lg font-serif transition cursor-pointer ${
-                fontSize === 'xlarge' ? 'bg-white shadow text-wood-900 font-bold' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-              title="特大字号"
-            >
-              特大
-            </button>
+        {/* Row 2: Font Size Switcher & Status Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-paper-border/60">
+          {/* Font Size Adjuster (Problem 1) */}
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm">
+              <span className="text-[11px] text-wood-600 font-serif font-medium pl-1.5 pr-0.5 flex items-center space-x-1">
+                <Type className="w-3.5 h-3.5 text-bamboo-700" />
+                <span className="hidden sm:inline">字号:</span>
+              </span>
+              <button
+                onClick={() => handleFontSizeChange('normal')}
+                className={`px-2.5 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                  fontSize === 'normal'
+                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                    : 'text-wood-700 hover:bg-paper-200'
+                }`}
+                title="标准字号（适合电脑快速浏览）"
+              >
+                A- 标准
+              </button>
+              <button
+                onClick={() => handleFontSizeChange('large')}
+                className={`px-2.5 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                  fontSize === 'large'
+                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                    : 'text-wood-700 hover:bg-paper-200'
+                }`}
+                title="护眼大字（推荐研读）"
+              >
+                A 护眼大字
+              </button>
+              <button
+                onClick={() => handleFontSizeChange('xlarge')}
+                className={`px-2.5 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                  fontSize === 'xlarge'
+                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                    : 'text-wood-700 hover:bg-paper-200'
+                }`}
+                title="特大字号（高龄护眼/远距离观看）"
+              >
+                A+ 特大字号
+              </button>
+            </div>
+
+            {fontToast && (
+              <span className="text-[11px] text-bamboo-800 bg-bamboo-50 border border-bamboo-200 px-2 py-0.5 rounded-lg animate-fadeIn font-serif hidden md:inline">
+                ✓ {fontToast}
+              </span>
+            )}
           </div>
 
-          {/* Manual Status Buttons (Problem 12) */}
-          <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm">
-            <span className="text-[11px] text-wood-500 font-serif px-1 hidden sm:inline">标记状态:</span>
+          {/* Manual Status Buttons */}
+          <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm overflow-x-auto">
+            <span className="text-[11px] text-wood-500 font-serif px-1 hidden lg:inline">备考进度:</span>
             <button
               onClick={() => onUpdateStatus(currentLesson.id, 'unlearned')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer flex items-center space-x-1 ${
-                currentStatus === 'unlearned' ? 'bg-white text-wood-800 shadow font-bold' : 'text-wood-500 hover:bg-paper-200'
+              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                currentStatus === 'unlearned' ? 'bg-white text-wood-800 shadow font-bold ring-1 ring-wood-300' : 'text-wood-600 hover:bg-paper-200'
               }`}
             >
-              <span>⚪ 未学</span>
+              ⚪ 未学
             </button>
             <button
               onClick={() => onUpdateStatus(currentLesson.id, 'practicing')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer flex items-center space-x-1 ${
-                currentStatus === 'practicing' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold' : 'text-wood-600 hover:bg-paper-200'
+              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                currentStatus === 'practicing' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-sm' : 'text-wood-600 hover:bg-paper-200'
               }`}
             >
-              <span>🟡 备课中</span>
+              🟡 备课中
             </button>
             <button
               onClick={() => onUpdateStatus(currentLesson.id, 'mastered')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer flex items-center space-x-1 ${
+              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
                 currentStatus === 'mastered' ? 'bg-bamboo-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
               }`}
             >
-              <span>🟢 已掌握</span>
+              🟢 已掌握
             </button>
             <button
               onClick={() => onUpdateStatus(currentLesson.id, 'review_needed')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer flex items-center space-x-1 ${
+              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
                 currentStatus === 'review_needed' ? 'bg-cinnabar-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
               }`}
             >
-              <span>🔴 需复习</span>
+              🔴 需复习
             </button>
           </div>
-
-          <button
-            onClick={() => onAddToDaily(currentLesson)}
-            className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif cursor-pointer shadow-sm"
-            title="加入今日模拟练待办"
-          >
-            <CalendarPlus className="w-3.5 h-3.5 text-bamboo-700" />
-            <span className="hidden sm:inline">加入待办</span>
-          </button>
-
-          <button
-            onClick={onStartTrialTimer}
-            className="btn-tactile flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-bamboo-700 text-white hover:bg-bamboo-800 text-xs font-serif font-bold shadow cursor-pointer"
-          >
-            <Play className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            <span>开启10分钟试讲</span>
-          </button>
         </div>
       </div>
 
@@ -477,41 +531,44 @@ ${currentLesson.speedPlan.homework}`;
         {/* Right Column: Workbench Main Stage */}
         <div className={`${isSidebarCollapsed ? 'lg:col-span-12' : 'lg:col-span-8'} space-y-6 transition-all duration-300`}>
           {/* Triple Tabs Navigation */}
-          <div className="flex items-center border-b border-paper-border space-x-2 bg-paper-card p-1.5 rounded-2xl border shadow-sm">
+          <div className="flex items-center border-b border-paper-border space-x-1 sm:space-x-2 bg-paper-card p-1.5 rounded-2xl border shadow-sm overflow-x-auto">
             <button
               onClick={() => setActiveTab('bible')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer whitespace-nowrap ${
                 activeTab === 'bible'
                   ? 'bg-bamboo-700 text-white font-bold shadow-sm'
                   : 'text-wood-700 hover:bg-paper-100 font-medium'
               }`}
             >
-              <FileText className="w-4 h-4" />
-              <span>选项卡 1【10分钟教学设计】</span>
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">选项卡 1【10分钟教学设计与板书】</span>
+              <span className="sm:hidden">1. 教学设计</span>
             </button>
 
             <button
               onClick={() => setActiveTab('text')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer whitespace-nowrap ${
                 activeTab === 'text'
                   ? 'bg-bamboo-700 text-white font-bold shadow-sm'
                   : 'text-wood-700 hover:bg-paper-100 font-medium'
               }`}
             >
-              <BookOpen className="w-4 h-4" />
-              <span>选项卡 2【课文全文与段落批注】</span>
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">选项卡 2【课文全文与分段批注】</span>
+              <span className="sm:hidden">2. 课文批注</span>
             </button>
 
             <button
               onClick={() => setActiveTab('pdf')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer whitespace-nowrap ${
                 activeTab === 'pdf'
                   ? 'bg-bamboo-700 text-white font-bold shadow-sm'
                   : 'text-wood-700 hover:bg-paper-100 font-medium'
               }`}
             >
-              <FileText className="w-4 h-4" />
-              <span>选项卡 3【教材原版 PDF（画笔标注）】</span>
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">选项卡 3【统编原版教材 PDF】</span>
+              <span className="sm:hidden">3. 原版教材</span>
             </button>
           </div>
 
@@ -520,11 +577,11 @@ ${currentLesson.speedPlan.homework}`;
             <div className="space-y-6 animate-fadeIn">
               {/* 1. 试讲考查要求 */}
               <div className="bg-paper-card p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
-                <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
+                <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
                   <AlertCircle className="w-4 h-4 text-bamboo-700" />
                   <span>一、试讲考查要求</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-serif">
+                <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 font-serif ${currentScale.tab1Requirement}`}>
                   {currentLesson.examRequirement.map((req, idx) => (
                     <div key={idx} className="p-2.5 rounded-xl bg-paper-50 border border-paper-border text-wood-800 flex items-start space-x-2">
                       <span className="font-bold text-bamboo-700">✓</span>
@@ -537,7 +594,7 @@ ${currentLesson.speedPlan.homework}`;
               {/* 2. 10分钟教学切片建议 */}
               <div className="bg-paper-card p-5 rounded-2xl border border-bamboo-200/80 shadow-scholarly space-y-3 bg-gradient-to-br from-paper-50 via-bamboo-50/20 to-paper-card">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
+                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
                     <Sparkles className="w-4 h-4 text-bamboo-700" />
                     <span>二、10分钟教学切片建议（围绕“一课一得”）</span>
                   </div>
@@ -546,26 +603,26 @@ ${currentLesson.speedPlan.homework}`;
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs font-serif text-wood-800 leading-relaxed">
-                  <div className="p-3 bg-white rounded-xl border border-bamboo-200 space-y-1">
+                <div className={`space-y-2.5 font-serif text-wood-800 ${currentScale.tab1Body}`}>
+                  <div className="p-3.5 bg-white rounded-xl border border-bamboo-200 space-y-1">
                     <strong className="text-bamboo-900 block font-bold">🎯 建议精讲段落切片：</strong>
-                    <p className="text-wood-900 text-sm font-medium">{currentLesson.goldenSlice.sliceRange}</p>
+                    <p className={`text-wood-900 font-medium ${currentScale.tab1Heading}`}>{currentLesson.goldenSlice.sliceRange}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    <div className="p-3 bg-white rounded-xl border border-paper-border space-y-1">
+                    <div className="p-3.5 bg-white rounded-xl border border-paper-border space-y-1">
                       <strong className="text-wood-900 block font-bold">✨ 一课一得目标：</strong>
                       <p className="text-wood-700">{currentLesson.goldenSlice.oneGain}</p>
                     </div>
 
-                    <div className="p-3 bg-white rounded-xl border border-paper-border space-y-1">
+                    <div className="p-3.5 bg-white rounded-xl border border-paper-border space-y-1">
                       <strong className="text-wood-900 block font-bold">⏱️ 建议时间分配：</strong>
-                      <p className="text-wood-700 font-mono text-[11px]">{currentLesson.goldenSlice.timingGuide}</p>
+                      <p className="text-wood-700 font-mono text-xs">{currentLesson.goldenSlice.timingGuide}</p>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-[11px] flex items-start space-x-2">
-                    <span className="font-bold">💡 备考提示：</span>
+                  <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 flex items-start space-x-2">
+                    <span className="font-bold flex-shrink-0">💡 备考提示：</span>
                     <span>{currentLesson.goldenSlice.examinerTip}</span>
                   </div>
                 </div>
@@ -574,7 +631,7 @@ ${currentLesson.speedPlan.homework}`;
               {/* 3. 考场教学简案设计 */}
               <div className="bg-paper-card p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
+                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
                     <Edit3 className="w-4 h-4 text-bamboo-700" />
                     <span>三、考场教学简案设计（备考室草稿纸速写）</span>
                   </div>
@@ -587,10 +644,10 @@ ${currentLesson.speedPlan.homework}`;
                   </button>
                 </div>
 
-                <div className="p-4 bg-paper-50 rounded-xl border border-paper-border font-serif text-xs leading-relaxed space-y-2.5 text-wood-800">
+                <div className={`p-4 bg-paper-50 rounded-xl border border-paper-border font-serif space-y-2.5 text-wood-800 ${currentScale.tab1Body}`}>
                   <div className="flex items-center justify-between pb-2 border-b border-stone-200">
                     <span className="font-bold text-wood-900">课型：{currentLesson.speedPlan.courseType}</span>
-                    <span className="text-wood-500">考场草稿提纲（建议备考室5-8分钟速成）</span>
+                    <span className="text-wood-500 text-xs">考场草稿提纲（建议备考室5-8分钟速成）</span>
                   </div>
 
                   <div>
@@ -603,11 +660,11 @@ ${currentLesson.speedPlan.homework}`;
                     <span>{currentLesson.speedPlan.difficulties}</span>
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <strong className="text-wood-900 block">【教学过程（5步流程）】：</strong>
                     {currentLesson.speedPlan.steps.map((s) => (
                       <div key={s.step} className="pl-2 flex items-start space-x-1.5">
-                        <span className="font-bold text-bamboo-800">{s.step}. {s.name}（{s.duration}）：</span>
+                        <span className="font-bold text-bamboo-800 flex-shrink-0">{s.step}. {s.name}（{s.duration}）：</span>
                         <span className="text-wood-700">{s.coreAction}</span>
                       </div>
                     ))}
@@ -623,11 +680,11 @@ ${currentLesson.speedPlan.homework}`;
               {/* 4. 教学过程示范（逐字稿） */}
               <div className="bg-paper-card p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
+                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
                     <MessageSquare className="w-4 h-4 text-bamboo-700" />
                     <span>四、10分钟试讲教学过程示范（互动与指导语言）</span>
                   </div>
-                  <span className="text-xs text-wood-500 font-serif">
+                  <span className="text-xs text-wood-500 font-serif hidden sm:inline">
                     口语化示范师生互动提问与朗读口令
                   </span>
                 </div>
@@ -642,7 +699,7 @@ ${currentLesson.speedPlan.homework}`;
                       教师活动：{currentLesson.verbatimScript.importStage.actionNotes}
                     </span>
                   </div>
-                  <p className="text-xs md:text-sm font-serif leading-relaxed text-wood-900 bg-white p-3 rounded-lg border border-paper-border">
+                  <p className={`font-serif text-wood-900 bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
                     {currentLesson.verbatimScript.importStage.teacherLines}
                   </p>
                 </div>
@@ -657,7 +714,7 @@ ${currentLesson.speedPlan.homework}`;
                       教师活动：{currentLesson.verbatimScript.preliminaryReadStage.actionNotes}
                     </span>
                   </div>
-                  <p className="text-xs md:text-sm font-serif leading-relaxed text-wood-900 bg-white p-3 rounded-lg border border-paper-border">
+                  <p className={`font-serif text-wood-900 bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
                     {currentLesson.verbatimScript.preliminaryReadStage.teacherLines}
                   </p>
                 </div>
@@ -673,30 +730,30 @@ ${currentLesson.speedPlan.homework}`;
                     </span>
                   </div>
 
-                  <div className="space-y-2 text-xs md:text-sm font-serif leading-relaxed">
+                  <div className="space-y-2 font-serif">
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
-                      <strong className="text-bamboo-800 block">【教师提问设计】：</strong>
-                      <p className="text-wood-900">{currentLesson.verbatimScript.deepDiveStage.teacherQuestion}</p>
+                      <strong className="text-bamboo-800 block text-xs md:text-sm">【教师提问设计】：</strong>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.teacherQuestion}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-stone-300 space-y-1">
-                      <strong className="text-stone-700 block">【预设学生回答】：</strong>
-                      <p className="text-wood-800 italic">{currentLesson.verbatimScript.deepDiveStage.studentAnswer}</p>
+                      <strong className="text-stone-700 block text-xs md:text-sm">【预设学生回答】：</strong>
+                      <p className={`text-wood-800 italic ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.studentAnswer}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
-                      <strong className="text-bamboo-800 block">【教师评价与板书提示】：</strong>
-                      <p className="text-wood-900">{currentLesson.verbatimScript.deepDiveStage.teacherFeedback}</p>
+                      <strong className="text-bamboo-800 block text-xs md:text-sm">【教师评价与板书提示】：</strong>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.teacherFeedback}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
-                      <strong className="text-bamboo-800 block">【追问启发】：</strong>
-                      <p className="text-wood-900">{currentLesson.verbatimScript.deepDiveStage.deepenQuestion}</p>
+                      <strong className="text-bamboo-800 block text-xs md:text-sm">【追问启发】：</strong>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.deepenQuestion}</p>
                     </div>
 
                     <div className="bg-stone-50 p-3 rounded-lg border border-stone-300 space-y-1">
-                      <strong className="text-wood-800 block">【朗读指导提示】：</strong>
-                      <p className="text-wood-900 font-medium">{currentLesson.verbatimScript.deepDiveStage.readingGuidance}</p>
+                      <strong className="text-wood-800 block text-xs md:text-sm">【朗读指导提示】：</strong>
+                      <p className={`text-wood-900 font-medium ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.readingGuidance}</p>
                     </div>
                   </div>
                 </div>
@@ -708,7 +765,7 @@ ${currentLesson.speedPlan.homework}`;
                       第4~5步 · 小结与布置作业（07:30 - 10:00）
                     </span>
                   </div>
-                  <div className="space-y-1 text-xs md:text-sm font-serif leading-relaxed bg-white p-3 rounded-lg border border-paper-border">
+                  <div className={`space-y-1 font-serif bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
                     <p className="text-wood-900">{currentLesson.verbatimScript.summaryAndHomeworkStage.summaryLines}</p>
                     <p className="text-wood-700 pt-1">{currentLesson.verbatimScript.summaryAndHomeworkStage.homeworkLines}</p>
                   </div>
@@ -800,14 +857,14 @@ ${currentLesson.speedPlan.homework}`;
                           </div>
                         </div>
 
-                        {/* Paragraph Pure Body Text (Problem 8 & 10) */}
-                        <p className={`indent-8 tracking-wide font-serif text-wood-900 ${fontClass}`}>
+                        {/* Paragraph Pure Body Text (Problem 1) */}
+                        <p className={`indent-8 font-serif text-wood-900 ${currentScale.tab2Para}`}>
                           {para.content}
                         </p>
 
                         {/* Pinyin Notes if available */}
                         {para.pinyinNotes && para.pinyinNotes.length > 0 && (
-                          <div className="mt-3 pt-2.5 border-t border-bamboo-200/60 flex flex-wrap gap-2 text-xs">
+                          <div className={`mt-3 pt-2.5 border-t border-bamboo-200/60 flex flex-wrap gap-2 ${currentScale.tab2Word}`}>
                             <span className="text-bamboo-800 font-bold">【重点词语注释】：</span>
                             {para.pinyinNotes.map((pn, i) => (
                               <span key={i} className="px-2 py-0.5 rounded bg-paper-50 text-wood-800 border border-stone-300 font-serif">
@@ -819,8 +876,8 @@ ${currentLesson.speedPlan.homework}`;
 
                         {/* Existing Paragraph Annotation Display */}
                         {hasNote && !isEditing && (
-                          <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs md:text-sm text-amber-950 font-serif space-y-1 shadow-sm">
-                            <div className="flex items-center justify-between text-[11px] font-bold text-amber-800 pb-1 border-b border-amber-200/60">
+                          <div className={`mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-950 font-serif space-y-1 shadow-sm ${currentScale.tab2Note}`}>
+                            <div className="flex items-center justify-between text-xs font-bold text-amber-800 pb-1 border-b border-amber-200/60">
                               <span className="flex items-center space-x-1">
                                 <span>📝 我的段落备课批注：</span>
                               </span>
@@ -847,7 +904,7 @@ ${currentLesson.speedPlan.homework}`;
                               value={tempParaText}
                               onChange={(e) => setTempParaText(e.target.value)}
                               placeholder="例如：此处模拟点名李同学提问‘这三个动词有何表达效果’；在副板书写上重点生字注音..."
-                              className="w-full p-2.5 text-xs md:text-sm bg-white border border-paper-border rounded-lg focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif"
+                              className={`w-full p-2.5 bg-white border border-paper-border rounded-lg focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif ${currentScale.tab2Note}`}
                             />
                             <div className="flex justify-end space-x-2">
                               <button
@@ -889,7 +946,7 @@ ${currentLesson.speedPlan.homework}`;
                     placeholder="在此记录本篇课文个人的试讲提问设计、导入语调整或板书心得..."
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
-                    className="w-full p-3 text-xs md:text-sm bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed"
+                    className={`w-full p-3 bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed ${currentScale.tab2Note}`}
                   />
                   <div className="flex justify-end">
                     <button
@@ -904,14 +961,24 @@ ${currentLesson.speedPlan.homework}`;
             </div>
           )}
 
-          {/* ================= TAB C: 教材原版 PDF (Problem 9) ================= */}
+          {/* ================= TAB C: 教材原版 PDF (Problem 9 & 4) ================= */}
           {activeTab === 'pdf' && (
             <div className="space-y-4 animate-fadeIn">
-              <PdfViewer
-                fileName={currentLesson.pdfFileName}
-                initialPage={currentLesson.pdfPage}
-                lessonTitle={currentLesson.title}
-              />
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center p-12 space-y-3 bg-stone-100 rounded-2xl border border-paper-border text-center">
+                    <div className="w-8 h-8 border-4 border-bamboo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="font-serif text-sm font-bold text-wood-800">正在异步载入 PDF 阅读器组件...</p>
+                    <p className="font-serif text-xs text-wood-500">已启用分包按需加载，无需等待完整大文件</p>
+                  </div>
+                }
+              >
+                <PdfViewer
+                  fileName={currentLesson.pdfFileName}
+                  initialPage={currentLesson.pdfPage}
+                  lessonTitle={currentLesson.title}
+                />
+              </Suspense>
             </div>
           )}
         </div>

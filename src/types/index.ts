@@ -4,11 +4,12 @@ export type Genre =
   | '文言文'
   | '古诗词'
   | '说明文/新闻/活动'
-  | '议论文/思辨文本';
+  | '议论文/思辨文本'
+  | '写作与表达专项';
 
 export type StarRating = 5 | 4 | 3;
 
-export type StudyStatus = 'unlearned' | 'practicing' | 'mastered';
+export type StudyStatus = 'unlearned' | 'practicing' | 'mastered' | 'review_needed';
 
 export type BookId = '7s' | '7x' | '8s' | '8x' | '9s' | '9x';
 
@@ -133,4 +134,11 @@ export interface ExamSimulationTicket {
   drawTime: string;
   prepDurationSeconds: number;
   trialDurationSeconds: number;
+}
+
+export interface StudySessionRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  minutes: number;
+  completedAt: string;
 }

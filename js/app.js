@@ -1,6 +1,6 @@
 /**
- * 初中语文教师资格证面试智能备考系统 · 核心业务引擎 (app.js)
- * 纯前端驱动、本地存储持久化、真实学习流程优先、拒绝宣传口号
+ * 初中语文教师资格证面试备课与试讲训练 · 核心引擎 (app.js)
+ * 纯前端驱动、真实学习路径优先、彻底去除宣传口号、说人话做实事
  */
 
 (function () {
@@ -10,17 +10,15 @@
   const APP_STATE = {
     currentTab: "home",
     selectedLesson: null,
+    currentWizardStep: 1, // 1~7 步骤
+    currentReaderView: "text", // text | pdf
+    readerFontSize: "font-md",
+
     selectedBookId: "all",
     selectedGenre: "all",
-    selectedStatus: "all", // all | unlearned | learning | completed
+    selectedStatus: "all",
     searchKeyword: "",
-    priorityFilter: "all",
     favoritesOnly: false,
-
-    // 阅读器偏好
-    readerTheme: "paper", // paper | white | night
-    readerFontSize: "font-md", // font-sm | font-md | font-lg
-    readerHighlight: true,
 
     // 计时器状态
     prepDurationMinutes: 10,
@@ -35,30 +33,21 @@
       isRunning: false
     },
 
-    // 1分钟快速导入小练习计时
-    quickLeadTimer: {
-      remainingSeconds: 60,
-      intervalId: null,
-      isRunning: false
-    },
-
-    // 陪练对话
-    sparringDialogues: [],
+    // 提示模式当前步
+    promptCurrentIndex: 0,
 
     // 本地持久化数据
     userData: {
       favorites: [],
-      lessonStatus: {}, // { [lessonId]: 'unlearned' | 'learning' | 'completed' }
+      lessonProgress: {}, // { [lessonId]: { read: true, designed: true, teachTries: 1 } }
+      lessonStatus: {},   // { [lessonId]: 'unlearned' | 'learning' | 'completed' }
       myLessonPlans: {},
       examCount: 0,
       sparringCount: 0,
-      todayChecklist: [false, false, false, false, false],
-      dailyTasks: {},
-      lastActiveDate: ""
+      todayChecklist: [false, false, false, false, false]
     }
   };
 
-  // 预计下半年面试时间：2026年12月5日
   const EXAM_TARGET_DATE = new Date(2026, 11, 5);
 
   // Web Audio 考试提示音
@@ -78,22 +67,23 @@
       osc.start();
       osc.stop(ctx.currentTime + duration);
     } catch (e) {
-      console.warn("Web Audio failed:", e);
+      console.warn("Audio warning:", e);
     }
   }
 
   // 本地存储
-  const STORAGE_KEY = "CHINESE_TEACHER_APP_DATA_V2";
+  const STORAGE_KEY = "CHINESE_TEACHER_APP_DATA_V3";
   function loadUserData() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("CHINESE_TEACHER_APP_DATA_V1");
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("CHINESE_TEACHER_APP_DATA_V2");
       if (saved) {
         APP_STATE.userData = Object.assign(APP_STATE.userData, JSON.parse(saved));
+        if (!APP_STATE.userData.lessonProgress) APP_STATE.userData.lessonProgress = {};
         if (!APP_STATE.userData.lessonStatus) APP_STATE.userData.lessonStatus = {};
         if (!APP_STATE.userData.todayChecklist) APP_STATE.userData.todayChecklist = [false, false, false, false, false];
       }
     } catch (e) {
-      console.error("Failed to load user data:", e);
+      console.error("Failed to load storage:", e);
     }
   }
 
@@ -102,18 +92,16 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE.userData));
       updateGlobalBadges();
     } catch (e) {
-      console.error("Failed to save user data:", e);
+      console.error("Failed to save storage:", e);
     }
   }
 
-  // 格式化时间 mm:ss
   function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
 
-  // 计算倒计时天数
   function getDaysToExam() {
     const now = new Date();
     const diffTime = EXAM_TARGET_DATE - now;
@@ -121,13 +109,12 @@
     return diffDays > 0 ? diffDays : 0;
   }
 
-  // 初始化应用
+  // DOM 就绪启动
   document.addEventListener("DOMContentLoaded", () => {
     loadUserData();
     initUI();
     renderDashboard();
     renderTextbooks();
-    renderTemplates();
     renderStructured();
     renderDefense();
     renderStudyPlan();
@@ -138,29 +125,20 @@
   function initUI() {
     const days = getDaysToExam();
     const badge = document.getElementById("exam-countdown-badge");
-    const heroDays = document.getElementById("hero-countdown-days");
-    if (badge) badge.innerHTML = `<span>⏳ 距12月面试预计还剩</span><strong>${days}</strong><span>天</span>`;
-    if (heroDays) heroDays.textContent = days;
+    if (badge) badge.innerHTML = `<span>⏳ 距12月面试还有</span><strong>${days}</strong><span>天</span>`;
     updateGlobalBadges();
   }
 
   function updateGlobalBadges() {
     const favCount = APP_STATE.userData.favorites.length;
     const examCount = APP_STATE.userData.examCount || 0;
-
     const favBadge = document.getElementById("header-fav-badge");
     if (favBadge) favBadge.textContent = `${favCount} 篇收藏`;
-
     const examBadge = document.getElementById("header-exam-badge");
-    if (examBadge) examBadge.textContent = `${examCount} 次演练`;
-
-    // 侧边栏全部课文总数
-    const totalLessons = window.TEXTBOOK_DB ? window.TEXTBOOK_DB.totalLessons : 146;
-    const sideBadge = document.getElementById("sidebar-total-badge");
-    if (sideBadge) sideBadge.textContent = totalLessons;
+    if (examBadge) examBadge.textContent = `${examCount} 次试讲`;
   }
 
-  // 移动端抽屉控制
+  // 移动端抽屉导航
   window.toggleMobileSidebar = function () {
     const sidebar = document.getElementById("app-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
@@ -179,19 +157,16 @@
     }
   };
 
-  // 主导航标签切换
   const TAB_TITLE_MAP = {
-    "home": "首页任务",
-    "novice": "新手入门 (8步走)",
+    "home": "今天学什么",
     "workbench": "课文备课工作台",
-    "textbooks": "统编初中教材课文库",
-    "mock-exam": "考场备课与试讲演练",
-    "templates": "教师试讲常用表达",
-    "sparring": "分阶段试讲反馈",
-    "genre-templates": "课型教学重点与取舍",
-    "structured": "结构化问答真题",
-    "defense": "考官答辩与追问",
-    "study-plan": "备考规划与打卡",
+    "textbooks": "统编六册课文库",
+    "teach-modes": "试讲训练 (四模式)",
+    "sparring": "师生互动练习",
+    "mock-exam": "教学设计草稿",
+    "structured": "结构化问答",
+    "defense": "考官答辩",
+    "study-plan": "备考排期",
     "saved": "我的教案与收藏"
   };
 
@@ -199,64 +174,37 @@
     APP_STATE.currentTab = tabName;
     closeMobileSidebar();
 
-    // 更新侧边栏激活按钮
     document.querySelectorAll(".sidebar-nav-item").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.tab === tabName);
     });
 
-    // 更新视图
     document.querySelectorAll(".tab-view").forEach(view => {
       view.classList.toggle("active", view.id === `tab-view-${tabName}`);
     });
 
-    // 顶部标题同步
     const titleEl = document.getElementById("current-view-title");
     if (titleEl) titleEl.textContent = TAB_TITLE_MAP[tabName] || "备考学习";
 
-    // 针对特定标签刷新数据
     if (tabName === "home") renderDashboard();
     if (tabName === "textbooks") renderTextbooks();
     if (tabName === "saved") renderSavedPlans();
-    if (tabName === "study-plan") renderStudyPlan();
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 侧边栏册次快捷选择
   window.selectSidebarBook = function (bookId) {
     APP_STATE.selectedBookId = bookId;
     document.querySelectorAll(".sidebar-subnav-item").forEach(item => {
       item.classList.toggle("active", item.id === `subnav-${bookId}`);
     });
-    // 同步课文库中的筛选按钮
     document.querySelectorAll(".chip-book").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.book === bookId);
     });
     renderTextbooks();
   };
 
-  // 1. 首页任务与打卡渲染
+  // 1. 首页逻辑
   function renderDashboard() {
-    const totalLessons = window.TEXTBOOK_DB ? window.TEXTBOOK_DB.totalLessons : 146;
-    const preppedCount = Object.keys(APP_STATE.userData.myLessonPlans).length;
-    const examCount = APP_STATE.userData.examCount || 0;
-    
-    // 统计已学习课文数量
-    const learnedCount = Object.values(APP_STATE.userData.lessonStatus).filter(st => st === "learning" || st === "completed").length;
-
-    const totalEl = document.getElementById("dash-total-lessons");
-    if (totalEl) totalEl.textContent = totalLessons;
-
-    const learnedEl = document.getElementById("dash-learned-lessons");
-    if (learnedEl) learnedEl.textContent = learnedCount;
-
-    const preppedEl = document.getElementById("dash-prepped-lessons");
-    if (preppedEl) preppedEl.textContent = preppedCount;
-
-    const examEl = document.getElementById("dash-exam-count");
-    if (examEl) examEl.textContent = examCount;
-
-    // 今日任务勾选状态同步
     const checklist = APP_STATE.userData.todayChecklist || [false, false, false, false, false];
     checklist.forEach((checked, idx) => {
       const cb = document.getElementById(`check-task-${idx}`);
@@ -268,7 +216,6 @@
     });
   }
 
-  // 切换今日清单任务状态
   window.toggleChecklistTask = function (idx) {
     if (!APP_STATE.userData.todayChecklist) {
       APP_STATE.userData.todayChecklist = [false, false, false, false, false];
@@ -286,31 +233,31 @@
     if (current) playChime(659.25, "sine", 0.2);
   };
 
-  // 随机抽取课文模拟全真面试
   window.startRandomExamSimulation = function () {
     if (!window.TEXTBOOK_DB || !window.TEXTBOOK_DB.lessons) return;
-    // 从五星重点篇目中随机抽取一篇
     const highFreqs = window.TEXTBOOK_DB.lessons.filter(l => l.priority === "★★★★★");
     const pool = highFreqs.length > 0 ? highFreqs : window.TEXTBOOK_DB.lessons;
     const randomLesson = pool[Math.floor(Math.random() * pool.length)];
 
-    if (confirm(`🎲 考场电脑抽题完毕！\n\n您抽到的面试题目为：\n《${randomLesson.title}》（${randomLesson.author} · ${randomLesson.gradeName}）\n\n是否立即进入考场，开始准备简案与试讲？`)) {
-      openLessonWorkbench(randomLesson.fullId);
+    if (confirm(`🎲 考场电脑抽题完毕！\n\n您抽到的面试题目为：\n《${randomLesson.title}》（${randomLesson.author} · ${randomLesson.gradeName}）\n\n是否立即进入考场备课？`)) {
+      startMockExamWithLesson(randomLesson.fullId);
     }
   };
 
   // ===================================================================
-  // 核心：单篇课文双栏学习工作台 (Single Lesson Learning Workbench)
+  // 核心：单篇课文步进式学习工作台 (Step-by-step Guided Workbench)
   // ===================================================================
 
-  window.openLessonWorkbench = function (lessonId) {
+  window.openLessonWorkbench = function (lessonId, initialStep = 1) {
     if (!window.TEXTBOOK_DB) return;
     const lesson = window.TEXTBOOK_DB.lessons.find(l => l.fullId === lessonId);
     if (!lesson) return;
 
     APP_STATE.selectedLesson = lesson;
+    APP_STATE.currentWizardStep = initialStep;
+    APP_STATE.currentReaderView = "text";
 
-    // 更新用户课文学习状态（若是首次接触，置为正在学）
+    // 标记为正在学
     if (!APP_STATE.userData.lessonStatus[lessonId] || APP_STATE.userData.lessonStatus[lessonId] === "unlearned") {
       APP_STATE.userData.lessonStatus[lessonId] = "learning";
       saveUserData();
@@ -319,47 +266,30 @@
     const container = document.getElementById("workbench-container");
     if (!container) return;
 
-    // 切换到工作台视图
     switchTab("workbench");
     const titleEl = document.getElementById("current-view-title");
-    if (titleEl) titleEl.textContent = `《${lesson.title}》· 备课工作台`;
+    if (titleEl) titleEl.textContent = `《${lesson.title}》· 备课与试讲`;
 
-    // 获取课文原文与核心片段数据
-    const textData = window.getLessonTextContent ? window.getLessonTextContent(lesson.fullId) : null;
+    // 读取该课课文正文与PDF页码
+    const textData = window.LESSON_TEXTS_DB && window.LESSON_TEXTS_DB[lesson.fullId] 
+      ? window.LESSON_TEXTS_DB[lesson.fullId] 
+      : (window.getLessonTextContent ? window.getLessonTextContent(lesson.fullId) : null);
+
+    const pdfPage = textData && textData.pdfPage ? textData.pdfPage : (lesson.page + 7);
+    const pdfUrl = encodeURI(lesson.pdfFileName) + `#page=${pdfPage}`;
+
     const isFav = APP_STATE.userData.favorites.includes(lesson.fullId);
-    const status = APP_STATE.userData.lessonStatus[lesson.fullId] || "learning";
 
-    // 动态生成根据文体调整的 10 分钟试讲时间轴
-    const timelineData = getGenreTimelineData(lesson.genre);
-
-    // 渲染双栏工作台
+    // 渲染工作台主结构
     container.innerHTML = `
-      <!-- 工作台顶部栏 -->
-      <div class="workbench-topbar">
-        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          <button class="workbench-back-btn" onclick="switchTab('textbooks')">
-            ← 返回课文列表
-          </button>
-          <div class="workbench-lesson-title-area">
-            <h2 class="workbench-lesson-title">《${lesson.title}》</h2>
-            <span class="workbench-meta-pill">${lesson.author}</span>
-            <span class="workbench-meta-pill">${lesson.gradeName} 第${lesson.unitNumber}单元</span>
-            <span class="workbench-meta-pill" style="background:var(--color-green-light); color:var(--color-green-primary); font-weight:600;">${lesson.genre}</span>
-            <span style="font-size:12px; color:var(--color-gold); font-weight:bold;">${lesson.priority}</span>
-          </div>
-        </div>
-
+      <!-- 课文头部与返回 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
         <div style="display:flex; align-items:center; gap:10px;">
-          <!-- 学习状态快捷切换 -->
-          <div style="display:flex; align-items:center; gap:4px; font-size:13px;">
-            <span style="color:var(--text-muted);">状态：</span>
-            <select class="search-input" style="padding:4px 8px; font-size:12.5px; width:auto;" onchange="setLessonStatus('${lesson.fullId}', this.value)">
-              <option value="unlearned" ${status === 'unlearned' ? 'selected' : ''}>未学习</option>
-              <option value="learning" ${status === 'learning' ? 'selected' : ''}>正在学习</option>
-              <option value="completed" ${status === 'completed' ? 'selected' : ''}>已完成试讲</option>
-            </select>
-          </div>
-
+          <button class="btn-academic" onclick="switchTab('textbooks')">← 选其他课文</button>
+          <h2 style="font-family:var(--font-serif); font-size:20px; font-weight:700;">《${lesson.title}》</h2>
+          <span style="font-size:13px; color:var(--text-muted);">${lesson.author} · ${lesson.gradeName} · ${lesson.genre}</span>
+        </div>
+        <div style="display:flex; gap:8px;">
           <button class="btn-academic" onclick="toggleFavorite('${lesson.fullId}'); this.textContent = APP_STATE.userData.favorites.includes('${lesson.fullId}') ? '★ 已收藏' : '☆ 收藏';">
             ${isFav ? "★ 已收藏" : "☆ 收藏"}
           </button>
@@ -369,388 +299,440 @@
         </div>
       </div>
 
-      <!-- 双栏核心内容 -->
-      <div class="workbench-split">
+      <!-- 步骤导航向导条 (Step Wizard Bar) -->
+      <div class="step-wizard-bar">
+        <button class="wizard-step-btn ${initialStep === 1 ? 'active' : ''}" id="wbtn-1" onclick="switchWizardStep(1)">
+          <span class="step-idx">1</span> 读课文原文
+        </button>
+        <button class="wizard-step-btn ${initialStep === 2 ? 'active' : ''}" id="wbtn-2" onclick="switchWizardStep(2)">
+          <span class="step-idx">2</span> 搞懂主要内容
+        </button>
+        <button class="wizard-step-btn ${initialStep === 3 ? 'active' : ''}" id="wbtn-3" onclick="switchWizardStep(3)">
+          <span class="step-idx">3</span> 选出10分钟重点
+        </button>
+        <button class="wizard-step-btn ${initialStep === 4 ? 'active' : ''}" id="wbtn-4" onclick="switchWizardStep(4)">
+          <span class="step-idx">4</span> 确定这节课教什么
+        </button>
+        <button class="wizard-step-btn ${initialStep === 5 ? 'active' : ''}" id="wbtn-5" onclick="switchWizardStep(5)">
+          <span class="step-idx">5</span> 课堂师生怎么说
+        </button>
+        <button class="wizard-step-btn ${initialStep === 6 ? 'active' : ''}" id="wbtn-6" onclick="switchWizardStep(6)">
+          <span class="step-idx">6</span> 整理草稿与板书
+        </button>
+        <button class="wizard-step-btn ${initialStep === 7 ? 'active' : ''}" id="wbtn-7" onclick="switchWizardStep(7)">
+          <span class="step-idx">7</span> 试讲练习 (4模式)
+        </button>
+      </div>
 
-        <!-- 左栏：教材原文阅读器 -->
-        <div class="reader-panel ${APP_STATE.readerTheme === 'white' ? 'theme-white' : APP_STATE.readerTheme === 'night' ? 'theme-night' : ''}" id="reader-panel-box">
-          <!-- 阅读器工具栏 -->
-          <div class="reader-toolbar">
-            <div class="reader-tools-group">
-              <span style="font-weight:600;">📖 课文原文</span>
-              <a href="${encodeURI(lesson.pdfFileName)}" target="_blank" style="color:var(--color-green-primary); text-decoration:none; margin-left:6px;" title="在浏览器新标签页中打开统编教材PDF原书第${lesson.page}页">
-                原书第${lesson.page}页 ↗
-              </a>
-            </div>
-
-            <div class="reader-tools-group">
-              <!-- 字号调节 -->
-              <span style="color:var(--text-muted);">字号：</span>
-              <button class="reader-tool-btn ${APP_STATE.readerFontSize === 'font-sm' ? 'active' : ''}" onclick="setReaderFontSize('font-sm')">小</button>
-              <button class="reader-tool-btn ${APP_STATE.readerFontSize === 'font-md' ? 'active' : ''}" onclick="setReaderFontSize('font-md')">中</button>
-              <button class="reader-tool-btn ${APP_STATE.readerFontSize === 'font-lg' ? 'active' : ''}" onclick="setReaderFontSize('font-lg')">大</button>
-
-              <!-- 底色切换 -->
-              <span style="color:var(--text-muted); margin-left:6px;">底色：</span>
-              <button class="reader-tool-btn ${APP_STATE.readerTheme === 'paper' ? 'active' : ''}" onclick="setReaderTheme('paper')">宣纸</button>
-              <button class="reader-tool-btn ${APP_STATE.readerTheme === 'white' ? 'active' : ''}" onclick="setReaderTheme('white')">纯白</button>
-              <button class="reader-tool-btn ${APP_STATE.readerTheme === 'night' ? 'active' : ''}" onclick="setReaderTheme('night')">夜间</button>
-
-              <!-- 高亮开关 -->
-              <button class="reader-tool-btn ${APP_STATE.readerHighlight ? 'active' : ''}" style="margin-left:6px;" onclick="toggleReaderHighlight()">
-                ${APP_STATE.readerHighlight ? "高亮开" : "高亮关"}
-              </button>
+      <!-- 步骤 1：读课文 (双重视图：纯净正文 + 原版PDF嵌入) -->
+      <div class="wizard-stage-content ${initialStep === 1 ? 'active' : ''}" id="wstage-1">
+        <div class="academic-card">
+          <div class="card-title">
+            <span>第一步：在网页内通读课文（先别急着备课，先看课文写了什么）</span>
+            <div class="reader-view-tabs">
+              <button class="reader-view-tab active" id="rv-tab-text" onclick="switchReaderView('text')">📝 纯净正文阅读</button>
+              <button class="reader-view-tab" id="rv-tab-pdf" onclick="switchReaderView('pdf')">📄 教材原版PDF对照（第${lesson.page}页）</button>
             </div>
           </div>
 
-          <!-- 正文滚动区 -->
-          <div class="reader-content ${APP_STATE.readerFontSize} ${APP_STATE.readerHighlight ? 'highlight-on' : ''}" id="reader-content-scroll">
-            <div style="text-align:center; margin-bottom:18px;">
-              <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:700;">${lesson.title}</h3>
-              <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">${lesson.author}</p>
-            </div>
-
-            ${textData ? textData.paragraphs.map(p => `
-              <div class="reader-paragraph ${p.highlight ? 'is-core' : ''}">
-                ${p.sectionName ? `<div class="reader-clip-badge">📍 ${p.sectionName}</div>` : ''}
-                <p>${p.highlight ? `<mark>${p.text}</mark>` : p.text}</p>
+          <!-- 视图 A：纯净正文 -->
+          <div id="reader-view-text-panel">
+            <div class="reader-box">
+              <div style="text-align:center; margin-bottom:16px;">
+                <h3 style="font-family:var(--font-serif); font-size:20px; font-weight:700;">${lesson.title}</h3>
+                <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">${lesson.author}</div>
               </div>
-            `).join("") : `
-              <div class="reader-paragraph">
-                <p>${lesson.mainContent}</p>
-              </div>
-            `}
-
-            <div style="margin-top:24px; padding:12px 14px; background:rgba(58,107,78,0.06); border-radius:var(--radius-sm); font-size:12.5px; color:var(--text-secondary);">
-              💡 <strong>阅读提示：</strong>如果需要对照统编教材原文插图、旁批与课后研讨练习，请点击工具栏的【原书第${lesson.page}页 ↗】查阅本地电子课本。
+              ${renderLessonTextHtml(textData, lesson)}
             </div>
+          </div>
+
+          <!-- 视图 B：内置教材原版 PDF 嵌入 -->
+          <div id="reader-view-pdf-panel" style="display:none;">
+            <div class="embedded-pdf-wrapper">
+              <iframe src="${pdfUrl}" class="embedded-pdf-iframe" title="教材原版PDF预览"></iframe>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">
+              💡 提示：如部分浏览器对本地嵌入 PDF 有拦截，可直接点击工具栏或查看纯净文本。
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+            <button class="btn-academic primary" onclick="switchWizardStep(2)">
+              我已经读完课文了，下一步：搞懂内容 →
+            </button>
           </div>
         </div>
+      </div>
 
-        <!-- 右栏：教法备课指导与实战工作台 -->
-        <div class="coach-panel">
+      <!-- 步骤 2：读懂它 (用一句话概括) -->
+      <div class="wizard-stage-content ${initialStep === 2 ? 'active' : ''}" id="wstage-2">
+        <div class="academic-card">
+          <h3 class="card-title">第二步：用一句话说说这篇课文主要写了什么？</h3>
+          <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.6;">
+            不要把问题想得太复杂。先试着用你自己的话说一说：
+          </p>
 
-          <!-- 模块1：10分钟重点取舍（极重要！） -->
-          <div class="academic-card">
-            <h3 class="card-title">
-              <span>🎯 这篇课文 10 分钟怎么取舍？</span>
-            </h3>
-            
-            <div class="tradeoff-grid">
-              <div class="tradeoff-card yes">
-                <div class="tradeoff-header">✅ 10分钟适合讲什么（只抓1个切片）</div>
-                <div>${lesson.sampleFocus || lesson.interviewKeyPoint}</div>
-              </div>
-              <div class="tradeoff-card no">
-                <div class="tradeoff-header">❌ 10分钟绝对不要讲什么（避坑警告）</div>
-                <div>${getLessonNotToTeachWarning(lesson)}</div>
-              </div>
+          <div class="think-box">
+            <label style="font-weight:600; font-size:13px;">请先自己想想并试着写一句：</label>
+            <textarea rows="3" placeholder="例如：这篇文章主要写了作者在春天看到的……，表达了作者对……"></textarea>
+            <button class="tip-reveal-btn" onclick="toggleTipReveal('tip-content-2')">
+              👉 点我看老师是怎么概括的
+            </button>
+            <div class="tip-reveal-content" id="tip-content-2">
+              <strong>老师的简明概括：</strong><br>
+              ${lesson.mainContent}<br><br>
+              <strong>为什么写这篇课文：</strong>${lesson.emotion}
             </div>
           </div>
 
-          <!-- 模块2：如果你完全不会讲，照着这几步准备 -->
-          <div class="academic-card">
-            <h3 class="card-title">
-              <span>📝 如果你完全不会讲，照着这几步准备（新手保姆级）</span>
-            </h3>
-            <div class="novice-stepper" style="margin-top:0;">
-              <div class="novice-step-card" style="padding:14px 16px;">
-                <div class="step-header" style="margin-bottom:6px;">
-                  <div class="step-number">1</div>
-                  <div class="step-title" style="font-size:14.5px;">文体判断与这节课的定位</div>
-                </div>
-                <div class="step-body" style="padding-left:36px; font-size:13.5px;">
-                  这篇课文属于<strong>【${lesson.genre}】</strong>。今天这10分钟试讲，不要讲成整篇梳理课，而要定位为：<strong>“抓住核心语段，带学生品析语言与情感的精读片段课”</strong>。
-                </div>
-              </div>
-
-              <div class="novice-step-card" style="padding:14px 16px;">
-                <div class="step-header" style="margin-bottom:6px;">
-                  <div class="step-number">2</div>
-                  <div class="step-title" style="font-size:14.5px;">确定本节课的2个实在目标</div>
-                </div>
-                <div class="step-body" style="padding-left:36px; font-size:13.5px;">
-                  <div><strong>目标一（语言与技能）：</strong>${lesson.teachingDesign.targets.knowledge}</div>
-                  <div style="margin-top:4px;"><strong>目标二（情感与思考）：</strong>${lesson.teachingDesign.targets.emotion}</div>
-                </div>
-              </div>
-
-              <div class="novice-step-card" style="padding:14px 16px;">
-                <div class="step-header" style="margin-bottom:6px;">
-                  <div class="step-number">3</div>
-                  <div class="step-title" style="font-size:14.5px;">设计一个直奔主题的核心主问题</div>
-                </div>
-                <div class="step-body" style="padding-left:36px; font-size:13.5px;">
-                  <strong>主问题建议：</strong>“请同学们默读核心语段，圈画出最能体现作者情感的词句，结合修辞手法说说好在哪里？”<br>
-                  <small style="color:var(--text-muted);">（第一问让学生找原文依据，第二问引导追问为什么好，课堂节奏最自然）</small>
-                </div>
-              </div>
-            </div>
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <button class="btn-academic" onclick="switchWizardStep(1)">← 上一步：重读课文</button>
+            <button class="btn-academic primary" onclick="switchWizardStep(3)">下一步：确定10分钟讲哪里 →</button>
           </div>
-
-          <!-- 模块3：10分钟试讲结构时间轴（随文体动态调整） -->
-          <div class="timeline-meter">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <h4 style="font-family:var(--font-serif); font-size:15.5px; font-weight:700;">⏱️ 10分钟试讲时间分配（${lesson.genre}课型）</h4>
-              <span style="font-size:12px; color:var(--color-green-primary); font-weight:600;">核心黄金段占50%时间</span>
-            </div>
-            <div class="timeline-bar">
-              <div class="timeline-segment segment-p1" style="width:${timelineData.p1_pct}%;" title="导入：${timelineData.p1}">导入 ${timelineData.p1_time}</div>
-              <div class="timeline-segment segment-p2" style="width:${timelineData.p2_pct}%;" title="初读：${timelineData.p2}">初读 ${timelineData.p2_time}</div>
-              <div class="timeline-segment segment-p3" style="width:${timelineData.p3_pct}%;" title="精读核心：${timelineData.p3}">精读核心品析（主阵地） ${timelineData.p3_time}</div>
-              <div class="timeline-segment segment-p4" style="width:${timelineData.p4_pct}%;" title="小结：${timelineData.p4}">小结 ${timelineData.p4_time}</div>
-              <div class="timeline-segment segment-p5" style="width:${timelineData.p5_pct}%;" title="作业：${timelineData.p5}">作业 ${timelineData.p5_time}</div>
-            </div>
-            <div class="timeline-legend">
-              <span>0:00 导入新课</span>
-              <span>1:00 进入文本</span>
-              <span>2:30 展开师生核心互动</span>
-              <span>7:30 拓展小结</span>
-              <span>10:00 礼貌下课</span>
-            </div>
-          </div>
-
-          <!-- 模块4：教师到底应该说什么？口语化台词示范（说人话、绝无AI腔） -->
-          <div class="academic-card">
-            <h3 class="card-title">
-              <span>💬 站上讲台到底应该怎么说？（教师口语示范）</span>
-            </h3>
-            <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
-              照着下面的语气和台词读一遍，找一找把课堂交给学生的感觉：
-            </p>
-
-            <div class="dialogue-demo-box">
-              <!-- 环节1：导入示范 -->
-              <div class="dialogue-item">
-                <span class="dialogue-role-badge teacher">教师导入</span>
-                <div class="dialogue-bubble teacher">
-                  “同学们好，请坐！上课前，大家先看大屏幕上的几幅图景（或者回想一下日常生活的经验）……今天，我们跟随作家${lesson.author}的笔触，一同走进课文——请看黑板，今天我们学习《${lesson.title}》。（顺手在黑板上方工整写下课题和作者）”
-                  <div class="dialogue-tip">💡 贴士：1分钟内迅速切入课题，课题写完立刻让学生翻开课本，千万不要在导入环节长篇大论。</div>
-                </div>
-              </div>
-
-              <!-- 环节2：提问与初读示范 -->
-              <div class="dialogue-item">
-                <span class="dialogue-role-badge teacher">教师提问</span>
-                <div class="dialogue-bubble teacher">
-                  “请同学们自由朗读课文，把字音读准、句子读顺，同时思考一个问题：作者在这篇文章中，最浓墨重彩描摹的是哪一处景致/哪一个人物细节？把打动你的句子用波浪线画下来。”
-                </div>
-              </div>
-
-              <!-- 环节3：模拟学生作答与教师追问 -->
-              <div class="dialogue-item">
-                <span class="dialogue-role-badge student">模拟学生</span>
-                <div class="dialogue-bubble student">
-                  “老师，我找到了第X段！这里作者写‘……’，我觉得写得特别好，把那种生机/那种感情全写活了！”
-                </div>
-              </div>
-
-              <div class="dialogue-item">
-                <span class="dialogue-role-badge teacher">教师点拨</span>
-                <div class="dialogue-bubble teacher">
-                  “你的语感非常敏锐，请坐！大家顺着他的发现往下看——作者在这里用了一个非常关键的词句，如果老师把这个字换成普通的词，表达效果有什么不一样呢？同桌之间交流30秒……”
-                  <div class="dialogue-tip">💡 贴士：不要只说‘很好请坐’！一定要把学生的答案提炼一句，再顺势追问下一个层次，考官最看重这个！</div>
-                </div>
-              </div>
-
-              <!-- 环节4：小结与作业示范 -->
-              <div class="dialogue-item">
-                <span class="dialogue-role-badge teacher">小结与作业</span>
-                <div class="dialogue-bubble teacher">
-                  “今天这节课，我们通过反复朗读和细细品味，感受到了《${lesson.title}》中语言的魅力与深情。课后请大家完成两项作业：基础作业是把文中的优美句子摘抄在积累本上；拓展作业是仿照课文的描写手法，写一段身边的一处景物或一个生活细节。好，下课！同学们再见。（面向考官鞠躬）各位评委老师，我的试讲到此结束，谢谢老师！”
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 模块5：规范黑板板书建议 -->
-          <div class="academic-card">
-            <h3 class="card-title">
-              <span>📋 黑板板书示范（粉笔字版式）</span>
-            </h3>
-            <div class="blackboard-box">
-              <div style="text-align:center; font-size:18px; margin-bottom:12px;" class="chalk-yellow">
-                《${lesson.title}》 ${lesson.author}
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; font-size:13.5px;">
-                <div>
-                  <div class="chalk-yellow" style="margin-bottom:4px;">【梳理感知】</div>
-                  <div class="chalk-white">${lesson.teachingDesign.blackboardDesign.left}</div>
-                </div>
-                <div style="border-left:1px dashed rgba(255,255,255,0.25); border-right:1px dashed rgba(255,255,255,0.25); padding:0 12px;">
-                  <div class="chalk-yellow" style="margin-bottom:4px;">【品析探究】</div>
-                  <div class="chalk-white">${lesson.teachingDesign.blackboardDesign.center}</div>
-                </div>
-                <div>
-                  <div class="chalk-yellow" style="margin-bottom:4px;">【主旨升华】</div>
-                  <div class="chalk-white">${lesson.teachingDesign.blackboardDesign.right}</div>
-                </div>
-              </div>
-            </div>
-            <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">
-              💡 <strong>板书黄金法则：</strong>导入时写课题与作者；初读写左侧；精读时边问学生边在中间写下2~3个核心词；总结时写右侧主旨。千万别在最后1分钟集中抄写！
-            </p>
-          </div>
-
-          <!-- 模块6：三步练一练 -->
-          <div class="academic-card" style="border:2px solid var(--color-green-primary); background:#FAFCF9;">
-            <h3 class="card-title" style="color:var(--color-green-primary); border-bottom-color:var(--color-green-border);">
-              <span>🚀 现在就练一练：三步循序渐进</span>
-            </h3>
-            
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:8px;">
-              <div style="background:#FFFFFF; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; text-align:center;">
-                <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">第1步：开嗓朗读</div>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">看着上面的教师台词，大声朗读一遍，克服开口羞怯感。</p>
-                <button class="btn-academic" style="width:100%; font-size:12.5px;" onclick="playChime(659.25, 'sine', 0.2); alert('太棒了！只要敢开口说出第一句，你已经战胜了80%的初学者！接下来尝试第2步。');">
-                  已完成朗读 ✓
-                </button>
-              </div>
-
-              <div style="background:#FFFFFF; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; text-align:center;">
-                <div style="font-weight:700; color:var(--color-green-primary); margin-bottom:4px;">第2步：1分钟导入小练</div>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">不看稿子，用60秒说一遍《${lesson.title}》的新课导入。</p>
-                <button class="btn-academic primary" style="width:100%; font-size:12.5px;" id="btn-quick-lead" onclick="toggleQuickLeadTimer()">
-                  开始60秒挑战 ⏱️
-                </button>
-              </div>
-
-              <div style="background:#FFFFFF; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; text-align:center;">
-                <div style="font-weight:700; color:#8C5611; margin-bottom:4px;">第3步：10分钟完整试讲</div>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">带上简案纸与计时器，完整讲完这篇课文。</p>
-                <button class="btn-academic gold" style="width:100%; font-size:12.5px;" onclick="startMockExamWithLesson('${lesson.fullId}')">
-                  进入考场试讲 🎯
-                </button>
-              </div>
-            </div>
-          </div>
-
         </div>
+      </div>
 
+      <!-- 步骤 3：选重点 (10分钟讲什么 vs 绝对不讲什么) -->
+      <div class="wizard-stage-content ${initialStep === 3 ? 'active' : ''}" id="wstage-3">
+        <div class="academic-card">
+          <h3 class="card-title">第三步：10分钟到底讲哪里？（极关键，严禁贪多！）</h3>
+          <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+            很多考生第一次试讲挂科，就是因为<strong>“试图在10分钟里把整篇课文从头讲到尾”</strong>。考官只要听前3分钟，发现你讲不完，就会直接扣分。必须学会取舍：
+          </p>
+
+          <div class="tradeoff-box-yes">
+            <div style="font-weight:700; margin-bottom:4px;">✅ 10分钟只讲这一个核心切片：</div>
+            <div>${lesson.sampleFocus || lesson.interviewKeyPoint}</div>
+            <div style="margin-top:6px; font-size:12.5px; color:#1F452E;">
+              <strong>为什么选这里？</strong>因为这一段修辞最丰富、动词最传神，最容易带假想学生开展“指名朗读、品味关键词、顺势追问”。
+            </div>
+          </div>
+
+          <div class="tradeoff-box-no">
+            <div style="font-weight:700; margin-bottom:4px;">❌ 10分钟绝对不要讲什么（避坑清醒剂）：</div>
+            <div>${getLessonNotToTeachWarning(lesson)}</div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <button class="btn-academic" onclick="switchWizardStep(2)">← 上一步</button>
+            <button class="btn-academic primary" onclick="switchWizardStep(4)">下一步：确定教学目标 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤 4：定目标 (用大白话说，先别背套话) -->
+      <div class="wizard-stage-content ${initialStep === 4 ? 'active' : ''}" id="wstage-4">
+        <div class="academic-card">
+          <h3 class="card-title">第四步：这节课你想让学生学会什么？</h3>
+          <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+            很多同学一看到“三维教学目标”就头大。先别去死记那些专业大词，用平时说话的方式想一想：<strong>“讲完这10分钟，学生下课能带走哪两个具体收获？”</strong>
+          </p>
+
+          <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:16px; margin:14px 0; font-size:14px; line-height:1.8;">
+            <div>
+              <strong>① 语言知识上（教学生品析）：</strong><br>
+              ${lesson.teachingDesign.targets.knowledge}
+            </div>
+            <div style="margin-top:10px;">
+              <strong>② 思想情感上（带学生体会）：</strong><br>
+              ${lesson.teachingDesign.targets.emotion}
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <button class="btn-academic" onclick="switchWizardStep(3)">← 上一步</button>
+            <button class="btn-academic primary" onclick="switchWizardStep(5)">下一步：看看老师怎么说台词 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤 5：师生对话与台词示范 (自然、接地气) -->
+      <div class="wizard-stage-content ${initialStep === 5 ? 'active' : ''}" id="wstage-5">
+        <div class="academic-card">
+          <h3 class="card-title">第五步：老师到底应该怎么说？（真实口语台词示范）</h3>
+          <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:12px;">
+            别讲得像在读论文！照着下面的话念出声，看看有亲和力的语文老师是怎么说话的：
+          </p>
+
+          <div class="classroom-dialogue-block">
+            <!-- 导入台词 -->
+            <div class="speech-bubble teacher">
+              <strong>【开场导入（1分钟内结束）】</strong><br>
+              “同学们好，请坐！上课前，大家先回忆一下，平时在你眼里，春天是什么样子的？……有同学说鸟语花香、天气暖和。那在著名作家朱自清先生的笔下，春天又是怎样的风貌呢？今天，我们就一起翻开课本第2页，走进课文《${lesson.title}》。（顺手在黑板正上方写下课题和作者）”
+            </div>
+
+            <!-- 第一个问题 -->
+            <div class="speech-bubble teacher">
+              <strong>【提出核心主问题（千万别问太大）】</strong><br>
+              “请同学们自由大声朗读第4段，圈画出作者描写春花时用到的颜色词和比喻句。注意思考：这些词句好在哪里？”
+              <div style="font-size:12px; color:var(--color-gold); margin-top:4px;">
+                💡 为什么这么问？如果直接问‘大家觉得春花美不美’，学生只会答‘美’，没法接话；问具体颜色和修辞，学生才能翻课本找依据。
+              </div>
+            </div>
+
+            <!-- 学生4种反应与老师怎么接 -->
+            <div style="margin-top:8px;">
+              <h4 style="font-size:14px; font-weight:bold; color:var(--text-primary); margin-bottom:8px;">
+                👨‍🎓 模拟学生4种不同回答，你该怎么接？
+              </h4>
+
+              <!-- 场景A：答得很好 -->
+              <div class="speech-bubble student" style="margin-bottom:8px;">
+                <strong>情况 A：学生回答完全正确</strong><br>
+                学生小明：“老师，我找到了‘红的像火，粉的像霞，白的像雪’，这里用了排比和比喻，写出了花很多很艳！”<br>
+                <div style="margin-top:6px; color:var(--color-green-primary); font-weight:600;">
+                  老师接话示范：“小明找得真准确，请坐！大家看这三个比喻，不仅写出了色彩的丰富，还按照由浓到淡的视觉层次来写。那老师再追问一句……”
+                </div>
+              </div>
+
+              <!-- 场景B：答得比较浅/只有半句 -->
+              <div class="speech-bubble student" style="margin-bottom:8px;">
+                <strong>情况 B：学生回答很短/只有半句</strong><br>
+                学生小华：“老师，我觉得‘闹’这个字写得好。”<br>
+                <div style="margin-top:6px; color:var(--color-green-primary); font-weight:600;">
+                  老师接话示范：“小华有一双善于发现细节的眼睛！‘闹’字确实是点睛之笔。那老师想请问，明明是在写蜜蜂的声音，为什么作者不用‘叫’，而要用‘闹’呢？同桌之间讨论一下……”
+                </div>
+              </div>
+
+              <!-- 场景C：答非所问或有些走偏 -->
+              <div class="speech-bubble student">
+                <strong>情况 C：学生答偏了</strong><br>
+                学生小军：“老师，我觉得是因为春天有蜜蜂可以采蜂蜜吃。”<br>
+                <div style="margin-top:6px; color:var(--color-green-primary); font-weight:600;">
+                  老师接话示范：“小军同学非常热爱生活，还想到了香甜的蜂蜜！不过我们再仔细看看原文，满树的桃花和嗡嗡的蜜蜂，是不是把原本安静的春天写得像过节一样热闹？这就叫‘化静为动’……”
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <button class="btn-academic" onclick="switchWizardStep(4)">← 上一步</button>
+            <button class="btn-academic primary" onclick="switchWizardStep(6)">下一步：整理简案与板书 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤 6：写简案与板书 -->
+      <div class="wizard-stage-content ${initialStep === 6 ? 'active' : ''}" id="wstage-6">
+        <div class="academic-card">
+          <h3 class="card-title">第六步：黑板板书与草稿纸怎么写？</h3>
+          <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+            草稿纸只是提纲，字迹工整、自己看得清即可。黑板板书按“左脉络、中重点、右主旨”布局：
+          </p>
+
+          <div class="blackboard-view">
+            <div style="text-align:center; font-size:18px; margin-bottom:12px; color:var(--color-chalk-yellow);">
+              《${lesson.title}》 ${lesson.author}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+              <div>
+                <div style="color:var(--color-chalk-yellow); margin-bottom:4px;">【整体图景】</div>
+                <div>春草图 · 萌发<br>春花图 · 争艳<br>春风图 · 和煦</div>
+              </div>
+              <div style="border-left:1px dashed rgba(255,255,255,0.2); border-right:1px dashed rgba(255,255,255,0.2); padding:0 10px;">
+                <div style="color:var(--color-chalk-yellow); margin-bottom:4px;">【春花图品析】</div>
+                <div>色：火、霞、雪（比喻）<br>态：你不让我我不让你（拟人）<br>声：嗡嗡地闹着（以动写静）</div>
+              </div>
+              <div>
+                <div style="color:var(--color-chalk-yellow); margin-bottom:4px;">【情感升华】</div>
+                <div>赞美生机<br>向往希望</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <button class="btn-academic" onclick="switchWizardStep(5)">← 上一步</button>
+            <button class="btn-academic primary" onclick="switchWizardStep(7)">最后一步：去试讲训练 🚀</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤 7：四种试讲模式 (实战开口) -->
+      <div class="wizard-stage-content ${initialStep === 7 ? 'active' : ''}" id="wstage-7">
+        <div class="academic-card">
+          <h3 class="card-title">第七步：开口试讲！选择最适合你当前水平的模式</h3>
+          <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+            别怕卡壳，每一个优秀的老师都是从磕磕绊绊念稿子开始的。循序渐进练习：
+          </p>
+
+          <div class="teach-modes-grid">
+            <div class="teach-mode-card" style="border-top:3px solid var(--color-green-primary);" onclick="startFollowAlongMode()">
+              <div class="mode-name">① 跟练模式（有提示，跟着读）</div>
+              <div class="mode-desc">屏幕显示一段示范台词，你大声念一段，先习惯把自己的声音放出来。</div>
+              <button class="btn-academic primary" style="font-size:12.5px;">开始大声跟读 →</button>
+            </div>
+
+            <div class="teach-mode-card" style="border-top:3px solid var(--color-gold);" onclick="startPromptMode()">
+              <div class="mode-name">② 提示模式（卡住点一下提示）</div>
+              <div class="mode-desc">自己试着讲，讲到一半卡壳时点击【提示我】，老教师给你提个醒。</div>
+              <button class="btn-academic" style="font-size:12.5px;">开始提示练习 →</button>
+            </div>
+
+            <div class="teach-mode-card" style="border-top:3px solid var(--color-blue);" onclick="startIndependentMode()">
+              <div class="mode-name">③ 独立练习（10分钟只计时）</div>
+              <div class="mode-desc">面对镜子或屏幕，不看任何提示，自己从头讲到尾，测试时间控制。</div>
+              <button class="btn-academic" style="font-size:12.5px;">进入10分钟计时 →</button>
+            </div>
+
+            <div class="teach-mode-card" style="border-top:3px solid var(--color-red);" onclick="startMockExamWithLesson('${lesson.fullId}')">
+              <div class="mode-name">④ 考场模拟（备课+试讲+答辩）</div>
+              <div class="mode-desc">完整25分钟考场实战，检验手写简案与从容试讲的综合水平。</div>
+              <button class="btn-academic gold" style="font-size:12.5px;">进入考场全流程 →</button>
+            </div>
+          </div>
+
+          <!-- 跟练/提示交互区域 -->
+          <div id="interactive-practice-area" style="display:none; margin-top:20px; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:18px;">
+            <div id="practice-interactive-content"></div>
+          </div>
+        </div>
       </div>
     `;
 
-    // 滚动到顶部
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 辅助：获取课文“千万不要讲什么”的警示
+  // 渲染课文段落 HTML
+  function renderLessonTextHtml(textData, lesson) {
+    if (textData && textData.paragraphs && textData.paragraphs.length > 0) {
+      return textData.paragraphs.map(p => `
+        <div class="reader-para ${p.highlight ? 'core-highlight' : ''}">
+          ${p.text}
+        </div>
+      `).join("");
+    }
+    if (textData && textData.rawText) {
+      return `<div class="reader-para" style="white-space:pre-line;">${textData.rawText}</div>`;
+    }
+    return `<div class="reader-para">${lesson.mainContent}</div>`;
+  }
+
+  // 步骤切换
+  window.switchWizardStep = function (stepIdx) {
+    APP_STATE.currentWizardStep = stepIdx;
+    document.querySelectorAll(".wizard-step-btn").forEach((btn, idx) => {
+      btn.classList.toggle("active", idx + 1 === stepIdx);
+    });
+    document.querySelectorAll(".wizard-stage-content").forEach((stage, idx) => {
+      stage.classList.toggle("active", idx + 1 === stepIdx);
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // 阅读器切换：纯净文字 vs 原版教材PDF嵌入
+  window.switchReaderView = function (viewType) {
+    APP_STATE.currentReaderView = viewType;
+    document.getElementById("rv-tab-text").classList.toggle("active", viewType === "text");
+    document.getElementById("rv-tab-pdf").classList.toggle("active", viewType === "pdf");
+    document.getElementById("reader-view-text-panel").style.display = viewType === "text" ? "block" : "none";
+    document.getElementById("reader-view-pdf-panel").style.display = viewType === "pdf" ? "block" : "none";
+  };
+
+  // 折叠提示展开
+  window.toggleTipReveal = function (contentId) {
+    const el = document.getElementById(contentId);
+    if (el) {
+      const isHidden = el.style.display === "none" || !el.style.display;
+      el.style.display = isHidden ? "block" : "none";
+    }
+  };
+
+  // 辅导模式1：大声跟练
+  window.startFollowAlongMode = function () {
+    const area = document.getElementById("interactive-practice-area");
+    const content = document.getElementById("practice-interactive-content");
+    if (!area || !content) return;
+
+    area.style.display = "block";
+    const lesson = APP_STATE.selectedLesson || { title: "《春》" };
+
+    content.innerHTML = `
+      <div style="font-size:15px; font-weight:700; margin-bottom:10px;">
+        📢 跟练模式：大声把下面每一句台词读出来
+      </div>
+      <div style="background:#FFFFFF; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:14px; font-size:14.5px; line-height:1.75; margin-bottom:12px;">
+        “同学们好，请坐！上课前，大家回想一下，在你眼里春天是什么样子的？今天我们一起来看看朱自清笔下的春天有何不同，请看黑板——《${lesson.title}》。”
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12.5px; color:var(--text-muted);">读完这句，是不是觉得开口并没有那么难？</span>
+        <button class="btn-academic primary" onclick="playChime(659.25, 'sine', 0.2); alert('很棒！声音宏亮，教态自然。可以尝试进入模式2或模式3！');">
+          我读完了 ✓
+        </button>
+      </div>
+    `;
+  };
+
+  // 辅导模式2：提示模式
+  window.startPromptMode = function () {
+    const area = document.getElementById("interactive-practice-area");
+    const content = document.getElementById("practice-interactive-content");
+    if (!area || !content) return;
+
+    area.style.display = "block";
+    APP_STATE.promptCurrentIndex = 0;
+
+    const prompts = [
+      "第1步：新课导入 —— 亲切问好，以生活体验引出课题，在黑板正上方写好题目和作者。",
+      "第2步：整体感知 —— 提出朗读要求，明确告诉学生今天重点研读核心段落（如春花图）。",
+      "第3步：精读核心 —— 提出第一个具体问题，问学生写了哪些颜色和修辞，留出思考停顿。",
+      "第4步：启发追问 —— 假想学生小明回答了，肯定其答案并顺势追问这个动词好在哪里。",
+      "第5步：课堂小结 —— 师生共同回顾板书重点，布置分层作业，下课致谢鞠躬。"
+    ];
+
+    function showPrompt(idx) {
+      content.innerHTML = `
+        <div style="font-size:15px; font-weight:700; margin-bottom:10px;">
+          💡 提示模式（当前第 ${idx + 1} / ${prompts.length} 步）
+        </div>
+        <div style="background:#FFFFFF; border-left:4px solid var(--color-gold); padding:12px 14px; font-size:14px; line-height:1.7; margin-bottom:12px;">
+          ${prompts[idx]}
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <button class="btn-academic" ${idx === 0 ? 'disabled' : ''} onclick="window.prevPrompt(${idx})">上一环节</button>
+          <button class="btn-academic primary" onclick="window.nextPrompt(${idx})">
+            ${idx + 1 === prompts.length ? '完成全流程练习 🎉' : '讲完这句，下一步 →'}
+          </button>
+        </div>
+      `;
+    }
+
+    window.nextPrompt = function (idx) {
+      if (idx + 1 < prompts.length) {
+        showPrompt(idx + 1);
+      } else {
+        alert("太棒了！你已经顺利走完了这篇课文的完整试讲流程！");
+      }
+    };
+
+    window.prevPrompt = function (idx) {
+      if (idx > 0) showPrompt(idx - 1);
+    };
+
+    showPrompt(0);
+  };
+
+  // 模式3：独立计时
+  window.startIndependentMode = function () {
+    switchTab("mock-exam");
+  };
+
   function getLessonNotToTeachWarning(lesson) {
     if (lesson.genre.includes("散文")) {
-      return "千万不要试图把文中所有景物片段全部讲完！绝对讲不完！也不要在作者生平背景上花费超过1分钟，更不要在字词拼音上纠缠太久。";
+      return "千万不要把全文所有景物全部讲完！10分钟绝对不够！也不要花超过1分钟去介绍作者生平背景，更不要在字词拼音上纠缠太久。";
     } else if (lesson.genre.includes("小说")) {
-      return "不要从头到尾复述故事长篇情节！不要把小说全部人物都拿来分析，抓1个最典型的人物动作或肖像细节深入剖析即可。";
+      return "不要从头到尾复述故事全过程！不要分析所有人物，抓1个最典型的人物动作或肖像细节深入剖析即可。";
     } else if (lesson.genre.includes("说明")) {
-      return "不要把课文当科学科普课来讲！我们是语文课，要重点讲‘说明方法’（打比方、列数字）以及‘说明文语言的准确性与严密性’。";
+      return "不要把课文讲成科学课！重点讲说明方法（打比方、列数字）以及说明文语言的准确性。";
     } else if (lesson.genre.includes("议论")) {
-      return "不要陷在具体事例细节里出不来！重点讲论点是什么、用了什么论证方法（举例/道理论证）、论证思路是怎样层层推进的。";
+      return "不要陷在具体事例细节里出不来！重点讲论点是什么、用了什么论证方法、论证思路是怎样推进的。";
     } else if (lesson.genre.includes("文言")) {
-      return "千万不要逐字逐句做机械字面翻译！抓住两到三个通假字或古今异义字，把时间留给朗读节奏停顿和探究作者的核心情怀。";
-    } else if (lesson.genre.includes("诗")) {
-      return "不要一字一句生硬翻译诗意！重点带学生读出节拍重音，抓取核心意象，体会诗人当时的心境。";
+      return "千万不要逐字逐句做机械字面翻译！抓住两到三个关键字词，把时间留给朗读节奏和探究作者风骨。";
     }
     return "10分钟时间极短，千万不要试图讲完所有段落，只选1个核心切片深入互动即可。";
   }
 
-  // 辅助：获取各文体动态时间分配
-  function getGenreTimelineData(genre) {
-    if (genre.includes("文言") || genre.includes("诗")) {
-      return {
-        p1_time: "1分", p1_pct: 10, p1: "名句起兴导入",
-        p2_time: "2分", p2_pct: 20, p2: "读准字音节奏停顿",
-        p3_time: "5分", p3_pct: 50, p3: "落实关键实词虚词与主旨品析",
-        p4_time: "1分", p4_pct: 10, p4: "当堂成诵与小结",
-        p5_time: "1分", p5_pct: 10, p5: "背诵默写分层作业"
-      };
-    } else if (genre.includes("小说")) {
-      return {
-        p1_time: "1分", p1_pct: 10, p1: "人物话题导入",
-        p2_time: "1.5分", p2_pct: 15, p2: "梳理情节冲突线索",
-        p3_time: "5.5分", p3_pct: 55, p3: "抓动作语言细节品析人物性格",
-        p4_time: "1分", p4_pct: 10, p4: "探讨社会环境与主题",
-        p5_time: "1分", p5_pct: 10, p5: "续写或微写作作业"
-      };
-    } else {
-      // 散文/常规
-      return {
-        p1_time: "1分", p1_pct: 10, p1: "生活情境激趣导入",
-        p2_time: "1.5分", p2_pct: 15, p2: "自读感知与明确研读段落",
-        p3_time: "5分", p3_pct: 50, p3: "精读主问题探究与师生互动",
-        p4_time: "1.5分", p4_pct: 15, p4: "情感升华与回顾板书",
-        p5_time: "1分", p5_pct: 10, p5: "分层作业与下课致谢"
-      };
-    }
-  }
-
-  // 阅读器控制
-  window.setReaderFontSize = function (size) {
-    APP_STATE.readerFontSize = size;
-    const content = document.getElementById("reader-content-scroll");
-    if (content) {
-      content.className = `reader-content ${size} ${APP_STATE.readerHighlight ? 'highlight-on' : ''}`;
-    }
-    document.querySelectorAll(".reader-toolbar button").forEach(b => {
-      if (b.textContent === '小' && size === 'font-sm') b.classList.add('active');
-      else if (b.textContent === '中' && size === 'font-md') b.classList.add('active');
-      else if (b.textContent === '大' && size === 'font-lg') b.classList.add('active');
-      else if (['小', '中', '大'].includes(b.textContent)) b.classList.remove('active');
-    });
-  };
-
-  window.setReaderTheme = function (theme) {
-    APP_STATE.readerTheme = theme;
-    const box = document.getElementById("reader-panel-box");
-    if (box) {
-      box.className = `reader-panel ${theme === 'white' ? 'theme-white' : theme === 'night' ? 'theme-night' : ''}`;
-    }
-  };
-
-  window.toggleReaderHighlight = function () {
-    APP_STATE.readerHighlight = !APP_STATE.readerHighlight;
-    const content = document.getElementById("reader-content-scroll");
-    if (content) {
-      content.classList.toggle("highlight-on", APP_STATE.readerHighlight);
-    }
-  };
-
-  // 设置课文学习进度
-  window.setLessonStatus = function (lessonId, status) {
-    APP_STATE.userData.lessonStatus[lessonId] = status;
-    saveUserData();
-    renderTextbooks();
-    renderDashboard();
-  };
-
-  // 60秒快速导入计时器
-  window.toggleQuickLeadTimer = function () {
-    const btn = document.getElementById("btn-quick-lead");
-    if (APP_STATE.quickLeadTimer.isRunning) {
-      clearInterval(APP_STATE.quickLeadTimer.intervalId);
-      APP_STATE.quickLeadTimer.isRunning = false;
-      if (btn) btn.textContent = "继续计时";
-    } else {
-      APP_STATE.quickLeadTimer.remainingSeconds = 60;
-      APP_STATE.quickLeadTimer.isRunning = true;
-      if (btn) btn.textContent = "倒计时 60s";
-      playChime(523.25, "sine", 0.2);
-
-      APP_STATE.quickLeadTimer.intervalId = setInterval(() => {
-        if (APP_STATE.quickLeadTimer.remainingSeconds > 0) {
-          APP_STATE.quickLeadTimer.remainingSeconds--;
-          if (btn) btn.textContent = `倒计时 ${APP_STATE.quickLeadTimer.remainingSeconds}s`;
-        } else {
-          clearInterval(APP_STATE.quickLeadTimer.intervalId);
-          APP_STATE.quickLeadTimer.isRunning = false;
-          playChime(783.99, "triangle", 0.6);
-          alert("⏱️ 60秒时间到！你的导入是否控制在1分钟以内了？导入讲得干脆利落，考官的第一印象就会非常好！");
-          if (btn) btn.textContent = "再次练习 60s";
-        }
-      }, 1000);
-    }
-  };
-
   // ===================================================================
-  // 2. 渲染教材课文库
+  // 2. 课文库渲染
   // ===================================================================
 
   function renderTextbooks() {
@@ -758,101 +740,64 @@
     if (!grid || !window.TEXTBOOK_DB) return;
 
     let filtered = window.TEXTBOOK_DB.lessons.filter(l => {
-      // 进度筛选
       const status = APP_STATE.userData.lessonStatus[l.fullId] || "unlearned";
       if (APP_STATE.selectedStatus !== "all" && status !== APP_STATE.selectedStatus) return false;
-
-      // 册次筛选
       if (APP_STATE.selectedBookId !== "all" && l.grade !== APP_STATE.selectedBookId) return false;
-
-      // 文体筛选
       if (APP_STATE.selectedGenre !== "all" && !l.genre.includes(APP_STATE.selectedGenre)) return false;
-
-      // 优先级筛选
-      if (APP_STATE.priorityFilter !== "all" && l.priority !== APP_STATE.priorityFilter) return false;
-
-      // 收藏筛选
       if (APP_STATE.favoritesOnly && !APP_STATE.userData.favorites.includes(l.fullId)) return false;
-
-      // 搜索关键词
       if (APP_STATE.searchKeyword) {
         const kw = APP_STATE.searchKeyword.toLowerCase();
         const inTitle = l.title.toLowerCase().includes(kw);
         const inAuthor = l.author.toLowerCase().includes(kw);
-        const inTheme = (l.unitTheme || "").toLowerCase().includes(kw);
-        const inFocus = (l.sampleFocus || "").toLowerCase().includes(kw);
-        if (!inTitle && !inAuthor && !inTheme && !inFocus) return false;
+        if (!inTitle && !inAuthor) return false;
       }
       return true;
     });
 
     const countEl = document.getElementById("textbook-filter-count");
-    if (countEl) countEl.textContent = `共检索到 ${filtered.length} 篇课文`;
+    if (countEl) countEl.textContent = `共 ${filtered.length} 篇`;
 
-    if (filtered.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 48px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
-          <div style="font-size: 32px; margin-bottom: 12px;">📖</div>
-          <p>暂无符合筛选条件的课文，请尝试清除搜索或调整文体/进度筛选。</p>
+    grid.innerHTML = filtered.map(l => {
+      const isFav = APP_STATE.userData.favorites.includes(l.fullId);
+      const status = APP_STATE.userData.lessonStatus[l.fullId] || "unlearned";
+      let statusTag = `<span style="font-size:11.5px; color:var(--text-muted);">未学习</span>`;
+      if (status === "learning") statusTag = `<span style="font-size:11.5px; color:var(--color-gold); font-weight:600;">正在学</span>`;
+      if (status === "completed") statusTag = `<span style="font-size:11.5px; color:var(--color-green-primary); font-weight:600;">已试讲</span>`;
+
+      return `
+        <div class="lesson-card" onclick="openLessonWorkbench('${l.fullId}')">
+          <div class="lesson-card-header">
+            <div>
+              <h3 style="font-size:17px;">《${l.title}》</h3>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${l.gradeName} · ${l.author}</div>
+            </div>
+            <span class="lesson-genre-pill">${l.genre}</span>
+          </div>
+          <div class="lesson-card-body">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="font-size:11px; color:var(--color-gold);">${l.priority}</span>
+              ${statusTag}
+            </div>
+            <p style="font-size:13px; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+              ${l.mainContent}
+            </p>
+          </div>
+          <div class="lesson-card-footer" onclick="event.stopPropagation()">
+            <span style="font-size:12px; color:var(--text-muted);">原书第${l.page}页</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-academic" style="padding:2px 8px; font-size:12px;" onclick="toggleFavorite('${l.fullId}'); event.stopPropagation();">
+                ${isFav ? "★ 已收藏" : "☆ 收藏"}
+              </button>
+              <button class="btn-academic primary" style="padding:2px 10px; font-size:12px;" onclick="openLessonWorkbench('${l.fullId}'); event.stopPropagation();">
+                学习这篇 →
+              </button>
+            </div>
+          </div>
         </div>
       `;
-      return;
-    }
-
-    grid.innerHTML = filtered.map(l => createLessonCardHtml(l)).join("");
+    }).join("");
   }
 
-  // 生成单张课文卡片 HTML
-  function createLessonCardHtml(lesson) {
-    const isFav = APP_STATE.userData.favorites.includes(lesson.fullId);
-    const status = APP_STATE.userData.lessonStatus[lesson.fullId] || "unlearned";
-
-    let statusBadge = `<span style="font-size:11.5px; color:var(--text-muted);">未学习</span>`;
-    if (status === "learning") {
-      statusBadge = `<span style="font-size:11.5px; color:var(--color-gold); font-weight:600;">📖 正在学</span>`;
-    } else if (status === "completed") {
-      statusBadge = `<span style="font-size:11.5px; color:var(--color-green-primary); font-weight:600;">✓ 已完成试讲</span>`;
-    }
-
-    return `
-      <div class="lesson-card" onclick="openLessonWorkbench('${lesson.fullId}')">
-        <div class="lesson-card-header">
-          <div class="lesson-title-box">
-            <h3>《${lesson.title}》</h3>
-            <div class="lesson-author-tag">${lesson.gradeName} · 第${lesson.unitNumber}单元 · ${lesson.author}</div>
-          </div>
-          <span class="lesson-genre-pill">${lesson.genre}</span>
-        </div>
-        <div class="lesson-card-body">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size: 11px; color: var(--color-gold); font-weight:bold;">${lesson.priority} 常考</span>
-            ${statusBadge}
-          </div>
-          <p style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px;">
-            ${lesson.mainContent}
-          </p>
-          <div class="lesson-focus-preview">
-            <strong>10分钟重点切片：</strong>${lesson.sampleFocus || lesson.interviewKeyPoint}
-          </div>
-        </div>
-        <div class="lesson-card-footer" onclick="event.stopPropagation()">
-          <a class="pdf-link-btn" href="${encodeURI(lesson.pdfFileName)}" target="_blank" title="打开教材原书第${lesson.page}页">
-            📄 原书第${lesson.page}页
-          </a>
-          <div style="display:flex; gap:6px;">
-            <button class="btn-academic" style="padding: 3px 8px; font-size:12px;" onclick="toggleFavorite('${lesson.fullId}'); event.stopPropagation();">
-              ${isFav ? "★ 已收藏" : "☆ 收藏"}
-            </button>
-            <button class="btn-academic primary" style="padding: 3px 10px; font-size:12px;" onclick="openLessonWorkbench('${lesson.fullId}'); event.stopPropagation();">
-              进入工作台 →
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // 收藏切换
   window.toggleFavorite = function (lessonId) {
     const idx = APP_STATE.userData.favorites.indexOf(lessonId);
     if (idx >= 0) {
@@ -868,7 +813,7 @@
   };
 
   // ===================================================================
-  // 3. 考场备课与试讲演练 (Mock Exam)
+  // 3. 备课与计时器
   // ===================================================================
 
   window.setPrepDuration = function (mins) {
@@ -886,12 +831,10 @@
     APP_STATE.selectedLesson = lesson;
     switchTab("mock-exam");
 
-    // 填充教案纸抬头
     document.getElementById("exam-sheet-lesson-title").textContent = `《${lesson.title}》`;
     document.getElementById("exam-sheet-author").textContent = lesson.author;
     document.getElementById("exam-sheet-grade").textContent = lesson.gradeName;
 
-    // 检查是否有历史保存的教案草稿
     const savedPlan = APP_STATE.userData.myLessonPlans[lesson.fullId];
     if (savedPlan) {
       document.getElementById("sheet-input-targets").value = savedPlan.targets || "";
@@ -899,29 +842,19 @@
       document.getElementById("sheet-input-flow").value = savedPlan.flow || "";
       document.getElementById("sheet-input-blackboard").value = savedPlan.blackboard || "";
     } else {
-      document.getElementById("sheet-input-targets").value = `1. 知识与能力目标：品读文中的重点词句与修辞手法（${lesson.sampleFocus ? lesson.sampleFocus.slice(0, 30) : ''}）\n2. 过程与方法目标：通过朗读品味与小组合作，学习从多角度描写景物/人物的方法\n3. 情感态度目标：体会作者的思想情感`;
-      document.getElementById("sheet-input-points").value = `【教学重点】：抓住核心语段朗读品析（${lesson.sampleFocus ? lesson.sampleFocus.slice(0, 20) : ''}）\n【教学难点】：体会语言运用之精妙与深层情感`;
-      document.getElementById("sheet-input-flow").value = `一、导入新课（约1分钟）：\n以日常生活经验或名言引出课题，顺势在黑板上板书《${lesson.title}》与作者。\n\n二、初读感知（约2分钟）：\n学生自由朗读课文，扫清字词，明确今天重点研读的核心段落。\n\n三、精读品析（约5分钟，重中之重）：\n主问题1：……（指名学生回答，复述学生答案并追问）\n主问题2：……（引导朗读重音与停连，板书核心词）\n\n四、课堂小结（约1分钟）：\n师生共同回顾黑板板书，升华主旨。\n\n五、布置作业（约1分钟）：\n布置分层特色作业，面向评委鞠躬致谢。`;
-      document.getElementById("sheet-input-blackboard").value = `【课题】：${lesson.title}\n【主板书】：${lesson.teachingDesign ? lesson.teachingDesign.blackboardDesign.left : ''}\n【副板书】：重点字词、写作手法`;
+      document.getElementById("sheet-input-targets").value = `1. 读准生字词，品读赏析文中的修辞手法（${lesson.sampleFocus ? lesson.sampleFocus.slice(0, 30) : ''}）\n2. 体会作者在文中寄托的情感与思想`;
+      document.getElementById("sheet-input-points").value = `【教学重点】：抓住核心语段朗读品析（${lesson.sampleFocus ? lesson.sampleFocus.slice(0, 20) : ''}）`;
+      document.getElementById("sheet-input-flow").value = `1. 导入（1分钟）：生活情境引出课题，在黑板写课题《${lesson.title}》与作者\n2. 初读（1.5分钟）：学生自由朗读，明确今天重点研读的核心段落\n3. 精读（5分钟）：\n   主问题：作者写这一段抓住了哪些细节？（指名回答、追问接话、板书核心词）\n4. 小结（1.5分钟）：师生共同回顾黑板板书\n5. 作业（1分钟）：分层作业与礼貌下课`;
+      document.getElementById("sheet-input-blackboard").value = `【课题】：${lesson.title} ${lesson.author}\n【主板书】：梳理脉络关键词\n【副板书】：修辞手法品析`;
     }
 
     resetPrepTimer();
     resetTeachTimer();
   };
 
-  // 备课计时器
   function updatePrepTimerDisplay() {
     const el = document.getElementById("prep-timer-display");
-    if (el) {
-      el.textContent = formatTime(APP_STATE.prepTimer.remainingSeconds);
-      if (APP_STATE.prepTimer.remainingSeconds <= 60) {
-        el.className = "timer-dial danger";
-      } else if (APP_STATE.prepTimer.remainingSeconds <= 180) {
-        el.className = "timer-dial warning";
-      } else {
-        el.className = "timer-dial";
-      }
-    }
+    if (el) el.textContent = formatTime(APP_STATE.prepTimer.remainingSeconds);
   }
 
   window.togglePrepTimer = function () {
@@ -929,24 +862,24 @@
     if (APP_STATE.prepTimer.isRunning) {
       clearInterval(APP_STATE.prepTimer.intervalId);
       APP_STATE.prepTimer.isRunning = false;
-      if (btn) btn.textContent = "继续备课计时";
+      if (btn) btn.textContent = "继续倒计时";
     } else {
       APP_STATE.prepTimer.isRunning = true;
-      if (btn) btn.textContent = "暂停计时";
+      if (btn) btn.textContent = "暂停";
       APP_STATE.prepTimer.intervalId = setInterval(() => {
         if (APP_STATE.prepTimer.remainingSeconds > 0) {
           APP_STATE.prepTimer.remainingSeconds--;
           updatePrepTimerDisplay();
           if (APP_STATE.prepTimer.remainingSeconds === 60) {
             playChime(440, "sine", 0.5);
-            alert("⏰ 备课时间还剩最后 1 分钟！请抓紧整理板书设计与教学重点。");
+            alert("⏰ 备课时间还剩最后 1 分钟！请整理好草稿要点与板书。");
           }
         } else {
           clearInterval(APP_STATE.prepTimer.intervalId);
           APP_STATE.prepTimer.isRunning = false;
           playChime(880, "triangle", 1.0);
-          alert("🔔 备课时间已到！请整理教案纸，点击进入下方【开始10分钟试讲】开始开口练。");
-          if (btn) btn.textContent = "开始备课倒计时";
+          alert("🔔 备课时间到！请整理教案纸，点击进入【开始试讲】。");
+          if (btn) btn.textContent = "开始倒计时";
         }
       }, 1000);
     }
@@ -958,38 +891,28 @@
     APP_STATE.prepTimer.remainingSeconds = APP_STATE.prepDurationMinutes * 60;
     updatePrepTimerDisplay();
     const btn = document.getElementById("btn-prep-toggle");
-    if (btn) btn.textContent = "开始备课倒计时";
+    if (btn) btn.textContent = "开始倒计时";
   };
 
-  // 试讲计时器与阶段指示
   function updateTeachTimerDisplay() {
     const el = document.getElementById("teach-timer-display");
     const phaseEl = document.getElementById("teach-current-phase-hint");
     const sec = APP_STATE.teachTimer.remainingSeconds;
     const elapsed = 10 * 60 - sec;
 
-    if (el) {
-      el.textContent = formatTime(sec);
-      if (sec <= 60) {
-        el.className = "timer-dial danger";
-      } else if (sec <= 180) {
-        el.className = "timer-dial warning";
-      } else {
-        el.className = "timer-dial";
-      }
-    }
+    if (el) el.textContent = formatTime(sec);
 
     if (phaseEl) {
       if (elapsed <= 60) {
-        phaseEl.innerHTML = `📍 <strong>当前阶段：</strong>【导入新课】（0-1分钟）<br><small style="color:var(--text-muted)">亲切问好，以生活体验或诗文引出课题，在黑板正上方写好课题和作者。</small>`;
+        phaseEl.innerHTML = `📍 <strong>导入新课（0-1m）：</strong>问好，引出课题，在黑板上方写好课题和作者。`;
       } else if (elapsed <= 150) {
-        phaseEl.innerHTML = `📍 <strong>当前阶段：</strong>【初读感知】（1-2.5分钟）<br><small style="color:var(--text-muted)">自读扫清生字词，理清文章脉络，明确本节课重点研读哪个核心语段。</small>`;
+        phaseEl.innerHTML = `📍 <strong>初读感知（1-2.5m）：</strong>自读扫清生字词，明确今天重点研读的核心段落。`;
       } else if (elapsed <= 450) {
-        phaseEl.innerHTML = `📍 <strong>当前阶段：</strong>【精读品析·核心阵地】（2.5-7.5分钟，重中之重！）<br><small style="color:var(--color-green-primary); font-weight:bold;">核心主问题驱动，提问后停顿，指名学生回答并追问点拨，在黑板中间写核心词。</small>`;
+        phaseEl.innerHTML = `📍 <strong>精读品析（2.5-7.5m，核心）：</strong>核心主问题驱动，指名回答，追问接话，板书关键词。`;
       } else if (elapsed <= 540) {
-        phaseEl.innerHTML = `📍 <strong>当前阶段：</strong>【小结拓展】（7.5-9分钟）<br><small style="color:var(--text-muted)">由文及人升华主旨，结合黑板板书回顾重点内容。</small>`;
+        phaseEl.innerHTML = `📍 <strong>小结拓展（7.5-9m）：</strong>师生共同回顾黑板板书，升华情感。`;
       } else {
-        phaseEl.innerHTML = `📍 <strong>当前阶段：</strong>【布置作业与下课】（9-10分钟）<br><small style="color:var(--text-muted)">布置分层特色作业，面向评委席微笑鞠躬致谢，从容结课。</small>`;
+        phaseEl.innerHTML = `📍 <strong>布置作业（9-10m）：</strong>布置作业，向评委席鞠躬致谢结束试讲。`;
       }
     }
   }
@@ -1007,25 +930,22 @@
         if (APP_STATE.teachTimer.remainingSeconds > 0) {
           APP_STATE.teachTimer.remainingSeconds--;
           updateTeachTimerDisplay();
-
           if (APP_STATE.teachTimer.remainingSeconds === 5 * 60) {
-            playChime(523.25, "sine", 0.4); // 5分钟过半
+            playChime(523.25, "sine", 0.4);
           } else if (APP_STATE.teachTimer.remainingSeconds === 60) {
-            playChime(659.25, "sine", 0.6); // 剩1分钟
+            playChime(659.25, "sine", 0.6);
           }
         } else {
           clearInterval(APP_STATE.teachTimer.intervalId);
           APP_STATE.teachTimer.isRunning = false;
           playChime(987.77, "triangle", 1.2);
           alert("🏁 10分钟试讲时间到！请向考官鞠躬致谢：‘各位评委老师，我的试讲完毕，谢谢老师！’");
-          if (btn) btn.textContent = "开始10分钟试讲";
+          if (btn) btn.textContent = "开始试讲";
           APP_STATE.userData.examCount = (APP_STATE.userData.examCount || 0) + 1;
-          
           if (APP_STATE.selectedLesson) {
             APP_STATE.userData.lessonStatus[APP_STATE.selectedLesson.fullId] = "completed";
           }
           saveUserData();
-          updateGlobalBadges();
         }
       }, 1000);
     }
@@ -1037,12 +957,12 @@
     APP_STATE.teachTimer.remainingSeconds = 10 * 60;
     updateTeachTimerDisplay();
     const btn = document.getElementById("btn-teach-toggle");
-    if (btn) btn.textContent = "开始10分钟试讲";
+    if (btn) btn.textContent = "开始试讲";
   };
 
   window.saveCurrentLessonPlan = function () {
     if (!APP_STATE.selectedLesson) {
-      alert("请先选择一篇课文进行备课！");
+      alert("请先选择一篇课文！");
       return;
     }
     const lid = APP_STATE.selectedLesson.fullId;
@@ -1059,39 +979,29 @@
     APP_STATE.userData.myLessonPlans[lid] = plan;
     saveUserData();
     playChime(659.25, "sine", 0.3);
-    alert(`🎉 《${APP_STATE.selectedLesson.title}》简案已成功保存在本地浏览器！`);
-  };
-
-  window.compareStandardPlan = function () {
-    if (!APP_STATE.selectedLesson) {
-      alert("请先选择一篇课文！");
-      return;
-    }
-    openLessonWorkbench(APP_STATE.selectedLesson.fullId);
+    alert(`🎉 《${APP_STATE.selectedLesson.title}》简案草稿已保存！`);
   };
 
   // ===================================================================
-  // 4. 分阶段试讲反馈与真实表达诊断 (Sparring)
+  // 4. 师生互动练习
   // ===================================================================
 
   window.sendTeacherLine = function (customText) {
     const input = document.getElementById("sparring-user-input");
     const text = customText || (input ? input.value.trim() : "");
     if (!text) return;
-
     if (input) input.value = "";
 
     appendDialogue("teacher", "执教老师（我）", text);
 
     setTimeout(() => {
-      generateStudentResponse(text);
-    }, 800);
+      generateInteractiveStudentResponse(text);
+    }, 700);
   };
 
   function appendDialogue(sender, name, content) {
     const stream = document.getElementById("sparring-dialogue-stream");
     if (!stream) return;
-
     const div = document.createElement("div");
     div.className = "dialogue-item";
     div.innerHTML = `
@@ -1102,219 +1012,60 @@
     stream.scrollTop = stream.scrollHeight;
   }
 
-  function generateStudentResponse(teacherPrompt) {
-    let studentResponses = [];
+  function generateInteractiveStudentResponse(prompt) {
+    let studentResp = "";
+    let teacherCoachTip = "";
 
-    if (teacherPrompt.includes("读") || teacherPrompt.includes("朗读")) {
-      studentResponses = [
-        {
-          name: "全班同学",
-          content: "（全班整齐放声朗读，声音洪亮，在读到关键动词时稍作了停顿，语调富有起伏。）"
-        },
-        {
-          name: "课代表小林",
-          content: "老师，读完这一段，我发现这个词应该读重音，因为这里最能表现作者当时的激动心情！"
-        }
-      ];
-    } else if (teacherPrompt.includes("词") || teacherPrompt.includes("修辞") || teacherPrompt.includes("比喻") || teacherPrompt.includes("拟人")) {
-      studentResponses = [
-        {
-          name: "学生小赵",
-          content: "老师，我圈画了文中的这一句！这里运用了修辞手法，把景物赋予了人的情态，非常生动！"
-        }
-      ];
-    } else if (teacherPrompt.includes("为什么") || teacherPrompt.includes("情感") || teacherPrompt.includes("怎么理解")) {
-      studentResponses = [
-        {
-          name: "学生小明",
-          content: "老师，我觉得作者在这里并不是单纯在写眼前的事物，而是借景抒情，寄托了对生活的热爱！"
-        }
-      ];
+    if (prompt.includes("读") || prompt.includes("朗读")) {
+      studentResp = "（全班大声齐读该语段，读完后教室安静下来。）";
+      teacherCoachTip = "学生朗读完毕后，先肯定优点：‘同学们读得整齐响亮！’紧接着立刻抛出你的核心问题，切忌沉默冷场。";
+    } else if (prompt.includes("颜色") || prompt.includes("词") || prompt.includes("哪")) {
+      studentResp = "学生小林举手：“老师，我找到了文中的红、粉、白，还有‘赶趟儿’这个词！”";
+      teacherCoachTip = "学生找到了具体词语，一定要先复述肯定：‘小林找得很敏锐！’然后追问：‘这个词好在哪里呢？’";
+    } else if (prompt.includes("为什么") || prompt.includes("怎么理解")) {
+      studentResp = "学生小赵举手：“老师，我觉得作者用这个词是为了把景色写得更有生机。”";
+      teacherCoachTip = "学生给出了宏观感受，接下来带大家聚焦微观字眼：‘那大家看，他是怎么写出这份生机的？’";
     } else {
-      studentResponses = [
-        {
-          name: "学生小红",
-          content: "老师，我赞成刚才同学的看法，而且我发现这个地方用的动词非常特别！"
-        }
-      ];
+      studentResp = "学生有些犹豫，小明站起来说：“老师，我觉得这句话读起来很顺口。”";
+      teacherCoachTip = "学生回答比较笼统时，不要批评，给学生‘搭个梯子’：‘顺口是因为句子句式整齐，我们再看看修辞……’";
     }
 
-    studentResponses.forEach((res, i) => {
-      setTimeout(() => {
-        appendDialogue("student", res.name, res.content);
-        playChime(523.25, "sine", 0.15);
-      }, i * 500);
-    });
+    appendDialogue("student", "模拟学生", studentResp);
+    playChime(523.25, "sine", 0.15);
 
-    setTimeout(() => {
-      evaluateTeacherDialogue(teacherPrompt);
-    }, studentResponses.length * 500 + 300);
-  }
-
-  // 针对教师台词输出接地气、尖锐具体的指导
-  function evaluateTeacherDialogue(prompt) {
-    const reportBox = document.getElementById("sparring-eval-report");
-    if (!reportBox) return;
-
-    const tips = [];
-    let positiveCount = 0;
-
-    // 检查口头禅
-    if (prompt.includes("那么") || prompt.includes("然后") || prompt.includes("就是说")) {
-      tips.push("⚠️ <strong>语言精练度：</strong>注意口头禅（如‘那么’、‘然后’）。正式试讲时直接说‘请大家看第3段’比‘那么我们来看第3段’听起来更沉稳从容。");
-    } else {
-      positiveCount++;
-      tips.push("✓ <strong>语言精练度：</strong>没有多余口头拖音，表达干净利落。");
-    }
-
-    // 检查是否有启发提问
-    if (prompt.includes("为什么") || prompt.includes("结合") || prompt.includes("怎么看") || prompt.includes("哪位同学")) {
-      positiveCount++;
-      tips.push("✓ <strong>启发性：</strong>问题指向明确，给学生留出了思考与表达的空间。");
-    } else {
-      tips.push("⚠️ <strong>启发性：</strong>当前更像单向发号施令。试着在提问后接一句：‘作者为什么这样写？大家先同桌交流30秒’。");
-    }
-
-    // 检查亲和力
-    if (prompt.includes("同学") || prompt.includes("请") || prompt.includes("大家")) {
-      positiveCount++;
-      tips.push("✓ <strong>亲和力与教态：</strong>语气温和亲切，符合真实初中语文课堂师生氛围。");
-    } else {
-      tips.push("⚠️ <strong>亲和力与教态：</strong>建议多使用‘同学们’、‘请坐’等课堂规范口语，增加与考官假想学生的互动感。");
-    }
-
-    reportBox.innerHTML = `
-      <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-        <div style="font-weight:700; color:var(--text-primary); margin-bottom:10px; font-size:15px;">
-          👨‍🏫 备考老师给你的现场改进建议：
+    // 显示现场点评
+    const card = document.getElementById("sparring-eval-card");
+    const report = document.getElementById("sparring-eval-report");
+    if (card && report) {
+      card.style.display = "block";
+      report.innerHTML = `
+        <div style="font-size:13.5px; line-height:1.7;">
+          <div style="margin-bottom:6px;"><strong>针对你刚才说的这一句：</strong>“${prompt}”</div>
+          <div style="background:var(--bg-primary); border-left:3px solid var(--color-green-primary); padding:10px 12px; border-radius:var(--radius-sm);">
+            💡 <strong>老教师现场支招：</strong>${teacherCoachTip}
+          </div>
         </div>
-        <div style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; line-height:1.65;">
-          ${tips.map(t => `<div>${t}</div>`).join("")}
-        </div>
-      </div>
-    `;
-
-    APP_STATE.userData.sparringCount = (APP_STATE.userData.sparringCount || 0) + 1;
-    saveUserData();
+      `;
+    }
   }
 
   // ===================================================================
-  // 5. 渲染常用表达、课型突破、结构化、答辩、规划、教案
+  // 5. 辅助视图数据渲染
   // ===================================================================
-
-  function renderTemplates() {
-    const container = document.getElementById("templates-scripts-container");
-    if (!container || !window.TEMPLATES_DB) return;
-    const s = window.TEMPLATES_DB.teacherScripts;
-
-    container.innerHTML = `
-      <div class="academic-card">
-        <h4 class="card-title">一、新课导入常用口语示范（0-1分钟）</h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
-          ${s.leadIn.map(item => `
-            <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-              <div style="font-weight:bold; color:var(--color-green-primary); margin-bottom:4px; font-size:14.5px;">${item.type}</div>
-              <div style="font-size:12.5px; color:var(--color-gold); margin-bottom:8px;">【思路】：${item.formula}</div>
-              <div style="font-size:13.5px; line-height:1.65; background:#FFFFFF; padding:12px; border-radius:var(--radius-sm); border-left:3px solid var(--color-green-primary); margin-bottom:10px;">
-                ${item.script}
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11.5px; color:var(--text-muted);">适用：${item.applicableGenres.join(" / ")}</span>
-                <button class="btn-academic" style="padding:2px 8px; font-size:11.5px;" onclick="navigator.clipboard.writeText('${item.script.replace(/'/g, "\\'")}'); alert('已复制到剪贴板！');">复制台词</button>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-
-      <div class="academic-card">
-        <h4 class="card-title">二、课堂提问与启发追问技巧（告别“很好请坐”）</h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
-          ${s.probing.map(item => `
-            <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-              <div style="font-weight:bold; color:var(--color-green-primary); margin-bottom:6px; font-size:14.5px;">💡 ${item.strategy}</div>
-              <div style="font-size:13.5px; line-height:1.65; background:#FFFFFF; padding:12px; border-radius:var(--radius-sm); border-left:3px solid var(--color-gold);">
-                ${item.script}
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-
-    const genreContainer = document.getElementById("genre-blueprints-container");
-    if (genreContainer && window.TEMPLATES_DB) {
-      genreContainer.innerHTML = window.TEMPLATES_DB.genreBlueprints.map(g => `
-        <div class="academic-card" style="margin-bottom:20px;">
-          <div class="card-title">
-            <span style="font-size:17px; color:var(--color-green-primary); font-weight:bold;">${g.genre} 10分钟试讲突破方案</span>
-            <span class="pill-badge green" style="font-size:12px;">核心文体</span>
-          </div>
-          <div style="background:var(--bg-secondary); padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:14px; border-left:4px solid var(--color-green-primary);">
-            <strong>核心原则：</strong>${g.corePrinciple}
-          </div>
-          
-          <h5 style="font-size:14px; font-weight:bold; margin-bottom:8px; color:var(--text-primary);">⏱ 10分钟时间分配建议：</h5>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:13px; margin-bottom:14px;">
-            ${Object.entries(g.timeAllocation).map(([t, desc]) => `
-              <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); padding:10px; border-radius:4px;">
-                <strong style="color:var(--color-green-primary);">${t}</strong>
-                <p style="font-size:12px; margin-top:4px; color:var(--text-secondary);">${desc}</p>
-              </div>
-            `).join("")}
-          </div>
-
-          <h5 style="font-size:14px; font-weight:bold; margin-bottom:6px; color:var(--text-primary);">🎯 重点抓手与取舍技巧：</h5>
-          <ul style="padding-left:20px; font-size:13px; color:var(--text-secondary); line-height:1.8;">
-            ${g.keySkills.map(k => `<li>${k}</li>`).join("")}
-          </ul>
-          
-          <div style="margin-top:12px; font-size:12px; color:var(--text-muted);">
-            <strong>代表课文：</strong>${g.representativeLessons.join("、")}
-          </div>
-        </div>
-      `).join("");
-    }
-  }
 
   function renderStructured() {
     const list = document.getElementById("structured-questions-list");
     if (!list || !window.STRUCTURED_DB) return;
-
     list.innerHTML = window.STRUCTURED_DB.questions.map((q, idx) => `
-      <div class="academic-card" style="margin-bottom:18px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-          <h4 style="font-family:var(--font-serif); font-size:16px; font-weight:bold; color:var(--text-primary); flex:1;">
-            第${idx + 1}题：${q.title}
-          </h4>
-          <span class="pill-badge gold" style="font-size:11px; white-space:nowrap; margin-left:10px;">${q.category}</span>
-        </div>
-        <div style="font-size:12px; color:var(--color-green-primary); margin-bottom:12px;">
-          <strong>考察维度：</strong>${q.coreAspect} | <strong>解题思维框架：</strong>${q.framework}
-        </div>
-
-        <div id="struct-answer-${q.id}" style="display:none; margin-top:12px; background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-          <div style="font-size:14px; line-height:1.8; color:var(--text-primary); white-space:pre-line; margin-bottom:12px;">
-            ${q.modelAnswer}
-          </div>
-          <div style="background:#FFFFFF; border-left:3px solid var(--color-green-primary); padding:10px 12px; font-size:12px; color:var(--text-secondary); margin-bottom:6px;">
-            <strong>考官打分亮点：</strong>${q.keyScorePoints.join("；")}
-          </div>
-          <div style="background:#FFF9F9; border-left:3px solid #D9534F; padding:8px 12px; font-size:12px; color:#A94442;">
-            <strong>考场防坑避险：</strong>${q.pitfalls}
-          </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px dashed var(--border-color); padding-top:10px;">
-          <span style="font-size:12px; color:var(--text-muted);">建议限时：2分30秒口头作答</span>
-          <button class="btn-academic" onclick="
-            const el = document.getElementById('struct-answer-${q.id}');
-            const isHidden = el.style.display === 'none';
-            el.style.display = isHidden ? 'block' : 'none';
-            this.textContent = isHidden ? '收起示范回答' : '查看示范回答';
-          ">
-            查看示范回答
-          </button>
+      <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:14px; margin-bottom:12px;">
+        <div style="font-weight:700; font-size:14.5px; margin-bottom:4px;">${idx + 1}. ${q.title}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">类型：${q.category} · 思路：${q.framework}</div>
+        <button class="btn-academic" style="font-size:12px; padding:2px 8px;" onclick="
+          const el = document.getElementById('ans-st-${q.id}');
+          el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        ">查看示范作答</button>
+        <div id="ans-st-${q.id}" style="display:none; margin-top:10px; font-size:13.5px; line-height:1.7; background:#FFFFFF; padding:12px; border-radius:4px; border-left:3px solid var(--color-green-primary);">
+          ${q.modelAnswer}
         </div>
       </div>
     `).join("");
@@ -1323,85 +1074,32 @@
   function renderDefense() {
     const list = document.getElementById("defense-questions-list");
     if (!list || !window.DEFENSE_DB) return;
-
     list.innerHTML = window.DEFENSE_DB.categories.map(cat => `
-      <div class="academic-card" style="margin-bottom:20px;">
-        <h3 class="card-title" style="font-size:17px; color:var(--color-green-primary);">
-          ${cat.category}
-        </h3>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          ${cat.questions.map(q => `
-            <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-              <h5 style="font-size:15px; font-weight:bold; color:var(--text-primary); margin-bottom:8px;">
-                ❓ 考官追问：${q.question}
-              </h5>
-              <div style="font-size:12px; color:var(--color-gold); margin-bottom:8px;">
-                <strong>核心应答逻辑：</strong>${q.answerLogic}
-              </div>
-              <div style="font-size:14px; line-height:1.75; color:var(--text-secondary); background:#FFFFFF; padding:14px; border-radius:var(--radius-sm); border-left:3px solid var(--color-green-primary); white-space:pre-line; margin-bottom:10px;">
-                ${q.modelAnswer}
-              </div>
-              <div style="font-size:12px; color:var(--text-muted);">
-                <strong>采分要点：</strong>${q.scoringHighlights.join(" | ")}
-              </div>
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:15px; color:var(--color-green-primary); margin-bottom:8px;">${cat.category}</h4>
+        ${cat.questions.map(q => `
+          <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); padding:12px 14px; border-radius:var(--radius-sm); margin-bottom:8px;">
+            <div style="font-weight:600; font-size:13.5px;">问：${q.question}</div>
+            <div style="font-size:13px; line-height:1.65; color:var(--text-secondary); margin-top:6px;">
+              <strong>答题要领：</strong>${q.answerLogic}<br>
+              <strong>参考回答：</strong>${q.modelAnswer.slice(0, 120)}...
             </div>
-          `).join("")}
-        </div>
+          </div>
+        `).join("")}
       </div>
     `).join("");
   }
 
   function renderStudyPlan() {
     const timeline = document.getElementById("plan-stages-timeline");
-    const checklist = document.getElementById("daily-checklist-container");
-
-    if (timeline && window.STUDY_PLAN_DB) {
-      timeline.innerHTML = window.STUDY_PLAN_DB.stages.map((s, i) => `
-        <div class="stage-step-card ${i === 0 ? 'current' : ''}">
-          <div class="stage-badge">${s.duration}</div>
-          <h4 class="stage-title">${s.name}</h4>
-          <p class="stage-desc"><strong>【核心目标】：</strong>${s.goal}</p>
-          <ul style="padding-left:18px; font-size:13px; color:var(--text-secondary); line-height:1.8; margin-bottom:12px;">
-            ${s.keyTasks.map(t => `<li>${t}</li>`).join("")}
-          </ul>
-        </div>
-      `).join("");
-    }
-
-    if (checklist && window.STUDY_PLAN_DB) {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const todayTasks = APP_STATE.userData.dailyTasks[todayStr] || {};
-
-      checklist.innerHTML = `
-        <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:13px; color:var(--text-muted);">今日打卡日期：<strong>${todayStr}</strong></span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${window.STUDY_PLAN_DB.dailyChecklistTemplate.map(task => {
-            const isDone = !!todayTasks[task.id];
-            return `
-              <label style="display:flex; align-items:center; gap:10px; background:var(--bg-card); padding:10px 14px; border:1px solid var(--border-color); border-radius:var(--radius-sm); cursor:pointer;">
-                <input type="checkbox" ${isDone ? "checked" : ""} onchange="toggleDailyTask('${task.id}', this.checked)" style="accent-color:var(--color-green-primary); width:16px; height:16px;">
-                <span style="font-size:14px; ${isDone ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-primary);'}">
-                  ${task.label}
-                </span>
-              </label>
-            `;
-          }).join("")}
-        </div>
-      `;
-    }
+    if (!timeline || !window.STUDY_PLAN_DB) return;
+    timeline.innerHTML = window.STUDY_PLAN_DB.stages.map(s => `
+      <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:14px; margin-bottom:12px;">
+        <div style="font-weight:700; color:var(--color-green-primary); margin-bottom:4px;">${s.name} (${s.duration})</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">${s.goal}</div>
+      </div>
+    `).join("");
   }
-
-  window.toggleDailyTask = function (taskId, isChecked) {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (!APP_STATE.userData.dailyTasks[todayStr]) {
-      APP_STATE.userData.dailyTasks[todayStr] = {};
-    }
-    APP_STATE.userData.dailyTasks[todayStr][taskId] = isChecked;
-    saveUserData();
-    if (isChecked) playChime(783.99, "sine", 0.2);
-  };
 
   function renderSavedPlans() {
     const plansContainer = document.getElementById("saved-plans-container");
@@ -1410,25 +1108,15 @@
     if (plansContainer) {
       const plans = Object.values(APP_STATE.userData.myLessonPlans);
       if (plans.length === 0) {
-        plansContainer.innerHTML = `
-          <div style="text-align:center; padding:32px; color:var(--text-muted);">
-            暂无自写教案。在任一课文工作台或考场模拟中点击“保存我的简案”即可在此查阅。
-          </div>
-        `;
+        plansContainer.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">暂无保存的教案草稿。在任何课文备课时点击“保存我的草稿”即可保存在这里。</div>`;
       } else {
         plansContainer.innerHTML = plans.map(p => `
-          <div class="academic-card" style="margin-bottom:14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <h4 style="font-family:var(--font-serif); font-size:16px; font-weight:bold; color:var(--text-primary);">
-                《${p.lessonTitle}》10分钟简案
-              </h4>
-              <span style="font-size:12px; color:var(--text-muted);">${p.updatedAt || ""}</span>
-            </div>
-            <p style="font-size:13px; color:var(--text-secondary); white-space:pre-line; max-height:100px; overflow:hidden; text-overflow:ellipsis;">
-              ${p.targets || ""}
-            </p>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px; border-top:1px solid var(--border-subtle); padding-top:8px;">
-              <button class="btn-academic" onclick="startMockExamWithLesson('${p.lessonId}')">去考场继续练</button>
+          <div style="background:var(--bg-card-warm); border:1px solid var(--border-color); padding:12px 14px; border-radius:var(--radius-sm); margin-bottom:10px;">
+            <div style="font-weight:700; font-size:14.5px;">《${p.lessonTitle}》教案提纲</div>
+            <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:6px;">保存于：${p.updatedAt}</div>
+            <div style="font-size:13px; color:var(--text-secondary); white-space:pre-line; max-height:80px; overflow:hidden;">${p.targets}</div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+              <button class="btn-academic" onclick="startMockExamWithLesson('${p.lessonId}')">加载到草稿纸</button>
               <button class="btn-academic" onclick="deleteLessonPlan('${p.lessonId}')" style="color:#C0392B;">删除</button>
             </div>
           </div>
@@ -1437,24 +1125,31 @@
     }
 
     if (favsContainer && window.TEXTBOOK_DB) {
-      const favLessons = window.TEXTBOOK_DB.lessons.filter(l => APP_STATE.userData.favorites.includes(l.fullId));
-      if (favLessons.length === 0) {
-        favsContainer.innerHTML = `<div style="text-align:center; padding:32px; color:var(--text-muted);">暂无收藏课文。在课文库点击“☆ 收藏”添加。</div>`;
+      const favs = window.TEXTBOOK_DB.lessons.filter(l => APP_STATE.userData.favorites.includes(l.fullId));
+      if (favs.length === 0) {
+        favsContainer.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">暂无收藏课文。</div>`;
       } else {
-        favsContainer.innerHTML = favLessons.map(l => createLessonCardHtml(l)).join("");
+        favsContainer.innerHTML = favs.map(l => `
+          <div class="lesson-card" onclick="openLessonWorkbench('${l.fullId}')">
+            <div class="lesson-card-header">
+              <h3>《${l.title}》</h3>
+              <span class="lesson-genre-pill">${l.genre}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${l.author} · ${l.gradeName}</div>
+          </div>
+        `).join("");
       }
     }
   }
 
-  window.deleteLessonPlan = function (lessonId) {
-    if (confirm("确定要删除这篇自写教案草稿吗？")) {
-      delete APP_STATE.userData.myLessonPlans[lessonId];
+  window.deleteLessonPlan = function (lid) {
+    if (confirm("确定要删除这篇草稿吗？")) {
+      delete APP_STATE.userData.myLessonPlans[lid];
       saveUserData();
       renderSavedPlans();
     }
   };
 
-  // 绑定事件
   function bindEvents() {
     const searchInput = document.getElementById("textbook-search-input");
     if (searchInput) {
@@ -1464,7 +1159,6 @@
       });
     }
 
-    // 进度状态筛选
     document.querySelectorAll(".chip-status").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".chip-status").forEach(b => b.classList.remove("active"));
@@ -1474,21 +1168,15 @@
       });
     });
 
-    // 册次筛选
     document.querySelectorAll(".chip-book").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".chip-book").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         APP_STATE.selectedBookId = btn.dataset.book;
-        // 同步侧边栏
-        document.querySelectorAll(".sidebar-subnav-item").forEach(item => {
-          item.classList.toggle("active", item.id === `subnav-${btn.dataset.book}`);
-        });
         renderTextbooks();
       });
     });
 
-    // 文体筛选
     document.querySelectorAll(".chip-genre").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".chip-genre").forEach(b => b.classList.remove("active"));
@@ -1498,32 +1186,19 @@
       });
     });
 
-    // 考频筛选
-    document.querySelectorAll(".chip-priority").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".chip-priority").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        APP_STATE.priorityFilter = btn.dataset.priority;
-        renderTextbooks();
-      });
-    });
-
-    // 收藏切换
     const favOnlyBtn = document.getElementById("btn-toggle-fav-filter");
     if (favOnlyBtn) {
       favOnlyBtn.addEventListener("click", () => {
         APP_STATE.favoritesOnly = !APP_STATE.favoritesOnly;
         favOnlyBtn.classList.toggle("active", APP_STATE.favoritesOnly);
-        favOnlyBtn.textContent = APP_STATE.favoritesOnly ? "★ 仅看收藏已开启" : "☆ 仅看收藏";
+        favOnlyBtn.textContent = APP_STATE.favoritesOnly ? "★ 仅看收藏开启" : "☆ 仅看收藏";
         renderTextbooks();
       });
     }
 
-    // 陪练快速话术
     document.querySelectorAll(".quick-spar-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        const text = btn.dataset.prompt;
-        sendTeacherLine(text);
+        sendTeacherLine(btn.dataset.prompt);
       });
     });
   }

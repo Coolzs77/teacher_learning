@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>初中语文教师资格证面试备考系统 · 统编版六册全收录</title>
+  <title>初中语文教资面试备课与试讲训练</title>
   <link rel="stylesheet" href="css/app.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,34 +15,25 @@
     <!-- 移动端抽屉遮罩 -->
     <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
-    <!-- 左侧固定侧边栏 (250px) -->
+    <!-- 左侧固定侧边栏 (240px) -->
     <aside id="app-sidebar" class="app-sidebar">
       <div class="sidebar-header">
         <div class="brand-icon">语</div>
         <div class="brand-info">
           <h1>初中语文教资面试</h1>
-          <p>备考学习工作台</p>
+          <p>备课与试讲训练</p>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <!-- 分组1：入门与任务 -->
+        <!-- 主学习路径 -->
         <div class="sidebar-group">
-          <div class="sidebar-group-title">学习入门</div>
+          <div class="sidebar-group-title">核心学习路径</div>
           <button class="sidebar-nav-item active" data-tab="home" onclick="switchTab('home')">
-            <div class="nav-left"><span class="nav-icon">🏠</span> <span>首页任务</span></div>
+            <div class="nav-left"><span class="nav-icon">🏠</span> <span>今天学什么</span></div>
           </button>
-          <button class="sidebar-nav-item" data-tab="novice" onclick="switchTab('novice')">
-            <div class="nav-left"><span class="nav-icon">🧭</span> <span>新手入门 (8步走)</span></div>
-          </button>
-        </div>
-
-        <!-- 分组2：教材课文库 -->
-        <div class="sidebar-group">
-          <div class="sidebar-group-title">统编教材 (146篇)</div>
           <button class="sidebar-nav-item" data-tab="textbooks" onclick="switchTab('textbooks'); selectSidebarBook('all');">
-            <div class="nav-left"><span class="nav-icon">📚</span> <span>全部课文</span></div>
-            <span class="nav-badge" id="sidebar-total-badge">146</span>
+            <div class="nav-left"><span class="nav-icon">📚</span> <span>课文库 (146篇)</span></div>
           </button>
           <div class="sidebar-subnav">
             <button class="sidebar-subnav-item" id="subnav-7A" onclick="switchTab('textbooks'); selectSidebarBook('7A');">七年级上册</button>
@@ -52,44 +43,31 @@
             <button class="sidebar-subnav-item" id="subnav-9A" onclick="switchTab('textbooks'); selectSidebarBook('9A');">九年级上册</button>
             <button class="sidebar-subnav-item" id="subnav-9B" onclick="switchTab('textbooks'); selectSidebarBook('9B');">九年级下册</button>
           </div>
-        </div>
-
-        <!-- 分组3：试讲训练 -->
-        <div class="sidebar-group">
-          <div class="sidebar-group-title">试讲实战训练</div>
           <button class="sidebar-nav-item" data-tab="mock-exam" onclick="switchTab('mock-exam')">
-            <div class="nav-left"><span class="nav-icon">⏱️</span> <span>考场计时备课与试讲</span></div>
+            <div class="nav-left"><span class="nav-icon">📝</span> <span>教学设计草稿</span></div>
           </button>
-          <button class="sidebar-nav-item" data-tab="templates" onclick="switchTab('templates')">
-            <div class="nav-left"><span class="nav-icon">💬</span> <span>教师试讲常用表达</span></div>
+          <button class="sidebar-nav-item" data-tab="teach-modes" onclick="switchTab('teach-modes')">
+            <div class="nav-left"><span class="nav-icon">🎤</span> <span>试讲训练 (四模式)</span></div>
           </button>
           <button class="sidebar-nav-item" data-tab="sparring" onclick="switchTab('sparring')">
-            <div class="nav-left"><span class="nav-icon">🤖</span> <span>分阶段试讲反馈</span></div>
+            <div class="nav-left"><span class="nav-icon">🤖</span> <span>师生互动练习</span></div>
           </button>
         </div>
 
-        <!-- 分组4：专项突破 -->
+        <!-- 辅助模块 -->
         <div class="sidebar-group">
-          <div class="sidebar-group-title">专项突破</div>
-          <button class="sidebar-nav-item" data-tab="genre-templates" onclick="switchTab('genre-templates')">
-            <div class="nav-left"><span class="nav-icon">📐</span> <span>课型教学重点与取舍</span></div>
-          </button>
+          <div class="sidebar-group-title">辅助备考</div>
           <button class="sidebar-nav-item" data-tab="structured" onclick="switchTab('structured')">
-            <div class="nav-left"><span class="nav-icon">⚖️</span> <span>结构化问答真题</span></div>
+            <div class="nav-left"><span class="nav-icon">⚖️</span> <span>结构化问答</span></div>
           </button>
           <button class="sidebar-nav-item" data-tab="defense" onclick="switchTab('defense')">
-            <div class="nav-left"><span class="nav-icon">🎓</span> <span>考官答辩与追问</span></div>
+            <div class="nav-left"><span class="nav-icon">🎓</span> <span>考官答辩</span></div>
           </button>
-        </div>
-
-        <!-- 分组5：备考规划与教案 -->
-        <div class="sidebar-group">
-          <div class="sidebar-group-title">个人备战</div>
           <button class="sidebar-nav-item" data-tab="study-plan" onclick="switchTab('study-plan')">
-            <div class="nav-left"><span class="nav-icon">📅</span> <span>备考规划与打卡</span></div>
+            <div class="nav-left"><span class="nav-icon">📅</span> <span>备考排期</span></div>
           </button>
           <button class="sidebar-nav-item" data-tab="saved" onclick="switchTab('saved')">
-            <div class="nav-left"><span class="nav-icon">📝</span> <span>我的教案与收藏</span></div>
+            <div class="nav-left"><span class="nav-icon">📂</span> <span>我的教案与收藏</span></div>
           </button>
         </div>
       </nav>
@@ -98,317 +76,131 @@
       <div class="sidebar-footer">
         <div class="user-snippet">
           <div class="user-avatar">琪</div>
-          <div class="user-text">
+          <div>
             <div class="user-name">琪琪 · 备考中</div>
-            <div class="user-goal">目标：12月面试通关</div>
+            <div class="user-goal">12月面试 · 今天练透一篇</div>
           </div>
         </div>
       </div>
     </aside>
 
-    <!-- 右侧独立主内容区 -->
+    <!-- 右侧主内容区 -->
     <main class="app-main">
-      <!-- 顶部统领栏 -->
       <header class="main-topbar">
         <div class="topbar-left">
           <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰ 导航</button>
-          <div class="current-view-title" id="current-view-title">首页任务</div>
+          <div class="current-view-title" id="current-view-title">今天学什么</div>
         </div>
 
         <div class="topbar-right">
           <div class="pill-badge gold" id="exam-countdown-badge">
-            <span>⏳ 距12月面试预计还剩</span><strong>78</strong><span>天</span>
+            <span>⏳ 距12月面试还有</span><strong>78</strong><span>天</span>
           </div>
-          <div class="pill-badge green" id="header-fav-badge" onclick="switchTab('saved')" style="cursor:pointer;">0 篇收藏</div>
-          <div class="pill-badge" id="header-exam-badge">0 次演练</div>
+          <div class="pill-badge" id="header-fav-badge" onclick="switchTab('saved')" style="cursor:pointer;">0 篇收藏</div>
+          <div class="pill-badge" id="header-exam-badge">0 次试讲</div>
         </div>
       </header>
 
-      <!-- 主视图容器 -->
       <div class="content-container">
 
         <!-- ===================================================================
-             视图1：全新重构的任务型首页 (Home)
+             视图1：首页 (聚焦今天学什么)
              =================================================================== -->
         <section id="tab-view-home" class="tab-view active">
-          <!-- 1. 问候与倒计时横幅 -->
-          <div class="welcome-hero">
-            <div class="welcome-header">
-              <div class="welcome-title-group">
-                <h2>你好，琪琪 👋</h2>
-                <div class="welcome-subtitle">
-                  备考初中语文教师资格证面试，不需要一开始把六本书全部背完。今天先踏实走好第一步。
-                </div>
-              </div>
-              <div class="welcome-countdown-box">
-                <div style="font-size:12px; color:var(--text-muted);">距下半年预计面试</div>
-                <div><span class="count-num" id="hero-countdown-days">78</span> <span style="font-size:13px; color:var(--text-secondary);">天</span></div>
-              </div>
+          <!-- 1. 今日核心学习卡片 -->
+          <div class="home-focus-card">
+            <div class="home-focus-header">
+              <span class="focus-tag">📍 今天练什么</span>
+              <span style="font-size:12.5px; color:var(--text-muted);">不用管146篇，今天先把这一篇讲顺</span>
             </div>
 
-            <div class="today-focus-bar">
-              <div class="today-focus-text">
-                <span>🎯</span>
-                <span>今天先完成一件事：<strong>【选一篇课文，完成第一次10分钟试讲训练】</strong></span>
+            <div class="focus-lesson-title">《春》 朱自清</div>
+            <div class="focus-lesson-meta">统编教材七年级上册 第一单元 · 现代写景抒情散文</div>
+
+            <div class="focus-step-status">
+              <span class="status-badge done">✓ 课文理解</span>
+              <span style="color:var(--text-muted);">➔</span>
+              <span class="status-badge current">● 教学设计（正在进行）</span>
+              <span style="color:var(--text-muted);">➔</span>
+              <span class="status-badge todo">○ 10分钟试讲</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div style="font-size:14px; color:var(--text-primary);">
+                <strong>下一步：</strong>弄清楚“春花图”怎么截取、怎么提问、怎么把这几句话讲给学生听。
               </div>
-              <button class="btn-academic primary" onclick="openLessonWorkbench('7A-u1-l1')">
-                开始练《春》 →
+              <button class="btn-academic primary large" onclick="openLessonWorkbench('7A-u1-l1')">
+                进入《春》学习工作台 →
               </button>
+            </div>
+
+            <div class="weekly-target-bar" style="margin-top:16px;">
+              <span>本周学习目标：3 篇重点课文</span>
+              <span>当前进度：已完成 2 / 3 篇</span>
             </div>
           </div>
 
-          <!-- 2. 今日任务清单卡片 -->
+          <!-- 2. 三大直达入口 -->
+          <div class="home-portals-grid">
+            <div class="home-portal-card" onclick="openLessonWorkbench('7A-u1-l1')">
+              <div>
+                <div class="portal-tag green">零基础上手</div>
+                <div class="portal-title">【我完全不会讲课】</div>
+                <div class="portal-desc">不知道10分钟讲什么、不知道怎么开口？跟着《春》的引导一步步做。</div>
+              </div>
+              <div class="portal-link">从《春》开始带练 →</div>
+            </div>
+
+            <div class="home-portal-card" onclick="switchTab('textbooks')">
+              <div>
+                <div class="portal-tag gold">自主选择</div>
+                <div class="portal-title">【我想挑一篇课文练】</div>
+                <div class="portal-desc">从统编六册课文库中挑选你感兴趣或想攻克的篇目开始练习。</div>
+              </div>
+              <div class="portal-link">挑选课文 →</div>
+            </div>
+
+            <div class="home-portal-card" onclick="startRandomExamSimulation()">
+              <div>
+                <div class="portal-tag blue">考前冲刺</div>
+                <div class="portal-title">【我想模拟一次考试】</div>
+                <div class="portal-desc">电脑随机抽题，限时备课 + 10分钟试讲 + 考官提问，检验熟练度。</div>
+              </div>
+              <div class="portal-link">随机抽题模拟 →</div>
+            </div>
+          </div>
+
+          <!-- 3. 今日自查打卡 -->
           <div class="academic-card">
             <div class="card-title">
-              <div class="card-title-left">
-                <span>📋 今日建议完成动作（点击即可标记完成）</span>
-              </div>
-              <span style="font-size:12px; color:var(--text-muted);">不求多，一天练透一篇即可</span>
+              <span>📋 今日小任务（点一下就能打钩）</span>
+              <span style="font-size:12px; color:var(--text-muted);">完成一个是一个</span>
             </div>
             <div class="today-checklist" id="today-checklist-container">
               <div class="checklist-item" onclick="toggleChecklistTask(0)">
                 <input type="checkbox" class="checklist-checkbox" id="check-task-0" onclick="event.stopPropagation(); toggleChecklistTask(0);">
-                <label class="task-label" for="check-task-0">1. 通读一遍选定的课文，弄清楚文章大概写了什么</label>
-                <span class="task-tag">阅读原文</span>
+                <label class="task-label" for="check-task-0">1. 在网页里通读一遍《春》，重点看看第4段“春花图”</label>
+                <span class="task-tag">读原文</span>
               </div>
               <div class="checklist-item" onclick="toggleChecklistTask(1)">
                 <input type="checkbox" class="checklist-checkbox" id="check-task-1" onclick="event.stopPropagation(); toggleChecklistTask(1);">
-                <label class="task-label" for="check-task-1">2. 确定10分钟试讲重点：只挑1个核心段落，明确不讲什么</label>
-                <span class="task-tag">重点取舍</span>
+                <label class="task-label" for="check-task-1">2. 搞清楚10分钟只讲“春花图”，千万不要把五幅图全讲完</label>
+                <span class="task-tag">定重点</span>
               </div>
               <div class="checklist-item" onclick="toggleChecklistTask(2)">
                 <input type="checkbox" class="checklist-checkbox" id="check-task-2" onclick="event.stopPropagation(); toggleChecklistTask(2);">
-                <label class="task-label" for="check-task-2">3. 确定这节课的2个具体教学目标，并理顺板书提纲</label>
-                <span class="task-tag">教学设计</span>
+                <label class="task-label" for="check-task-2">3. 看着示范台词，练习一次1分钟自然的新课导入</label>
+                <span class="task-tag">练导入</span>
               </div>
               <div class="checklist-item" onclick="toggleChecklistTask(3)">
                 <input type="checkbox" class="checklist-checkbox" id="check-task-3" onclick="event.stopPropagation(); toggleChecklistTask(3);">
-                <label class="task-label" for="check-task-3">4. 看着示范台词，练习一次自然亲切的1分钟新课导入</label>
-                <span class="task-tag">开嗓导入</span>
+                <label class="task-label" for="check-task-3">4. 学习学生回答后，老师怎么顺着学生的回答追问一句</label>
+                <span class="task-tag">学接话</span>
               </div>
               <div class="checklist-item" onclick="toggleChecklistTask(4)">
                 <input type="checkbox" class="checklist-checkbox" id="check-task-4" onclick="event.stopPropagation(); toggleChecklistTask(4);">
-                <label class="task-label" for="check-task-4">5. 打开10分钟计时器，站起来对着镜子或屏幕完整讲一遍</label>
-                <span class="task-tag">限时试讲</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. 三大直达入口网格 -->
-          <div class="portals-grid">
-            <div class="portal-card green" onclick="switchTab('novice')">
-              <div class="portal-icon">🟢</div>
-              <div class="portal-title">【我还不会讲课】</div>
-              <div class="portal-desc">第一次准备面试，不知道试讲看什么、怎么写简案、台词怎么说？带你8步理清思路。</div>
-              <div class="portal-action-btn">查看8步入门指引 →</div>
-            </div>
-
-            <div class="portal-card gold" onclick="switchTab('textbooks')">
-              <div class="portal-icon">🟡</div>
-              <div class="portal-title">【我已经会讲，想练课文】</div>
-              <div class="portal-desc">从统编初中六册146篇课文中挑一篇高频课文，直接进入10分钟限时试讲。</div>
-              <div class="portal-action-btn">进入课文库挑选 →</div>
-            </div>
-
-            <div class="portal-card blue" onclick="startRandomExamSimulation()">
-              <div class="portal-icon">🔵</div>
-              <div class="portal-title">【我想模拟完整面试】</div>
-              <div class="portal-desc">随机抽一篇课文，限时备课 + 10分钟试讲 + 2道结构化问答 + 考官答辩。</div>
-              <div class="portal-action-btn">开始全真模拟 →</div>
-            </div>
-          </div>
-
-          <!-- 4. 今日推荐课文特写卡 -->
-          <div class="academic-card" style="margin-bottom:24px;">
-            <div class="card-title">
-              <div class="card-title-left">
-                <span>🌟 今日重点推荐精练篇目</span>
-              </div>
-              <button class="btn-academic" onclick="switchTab('textbooks')">查看全部课文 ↗</button>
-            </div>
-            <div class="lesson-spotlight">
-              <div class="spotlight-info">
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <h3>《春》 朱自清</h3>
-                  <span class="lesson-genre-pill">写景抒情散文</span>
-                  <span style="font-size:12px; color:var(--color-gold); font-weight:bold;">★★★★★ 超高频常考</span>
-                </div>
-                <div class="spotlight-meta">统编教材七年级上册 第一单元 · 原书第2页</div>
-                <div class="spotlight-quote">
-                  “桃树、杏树、梨树，你不让我，我不让你，都开满了花赶趟儿。红的像火，粉的像霞，白的像雪……”
-                </div>
-              </div>
-              <button class="btn-academic primary large" onclick="openLessonWorkbench('7A-u1-l1')">
-                开始练这篇课文 ✍️
-              </button>
-            </div>
-          </div>
-
-          <!-- 5. 简约练习统计条 -->
-          <div class="stats-strip">
-            <div class="stat-box">
-              <div class="num" id="dash-total-lessons">146</div>
-              <div class="label">统编六册课文</div>
-            </div>
-            <div class="stat-box">
-              <div class="num" id="dash-learned-lessons">0</div>
-              <div class="label">已学习课文</div>
-            </div>
-            <div class="stat-box">
-              <div class="num" id="dash-prepped-lessons">0</div>
-              <div class="label">已编写简案</div>
-            </div>
-            <div class="stat-box">
-              <div class="num" id="dash-exam-count">0</div>
-              <div class="label">已完成试讲</div>
-            </div>
-          </div>
-        </section>
-
-
-        <!-- ===================================================================
-             视图2：新手入门 8 步引导 (Novice Guide)
-             =================================================================== -->
-        <section id="tab-view-novice" class="tab-view">
-          <div class="academic-card">
-            <div class="card-title">
-              <div class="card-title-left">
-                <span>🧭 第一次备考，不知道怎么准备？手把手带你走完这8步</span>
-              </div>
-              <button class="btn-academic primary" onclick="openLessonWorkbench('7A-u1-l1')">
-                拿《春》带我实操一遍 →
-              </button>
-            </div>
-            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              初中语文教资面试并不是考你能不能把一篇课文讲得面面俱到，而是考查你<strong>“站在讲台上像不像一个真正的初中语文老师”</strong>。放平心态，按照下面 8 个步骤循序渐进：
-            </p>
-
-            <div class="novice-stepper">
-              <!-- 第1步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">1</div>
-                  <div class="step-title">先认识真实考试流程与时间分配</div>
-                </div>
-                <div class="step-body">
-                  正式考试通常分为四个环节（具体时间安排以当次考试官方公告为准）：
-                  <div class="step-callout">
-                    <strong>① 抽题与备课（通常20分钟）：</strong>考场电脑随机打印出试题纸，包含课文题目、选段及2~3条试讲要求（如“有适当板书”、“设计品读朗读”、“体会作者情感”）。在备课纸上写出简案。<br>
-                    <strong>② 结构化问答（5分钟2题）：</strong>进考场先回答考官抽出的2道教育综合题目。<br>
-                    <strong>③ 无生试讲（10分钟）：</strong>面对考官站立试讲，讲台上假装下面有学生。<br>
-                    <strong>④ 考官答辩（5分钟）：</strong>考官围绕刚才的试讲设计提问1~2个问题。
-                  </div>
-                </div>
-              </div>
-
-              <!-- 第2步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">2</div>
-                  <div class="step-title">认识10分钟试讲的本质：绝不是从头讲到尾</div>
-                </div>
-                <div class="step-body">
-                  很多同学最大的误区，是以为什么都要讲完。初中课文少则几百字，多则几千字，10分钟根本讲不完！
-                  <div class="step-callout alert">
-                    <strong>考官到底想看什么？</strong><br>
-                    考官只想看你能不能：①用1分钟自然导入；②在课文里<strong>选出1个最适合讲的核心段落</strong>深挖；③问出好的问题并假想学生回答；④在黑板上端正板书。把一个点讲透，你就赢了！
-                  </div>
-                </div>
-              </div>
-
-              <!-- 第3步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">3</div>
-                  <div class="step-title">学会拿到一篇陌生课文后，怎样找切入点</div>
-                </div>
-                <div class="step-body">
-                  拿到抽题纸后，第一件事看<strong>文体</strong>和<strong>试题要求</strong>：
-                  <ul style="padding-left:18px; margin-top:6px;">
-                    <li><strong>写景散文（如《春》《济南的冬天》）：</strong>抓修辞比喻拟人和感官动词，引导学生读出画面美。</li>
-                    <li><strong>写人叙事/小说（如《背影》《孔乙己》）：</strong>抓人物外貌动作语言细节，品味性格与情感。</li>
-                    <li><strong>文言文（如《陋室铭》《桃花源记》）：</strong>读准停顿节奏，落实两三个关键实词虚词，探究主旨。</li>
-                  </ul>
-                </div>
-              </div>
-
-              <!-- 第4步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">4</div>
-                  <div class="step-title">学会定教学目标：别写空话大话，就定两点</div>
-                </div>
-                <div class="step-body">
-                  教案纸上不要抄写长篇大论，就定两到三个实实在在的目标：
-                  <div class="step-callout">
-                    <strong>目标1（知识与能力）：</strong>通过朗读，品析文中的比喻、拟人修辞手法与传神动词。<br>
-                    <strong>目标2（过程与方法）：</strong>通过圈点批注与合作交流，学习从多角度描写景物的方法。<br>
-                    <strong>目标3（情感态度）：</strong>体会作者对春天大自然的热爱之情。
-                  </div>
-                </div>
-              </div>
-
-              <!-- 第5步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">5</div>
-                  <div class="step-title">学会分配10分钟时间：黄金时间节奏</div>
-                </div>
-                <div class="step-body">
-                  <div class="step-callout">
-                    ⏱️ <strong>0:00 - 1:00（导入）：</strong>情境或生活经验引出课题，并顺手板书课题。<br>
-                    ⏱️ <strong>1:00 - 2:30（初读）：</strong>提出自读要求，明确今天这节课重点赏析哪一部分。<br>
-                    ⏱️ <strong>2:30 - 7:30（精读品析·核心）：</strong>围绕1~2个主问题，指名学生回答、老师追问点拨、板书核心词。<br>
-                    ⏱️ <strong>7:30 - 8:30（拓展升华）：</strong>由文本走向生活或情感升华。<br>
-                    ⏱️ <strong>8:30 - 9:30（小结与板书收束）：</strong>师生共同回顾板书重点。<br>
-                    ⏱️ <strong>9:30 - 10:00（分层作业与下课）：</strong>布置作业，鞠躬致谢。
-                  </div>
-                </div>
-              </div>
-
-              <!-- 第6步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">6</div>
-                  <div class="step-title">学会写考场简案：提纲式书写，不要长篇大论</div>
-                </div>
-                <div class="step-body">
-                  备课纸只是你的演讲提纲。不要把想说的话一句一句写上去，那样试讲时会变成照着纸念！
-                  写下：课题、目标、主问题1、主问题2、黑板板书图示。
-                </div>
-              </div>
-
-              <!-- 第7步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">7</div>
-                  <div class="step-title">学会试讲开口说话：自然、口语化、有问有停顿</div>
-                </div>
-                <div class="step-body">
-                  讲台上最忌讳把备课内容当论文背诵。试讲秘诀：
-                  <div class="step-callout">
-                    ① 提问后一定要<strong>停顿2~3秒</strong>，做出巡视学生、等待举手的姿态；<br>
-                    ② 指名请学生回答：“请窗边戴眼镜的小明同学说说……”<br>
-                    ③ 把学生的答案复述出来：“小明抓住了‘闹’这个动词，非常敏锐！请坐。”<br>
-                    ④ 紧接着追问一句：“那这个‘闹’字好在哪里呢？同桌的小红你来补充……”
-                  </div>
-                </div>
-              </div>
-
-              <!-- 第8步 -->
-              <div class="novice-step-card">
-                <div class="step-header">
-                  <div class="step-number">8</div>
-                  <div class="step-title">把第一篇课文试讲练顺之后，再准备结构化和答辩</div>
-                </div>
-                <div class="step-body">
-                  不要一上来就所有模块齐头并进导致焦虑。先选好一篇课文（比如《春》），把10分钟试讲开口讲两遍。只要有一篇课文能从容讲顺，后面的课文就是举一反三的练习！
-                  <div style="margin-top:14px;">
-                    <button class="btn-academic primary large" onclick="openLessonWorkbench('7A-u1-l1')">
-                      现在就开始，拿《春》试讲一次 🚀
-                    </button>
-                  </div>
-                </div>
+                <label class="task-label" for="check-task-4">5. 打开跟练模式，跟着把整篇试讲完整说一遍</label>
+                <span class="task-tag">开口试讲</span>
               </div>
             </div>
           </div>
@@ -416,183 +208,100 @@
 
 
         <!-- ===================================================================
-             视图3：单篇课文双栏学习工作台 (Single Lesson Workbench)
+             视图2：单篇课文学习工作台 (核心学习闭环)
              =================================================================== -->
         <section id="tab-view-workbench" class="tab-view">
-          <div class="workbench-container" id="workbench-container">
-            <!-- 动态注入双栏内容 -->
+          <div id="workbench-container">
+            <!-- 动态生成单篇课文完整步骤式工作台 -->
           </div>
         </section>
 
 
         <!-- ===================================================================
-             视图4：教材课文库 (Textbooks)
+             视图3：课文库 (146篇)
              =================================================================== -->
         <section id="tab-view-textbooks" class="tab-view">
           <div class="filter-panel">
             <div class="search-input-group">
-              <input type="text" id="textbook-search-input" class="search-input" placeholder="🔍 搜索课文名、作者、写作手法、语文要素关键词（如：春、朱自清、比喻、环境描写）...">
+              <input type="text" id="textbook-search-input" class="search-input" placeholder="🔍 搜索课文名、作者（如：春、朱自清、背影）...">
               <button class="btn-academic" id="btn-toggle-fav-filter">☆ 仅看收藏</button>
             </div>
 
-            <!-- 状态筛选 -->
             <div class="filter-row">
-              <span class="filter-label">学习进度：</span>
+              <span class="filter-label">学习状态：</span>
               <div class="filter-btn-group">
-                <button class="filter-chip chip-status active" data-status="all">全部状态</button>
+                <button class="filter-chip chip-status active" data-status="all">全部</button>
                 <button class="filter-chip chip-status" data-status="unlearned">未学习</button>
                 <button class="filter-chip chip-status" data-status="learning">正在学</button>
-                <button class="filter-chip chip-status" data-status="completed">已完成试讲</button>
+                <button class="filter-chip chip-status" data-status="completed">已试讲</button>
               </div>
             </div>
 
-            <!-- 册次筛选 -->
             <div class="filter-row">
               <span class="filter-label">教材册次：</span>
               <div class="filter-btn-group">
                 <button class="filter-chip chip-book active" data-book="all">全部六册</button>
-                <button class="filter-chip chip-book" data-book="7A">七年级上册</button>
-                <button class="filter-chip chip-book" data-book="7B">七年级下册</button>
-                <button class="filter-chip chip-book" data-book="8A">八年级上册</button>
-                <button class="filter-chip chip-book" data-book="8B">八年级下册</button>
-                <button class="filter-chip chip-book" data-book="9A">九年级上册</button>
-                <button class="filter-chip chip-book" data-book="9B">九年级下册</button>
+                <button class="filter-chip chip-book" data-book="7A">七年级上</button>
+                <button class="filter-chip chip-book" data-book="7B">七年级下</button>
+                <button class="filter-chip chip-book" data-book="8A">八年级上</button>
+                <button class="filter-chip chip-book" data-book="8B">八年级下</button>
+                <button class="filter-chip chip-book" data-book="9A">九年级上</button>
+                <button class="filter-chip chip-book" data-book="9B">九年级下</button>
               </div>
             </div>
 
-            <!-- 文体筛选 -->
             <div class="filter-row">
               <span class="filter-label">课文文体：</span>
               <div class="filter-btn-group">
                 <button class="filter-chip chip-genre active" data-genre="all">全部文体</button>
-                <button class="filter-chip chip-genre" data-genre="现代散文">现代散文</button>
+                <button class="filter-chip chip-genre" data-genre="现代散文">散文</button>
                 <button class="filter-chip chip-genre" data-genre="小说">小说</button>
                 <button class="filter-chip chip-genre" data-genre="说明文">说明文</button>
                 <button class="filter-chip chip-genre" data-genre="议论">议论文/演讲</button>
-                <button class="filter-chip chip-genre" data-genre="文言文">经典文言文</button>
+                <button class="filter-chip chip-genre" data-genre="文言文">文言文</button>
                 <button class="filter-chip chip-genre" data-genre="诗词">古诗词曲</button>
-                <button class="filter-chip chip-genre" data-genre="新闻">新闻特写</button>
-                <button class="filter-chip chip-genre" data-genre="戏剧">戏剧剧本</button>
               </div>
-            </div>
-
-            <!-- 考频筛选 -->
-            <div class="filter-row">
-              <span class="filter-label">面试考频：</span>
-              <div class="filter-btn-group">
-                <button class="filter-chip chip-priority active" data-priority="all">全部考频</button>
-                <button class="filter-chip chip-priority" data-priority="★★★★★">★★★★★ 超高频常考</button>
-                <button class="filter-chip chip-priority" data-priority="★★★★☆">★★★★☆ 重点篇目</button>
-              </div>
-              <span style="font-size:12px; color:var(--text-muted); margin-left:auto;" id="textbook-filter-count">
-                共检索到 146 篇课文
-              </span>
+              <span style="font-size:12px; color:var(--text-muted); margin-left:auto;" id="textbook-filter-count">共 146 篇</span>
             </div>
           </div>
 
-          <!-- 课文卡片瀑布流 -->
-          <div class="lessons-grid" id="textbooks-lessons-grid">
-            <!-- 动态加载全部课文 -->
-          </div>
+          <div class="lessons-grid" id="textbooks-lessons-grid"></div>
         </section>
 
 
         <!-- ===================================================================
-             视图5：考场计时备课与试讲 (Mock Exam)
+             视图4：四种试讲训练模式
              =================================================================== -->
-        <section id="tab-view-mock-exam" class="tab-view">
-          <div class="academic-card" style="margin-bottom:18px;">
-            <div style="font-size:13.5px; color:var(--text-secondary); line-height:1.6;">
-              💡 <strong>考试时间特别提示：</strong>全国各地区教师资格证面试正式考试规则中，抽题备课时间通常为 <strong>20分钟</strong>（具体以当次考试官方公告为准）。
-              本系统默认提供 <strong>10分钟提速强化备课模式</strong>（帮助考生锻炼快速列提纲的敏捷度），同时也支持切换为标准 20分钟模式。
-            </div>
-          </div>
+        <section id="tab-view-teach-modes" class="tab-view">
+          <div class="academic-card">
+            <h3 class="card-title">🎤 试讲训练：从“不敢开口”到“独立讲完10分钟”</h3>
+            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+              不要一上来就限时10分钟自己讲。试讲需要像练琴一样分阶段：先跟读别人的示范台词，再在有提示的情况下练，最后才独立脱稿试讲。
+            </p>
 
-          <div class="mock-exam-container">
-            <!-- 左侧：计时器与控制 -->
-            <div class="timer-sidebar">
-              <!-- 备课倒计时 -->
-              <div class="timer-card">
-                <h3 style="font-family:var(--font-serif); font-size:16px; color:var(--text-primary);">
-                  📝 阶段一：考场备课草稿书写
-                </h3>
-                <div style="display:flex; justify-content:center; gap:6px; margin:8px 0;">
-                  <button class="reader-tool-btn active" id="btn-prep-mode-10" onclick="setPrepDuration(10)">10分钟强化</button>
-                  <button class="reader-tool-btn" id="btn-prep-mode-20" onclick="setPrepDuration(20)">20分钟标准</button>
-                </div>
-                <div class="timer-dial" id="prep-timer-display">10:00</div>
-                <div class="timer-btn-group">
-                  <button class="btn-academic primary" id="btn-prep-toggle" onclick="togglePrepTimer()">开始备课倒计时</button>
-                  <button class="btn-academic" onclick="resetPrepTimer()">重置</button>
-                </div>
+            <div class="teach-modes-grid">
+              <div class="teach-mode-card" onclick="openLessonWorkbench('7A-u1-l1', 7)">
+                <div class="mode-name">① 跟练模式（有示范，带你读）</div>
+                <div class="mode-desc">系统一句一句显示示范台词，告诉你下一句该说什么、怎么问学生。你只需要大声读出来，把舌头练顺。</div>
+                <button class="btn-academic primary" style="font-size:12px;">以《春》开始跟练 →</button>
               </div>
 
-              <!-- 试讲倒计时 -->
-              <div class="timer-card">
-                <h3 style="font-family:var(--font-serif); font-size:16px; color:var(--color-green-primary);">
-                  🎯 阶段二：10分钟试讲实战演练
-                </h3>
-                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
-                  站立面对镜子或屏幕开口试讲
-                </p>
-                <div class="timer-dial" id="teach-timer-display">10:00</div>
-                <div id="teach-current-phase-hint" style="background:var(--bg-primary); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; font-size:13px; text-align:left; line-height:1.6; min-height:76px; margin:10px 0;">
-                  📍 <strong>准备就绪：</strong>点击下方开始试讲，系统将根据时间自动提示当前环节（导入、初读、精读、小结、作业）。
-                </div>
-                <div class="timer-btn-group">
-                  <button class="btn-academic primary" id="btn-teach-toggle" onclick="toggleTeachTimer()">开始10分钟试讲</button>
-                  <button class="btn-academic" onclick="resetTeachTimer()">重置</button>
-                </div>
-                <div style="margin-top:14px; border-top:1px dashed var(--border-color); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
-                  <button class="btn-academic gold" onclick="compareStandardPlan()">
-                    📖 对照参考标准教案提纲
-                  </button>
-                  <button class="btn-academic" onclick="window.print()">
-                    🖨️ 打印当前草稿教案纸
-                  </button>
-                </div>
+              <div class="teach-mode-card" onclick="openLessonWorkbench('7A-u1-l1', 7)">
+                <div class="mode-name">② 提示模式（卡壳时点提示）</div>
+                <div class="mode-desc">自己开口试讲。讲到一半忘了下一步该导入还是该分析了？点一下“提示我下一步”，老教师给你点拨一句。</div>
+                <button class="btn-academic" style="font-size:12px;">体验提示试讲 →</button>
               </div>
-            </div>
 
-            <!-- 右侧：标准空白手写教案纸 -->
-            <div class="exam-lesson-sheet-wrapper">
-              <div class="exam-lesson-sheet">
-                <div class="sheet-header">
-                  <div class="sheet-title">初中语文教师资格证面试 · 教学设计简案纸</div>
-                  <div class="sheet-meta-fields">
-                    <span><strong>课文题目：</strong><span id="exam-sheet-lesson-title">《春》</span></span>
-                    <span><strong>作者：</strong><span id="exam-sheet-author">朱自清</span></span>
-                    <span><strong>年级：</strong><span id="exam-sheet-grade">七年级上册</span></span>
-                    <span><strong>试讲限时：</strong>10分钟</span>
-                  </div>
-                </div>
+              <div class="teach-mode-card" onclick="startMockExamWithLesson('7A-u1-l1')">
+                <div class="mode-name">③ 独立练习（只计时，不打扰）</div>
+                <div class="mode-desc">不显示任何台词提示，10分钟倒计时启动。只在第5分钟和第9分钟发出轻柔提示音，提醒你把控节奏。</div>
+                <button class="btn-academic" style="font-size:12px;">进入独立计时 →</button>
+              </div>
 
-                <div class="sheet-section">
-                  <div class="sheet-section-title">一、教学目标（简明务实，定两点即可）</div>
-                  <textarea id="sheet-input-targets" class="sheet-textarea" placeholder="1. 知识与能力目标：品读重点词句/修辞手法&#10;2. 过程与方法目标：通过朗读与小组交流学习分析方法&#10;3. 情感态度目标：体会作者的思想情感"></textarea>
-                </div>
-
-                <div class="sheet-section">
-                  <div class="sheet-section-title">二、教学重难点</div>
-                  <textarea id="sheet-input-points" class="sheet-textarea" style="min-height:64px;" placeholder="【教学重点】：抓住核心语段朗读品析&#10;【教学难点】：理解深层主旨或写作手法的妙处"></textarea>
-                </div>
-
-                <div class="sheet-section">
-                  <div class="sheet-section-title">三、10分钟试讲教学过程（提纲式要点）</div>
-                  <textarea id="sheet-input-flow" class="sheet-textarea" style="min-height:200px;" placeholder="一、导入新课（约1分钟）：&#10;设计导入语，顺势板书课题&#10;&#10;二、初读感知（约2分钟）：&#10;整体感知，明确今天重点研读的核心段落&#10;&#10;三、精读品析（约5分钟，重中之重）：&#10;核心主问题1：……（指名回答、追问接话）&#10;核心主问题2：……（朗读指导、板书重点词）&#10;&#10;四、课堂小结（约1分钟）：&#10;师生回顾板书，升华主旨&#10;&#10;五、布置作业（约1分钟）：&#10;基础性作业 + 拓展性作业"></textarea>
-                </div>
-
-                <div class="sheet-section">
-                  <div class="sheet-section-title">四、黑板板书设计图示</div>
-                  <textarea id="sheet-input-blackboard" class="sheet-textarea" style="min-height:80px;" placeholder="【主板书】：课题、作者、核心脉络关键词&#10;【副板书】：生字词、修辞手法标注"></textarea>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid var(--border-color); padding-top:14px;">
-                  <span style="font-size:12px; color:var(--text-muted);">
-                    💾 提示：输入内容会自动保存在本地浏览器，随时可再次查看。
-                  </span>
-                  <button class="btn-academic primary" onclick="saveCurrentLessonPlan()">💾 保存我的简案</button>
-                </div>
+              <div class="teach-mode-card" onclick="startRandomExamSimulation()">
+                <div class="mode-name">④ 考场模拟（抽题+备课+试讲+答辩）</div>
+                <div class="mode-desc">完全模拟真实考场。随机抽取课文，限时备课后直接开讲，讲完回答考官提问。</div>
+                <button class="btn-academic gold" style="font-size:12px;">开始考场全真模拟 →</button>
               </div>
             </div>
           </div>
@@ -600,64 +309,133 @@
 
 
         <!-- ===================================================================
-             视图6：分阶段试讲反馈与陪练 (Sparring)
+             视图5：师生课堂互动练习 (真实学生多类型反应)
              =================================================================== -->
         <section id="tab-view-sparring" class="tab-view">
-          <div class="academic-card" style="margin-bottom:18px;">
-            <div class="card-title">
-              <span>🤖 分阶段试讲反馈与表达练习</span>
-            </div>
+          <div class="academic-card">
+            <h3 class="card-title">🤖 师生互动练习：学生回答各种情况，你该怎么接？</h3>
             <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              不要担心说错。我们把练习分为三个阶段：<strong>第一阶段</strong>先跟着示范读出声；<strong>第二阶段</strong>完成单项任务挑战（如用30秒完成导入）；<strong>第三阶段</strong>进行完整试讲自查，AI指出具体的表达口头禅与节奏问题。
+              真正的试讲最难的不是自己背课文，而是<strong>“怎么假装台下有学生在跟你互动”</strong>。在真实课堂里，学生不可能每个人都答得完美。这里模拟4种学生反应，教你如何自然接话：
             </p>
           </div>
 
           <div class="academic-card">
             <div class="card-title">
-              <span>🗣️ 课堂互动练习（你说一句，模拟学生回应一句）</span>
+              <span>🗣️ 课堂互动现场演练</span>
             </div>
-            <div class="dialogue-stream" id="sparring-dialogue-stream" style="max-height:360px; overflow-y:auto; padding:12px; background:var(--bg-primary); border-radius:var(--radius-md); margin-bottom:16px;">
+            <div class="dialogue-stream" id="sparring-dialogue-stream" style="max-height:360px; overflow-y:auto; padding:14px; background:var(--bg-primary); border-radius:var(--radius-md); margin-bottom:14px;">
               <div class="dialogue-item">
                 <span class="dialogue-role-badge student">模拟学生</span>
                 <div class="dialogue-bubble student">
-                  老师好！我们是初中生。请像在真实考场一样，说出您的新课导入、朗读指令或课堂提问，我们会举手回答！
+                  老师好！我们是初中生。请你说出一句你的课堂提问，或者提出一个朗读要求。
                 </div>
               </div>
             </div>
 
             <div style="margin-bottom:12px;">
               <span style="font-size:12.5px; color:var(--text-muted); margin-bottom:6px; display:block;">
-                💡 点击直接套用口语示范练习：
+                💡 快速点选教师提问示范：
               </span>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="filter-chip quick-spar-btn" data-prompt="请同学们大声朗读第3段，注意读准字音，并划出让你体会到生机的词语。">
-                  📖 朗读指令
+                <button class="filter-chip quick-spar-btn" data-prompt="请同学们默读第4段，圈画出作者写春花颜色的词语。">
+                  🔍 具体的词句提问
                 </button>
-                <button class="filter-chip quick-spar-btn" data-prompt="作者在这里运用了什么修辞手法？请抓住关键词说说你的品析。">
-                  🔍 修辞品析提问
+                <button class="filter-chip quick-spar-btn" data-prompt="作者在这里用了‘你不让我，我不让你’，把花当作什么来写？">
+                  🌸 修辞拟人提问
                 </button>
-                <button class="filter-chip quick-spar-btn" data-prompt="小明同学找得非常准！请坐。那老师再追问一句：作者为什么不用更普通的词，而用了这个字？">
-                  🚀 启发追问
-                </button>
-                <button class="filter-chip quick-spar-btn" data-prompt="请前后桌4人小组交流讨论两分钟：作者想通过这段描写表达什么情感？">
-                  👥 小组交流指令
+                <button class="filter-chip quick-spar-btn" data-prompt="花下成千成百的蜜蜂‘嗡嗡地闹着’，作者为什么用‘闹’不用‘叫’？">
+                  🚀 动词推敲追问
                 </button>
               </div>
             </div>
 
             <div class="search-input-group" style="margin-bottom:0;">
-              <input type="text" id="sparring-user-input" class="search-input" placeholder="输入你想对学生说的话（如：请大家思考作者为什么这样写？）" onkeydown="if(event.key==='Enter') sendTeacherLine();">
-              <button class="btn-academic primary" onclick="sendTeacherLine()">开口说这一句</button>
+              <input type="text" id="sparring-user-input" class="search-input" placeholder="输入你想对学生说的话（如：请大家看春花图……）" onkeydown="if(event.key==='Enter') sendTeacherLine();">
+              <button class="btn-academic primary" onclick="sendTeacherLine()">说出这句</button>
             </div>
           </div>
 
-          <div class="academic-card">
+          <!-- 老师具体建议报告 -->
+          <div class="academic-card" id="sparring-eval-card" style="display:none;">
             <div class="card-title">
-              <span>📋 试讲表达诊断与改进建议</span>
+              <span>👨‍🏫 备考老师的现场点评</span>
             </div>
-            <div id="sparring-eval-report">
-              <div style="text-align:center; padding:32px 16px; color:var(--text-muted);">
-                <p>在上方完成对话交流后，这里会直接指出你的<strong>口头禅、停顿时间、学生互动和具体修改建议</strong>。</p>
+            <div id="sparring-eval-report"></div>
+          </div>
+        </section>
+
+
+        <!-- ===================================================================
+             视图6：教学设计草稿 (Mock Exam Sheet)
+             =================================================================== -->
+        <section id="tab-view-mock-exam" class="tab-view">
+          <div class="mock-exam-container">
+            <div class="timer-sidebar">
+              <div class="timer-card">
+                <h3 style="font-family:var(--font-serif); font-size:15px; color:var(--text-primary);">
+                  📝 备课时间
+                </h3>
+                <div style="display:flex; justify-content:center; gap:6px; margin:6px 0;">
+                  <button class="reader-tool-btn active" id="btn-prep-mode-10" onclick="setPrepDuration(10)">10分钟提速</button>
+                  <button class="reader-tool-btn" id="btn-prep-mode-20" onclick="setPrepDuration(20)">20分钟考场标准</button>
+                </div>
+                <div class="timer-dial" id="prep-timer-display">10:00</div>
+                <div class="timer-btn-group">
+                  <button class="btn-academic primary" id="btn-prep-toggle" onclick="togglePrepTimer()">开始倒计时</button>
+                  <button class="btn-academic" onclick="resetPrepTimer()">重置</button>
+                </div>
+              </div>
+
+              <div class="timer-card">
+                <h3 style="font-family:var(--font-serif); font-size:15px; color:var(--color-green-primary);">
+                  🎯 10分钟试讲计时
+                </h3>
+                <div class="timer-dial" id="teach-timer-display">10:00</div>
+                <div id="teach-current-phase-hint" style="background:var(--bg-primary); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:8px 10px; font-size:12.5px; text-align:left; line-height:1.6; margin:8px 0;">
+                  📍 <strong>准备就绪：</strong>点击下方开始试讲，时间过半和剩1分钟时会发出轻提示音。
+                </div>
+                <div class="timer-btn-group">
+                  <button class="btn-academic primary" id="btn-teach-toggle" onclick="toggleTeachTimer()">开始试讲</button>
+                  <button class="btn-academic" onclick="resetTeachTimer()">重置</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="exam-lesson-sheet-wrapper">
+              <div class="exam-lesson-sheet">
+                <div class="sheet-header">
+                  <div class="sheet-title">教学设计草稿纸</div>
+                  <div class="sheet-meta-fields">
+                    <span><strong>课文：</strong><span id="exam-sheet-lesson-title">《春》</span></span>
+                    <span><strong>作者：</strong><span id="exam-sheet-author">朱自清</span></span>
+                    <span><strong>年级：</strong><span id="exam-sheet-grade">七年级上册</span></span>
+                  </div>
+                </div>
+
+                <div class="sheet-section">
+                  <div class="sheet-section-title">一、这节课让学生学会什么（目标两点即可）</div>
+                  <textarea id="sheet-input-targets" class="sheet-textarea" placeholder="1. 读准词句，学习赏析比喻、拟人修辞&#10;2. 体会作者对春天的喜爱之情"></textarea>
+                </div>
+
+                <div class="sheet-section">
+                  <div class="sheet-section-title">二、这节课的核心重点</div>
+                  <textarea id="sheet-input-points" class="sheet-textarea" style="min-height:55px;" placeholder="【教学重点】：抓住第4段‘春花图’品析生动词句与修辞手法的表达效果"></textarea>
+                </div>
+
+                <div class="sheet-section">
+                  <div class="sheet-section-title">三、10分钟试讲提纲要点</div>
+                  <textarea id="sheet-input-flow" class="sheet-textarea" style="min-height:180px;" placeholder="1. 导入（1分钟）：以生活春天图景切入，板书课题《春》与朱自清&#10;2. 初读（1.5分钟）：学生自由朗读，明确今天重点研读第4段‘春花图’&#10;3. 精读探究（5分钟）：&#10;   主问题：作者写春花写了哪些色彩和修辞？（指名回答、追问接话、板书关键词）&#10;4. 小结（1.5分钟）：师生回顾黑板板书，升华情感&#10;5. 作业（1分钟）：摘抄优美句子，仿写一处景物"></textarea>
+                </div>
+
+                <div class="sheet-section">
+                  <div class="sheet-section-title">四、黑板板书设计</div>
+                  <textarea id="sheet-input-blackboard" class="sheet-textarea" style="min-height:75px;" placeholder="【课题】：春 朱自清&#10;【主体】：春花图 —— 艳（火、霞、雪） 闹（蜜蜂蝴蝶） 甜（味）&#10;【主旨】：生机与希望"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; border-top:1px solid var(--border-color); padding-top:12px;">
+                  <span style="font-size:12px; color:var(--text-muted);">💾 内容自动保存在本地浏览器</span>
+                  <button class="btn-academic primary" onclick="saveCurrentLessonPlan()">💾 保存我的草稿</button>
+                </div>
               </div>
             </div>
           </div>
@@ -665,105 +443,43 @@
 
 
         <!-- ===================================================================
-             视图7：教师试讲常用表达 (Templates)
-             =================================================================== -->
-        <section id="tab-view-templates" class="tab-view">
-          <div class="academic-card" style="margin-bottom:20px;">
-            <h3 class="card-title">💬 教师试讲常用表达示范（说人话、口语化）</h3>
-            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              考场上最打动考官的是<strong>自然、从容、亲切</strong>的教态。把下面这些常用提问、追问和赞赏语读熟，到了考场随时能自然接上话。
-            </p>
-          </div>
-          <div id="templates-scripts-container">
-            <!-- 动态加载常用表达 -->
-          </div>
-        </section>
-
-
-        <!-- ===================================================================
-             视图8：课型教学重点与取舍 (Genre Templates)
-             =================================================================== -->
-        <section id="tab-view-genre-templates" class="tab-view">
-          <div class="academic-card" style="margin-bottom:20px;">
-            <h3 class="card-title">📐 八大文体 10 分钟试讲教学重点与取舍</h3>
-            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              不同文体在10分钟里的讲授侧重截然不同。弄清文体套路，即使抽到陌生课文，也能迅速知道该把时间花在哪个段落。
-            </p>
-          </div>
-          <div id="genre-blueprints-container">
-            <!-- 动态加载八大课型方案 -->
-          </div>
-        </section>
-
-
-        <!-- ===================================================================
-             视图9：结构化面试真题 (Structured)
+             辅助视图：结构化、答辩、排期、已存
              =================================================================== -->
         <section id="tab-view-structured" class="tab-view">
-          <div class="academic-card" style="margin-bottom:20px;">
-            <h3 class="card-title">⚖️ 结构化问答真题库与解题思路</h3>
-            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              进入试讲考场前，考官会随机从题库抽取 2 道题目提问，限时 5 分钟作答。掌握两套回答逻辑：<strong>综合分析类</strong>（表态 → 剖析原因与影响 → 结合自身实践践行）与<strong>应急应变类</strong>（沉着控制局面 → 区分轻重缓急处置 → 事后关爱反思）。
+          <div class="academic-card">
+            <h3 class="card-title">⚖️ 结构化面试常考题与回答思路</h3>
+            <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:14px;">
+              考官随机提问2道题，限时5分钟作答。掌握分点表达与实在可行的处理方法。
             </p>
-          </div>
-          <div id="structured-questions-list">
-            <!-- 动态加载结构化试题 -->
+            <div id="structured-questions-list"></div>
           </div>
         </section>
 
-
-        <!-- ===================================================================
-             视图10：考官答辩与追问 (Defense)
-             =================================================================== -->
         <section id="tab-view-defense" class="tab-view">
-          <div class="academic-card" style="margin-bottom:20px;">
-            <h3 class="card-title">🎓 试讲后考官答辩常考追问与回答示范</h3>
-            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
-              试讲结束后，考官通常会提问 1~2 个问题。回答公式：<strong>礼貌致谢 + 阐述你的教学意图 + 结合刚才讲课片段佐证 + 谦逊总结</strong>。
+          <div class="academic-card">
+            <h3 class="card-title">🎓 试讲后考官答辩常考追问</h3>
+            <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:14px;">
+              考官根据刚才的试讲提问1~2题。回答要点：礼貌致谢 + 说明教学依据 + 结合试讲片段佐证。
             </p>
-          </div>
-          <div id="defense-questions-list">
-            <!-- 动态加载答辩试题 -->
+            <div id="defense-questions-list"></div>
           </div>
         </section>
 
-
-        <!-- ===================================================================
-             视图11：备考规划与打卡 (Study Plan)
-             =================================================================== -->
         <section id="tab-view-study-plan" class="tab-view">
           <div class="academic-card">
-            <h3 class="card-title">📅 四阶段科学备考排期建议</h3>
-            <div class="stages-timeline" id="plan-stages-timeline">
-              <!-- 动态加载四阶段 -->
-            </div>
-          </div>
-
-          <div class="academic-card">
-            <h3 class="card-title">✅ 今日备战打卡清单</h3>
-            <div id="daily-checklist-container">
-              <!-- 动态加载每日清单 -->
-            </div>
+            <h3 class="card-title">📅 备考排期建议</h3>
+            <div class="stages-timeline" id="plan-stages-timeline"></div>
           </div>
         </section>
 
-
-        <!-- ===================================================================
-             视图12：我的教案与收藏 (Saved)
-             =================================================================== -->
         <section id="tab-view-saved" class="tab-view">
           <div class="academic-card">
-            <h3 class="card-title">📝 我在本地保存的备课简案</h3>
-            <div id="saved-plans-container">
-              <!-- 动态加载保存的教案 -->
-            </div>
+            <h3 class="card-title">📝 我的教案草稿</h3>
+            <div id="saved-plans-container"></div>
           </div>
-
           <div class="academic-card">
-            <h3 class="card-title">★ 我的收藏课文清单</h3>
-            <div class="lessons-grid" id="saved-favs-container">
-              <!-- 动态加载收藏课文 -->
-            </div>
+            <h3 class="card-title">★ 我的收藏课文</h3>
+            <div class="lessons-grid" id="saved-favs-container"></div>
           </div>
         </section>
 
@@ -771,7 +487,7 @@
     </main>
   </div>
 
-  <!-- 依赖脚本引入 -->
+  <!-- 数据与业务脚本 -->
   <script src="js/data/textbook-db.js"></script>
   <script src="js/data/lesson-texts-db.js"></script>
   <script src="js/data/templates-db.js"></script>

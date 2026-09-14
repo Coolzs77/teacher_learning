@@ -73,35 +73,34 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
 
     // In GitHub Pages subpath /teacher_learning/, resolve path safely
     const basePath = window.location.pathname.startsWith('/teacher_learning') ? '/teacher_learning' : '.';
-    const targetUrl = localFileUrl || `${basePath}/textbooks/${encodeURIComponent(fileName)}`;
+    const candidateUrls = localFileUrl ? [localFileUrl] : [
+      `${basePath}/textbooks/${encodeURIComponent(fileName)}`,
+      `${basePath}/public/textbooks/${encodeURIComponent(fileName)}`,
+      `./textbooks/${encodeURIComponent(fileName)}`,
+      `./public/textbooks/${encodeURIComponent(fileName)}`,
+      `../public/textbooks/${encodeURIComponent(fileName)}`
+    ];
 
     const loadPdf = async () => {
-      try {
-        const loadingTask = pdfjsLib.getDocument(targetUrl);
-        const doc = await loadingTask.promise;
-        if (isMounted) {
-          setPdfDoc(doc);
-          setNumPages(doc.numPages);
+      let loadedDoc: pdfjsLib.PDFDocumentProxy | null = null;
+      for (const url of candidateUrls) {
+        if (!isMounted) return;
+        try {
+          const task = pdfjsLib.getDocument(url);
+          loadedDoc = await task.promise;
+          if (loadedDoc) break;
+        } catch {
+          // try next candidate
+        }
+      }
+
+      if (isMounted) {
+        if (loadedDoc) {
+          setPdfDoc(loadedDoc);
+          setNumPages(loadedDoc.numPages);
           setLoading(false);
-        }
-      } catch (err: unknown) {
-        console.warn('Failed to load PDF from primary path:', err);
-        if (!localFileUrl) {
-          try {
-            const fallbackTask = pdfjsLib.getDocument(`./textbooks/${encodeURIComponent(fileName)}`);
-            const doc = await fallbackTask.promise;
-            if (isMounted) {
-              setPdfDoc(doc);
-              setNumPages(doc.numPages);
-              setLoading(false);
-              return;
-            }
-          } catch (e2) {
-            console.error('Fallback PDF load failed:', e2);
-          }
-        }
-        if (isMounted) {
-          setErrorMsg('未能在默认路径加载教材 PDF，您可直接从本地导入该册 PDF 文件进行浏览。');
+        } else {
+          setErrorMsg('未能在默认路径加载教材 PDF，您可直接点击上方按钮从本地导入该册 PDF 文件进行备课。');
           setLoading(false);
         }
       }

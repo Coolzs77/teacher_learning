@@ -244,9 +244,9 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
       ctx.stroke();
     } else if (activeTool === 'highlighter') {
       ctx.globalCompositeOperation = 'source-over';
-      // Semi-transparent highlight
-      ctx.strokeStyle = penColor === '#C24836' ? 'rgba(255, 99, 72, 0.35)' : 'rgba(255, 230, 0, 0.4)';
-      ctx.lineWidth = 18 * pixelRatio;
+      // Vibrant translucent fluorescent highlighter with mix-blend-multiply: NEVER obscures text
+      ctx.strokeStyle = penColor === '#C24836' ? 'rgba(255, 107, 107, 0.65)' : 'rgba(255, 234, 0, 0.7)';
+      ctx.lineWidth = 22 * pixelRatio;
       ctx.stroke();
     } else if (activeTool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
@@ -502,14 +502,14 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
           {/* Underlying PDF Page Canvas */}
           <canvas ref={canvasRef} />
 
-          {/* Interactive Annotation Canvas Overlay */}
+          {/* Interactive Annotation Canvas Overlay (with mix-blend-multiply so highlighter never obscures text underneath) */}
           <canvas
             ref={drawCanvasRef}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            className={`absolute inset-0 z-10 ${
+            className={`absolute inset-0 z-10 mix-blend-multiply ${
               activeTool === 'select'
                 ? 'pointer-events-none'
                 : activeTool === 'eraser'

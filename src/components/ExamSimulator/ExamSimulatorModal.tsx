@@ -107,7 +107,7 @@ export const ExamSimulatorModal: React.FC<ExamSimulatorModalProps> = ({
             </div>
             <div>
               <span className="text-stone-500">考生姓名：</span>
-              <span className="font-bold text-stone-800">考生</span>
+              <span className="font-bold text-bamboo-800">琪琪</span>
             </div>
             <div>
               <span className="text-stone-500">机位信息：</span>

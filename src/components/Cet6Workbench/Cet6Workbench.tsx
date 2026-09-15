@@ -1,234 +1,184 @@
 import React, { useState } from 'react';
-import { Cet6ScoreStrategy } from './Cet6ScoreStrategy';
-import { Cet6ClozeTrainer } from './Cet6ClozeTrainer';
-import { Cet6TranslationWorkshop } from './Cet6TranslationWorkshop';
-import { Cet6WritingModule } from './Cet6WritingModule';
-import { Cet6ClozeAndSyntax } from './Cet6ClozeAndSyntax';
-import { Cet6GrammarPractice } from './Cet6GrammarPractice';
-import { Cet6MistakeNotebook } from './Cet6MistakeNotebook';
-import { Cet6EmergencyPack } from './Cet6EmergencyPack';
-import { Cet6MistakeItem } from '../../data/cet6PracticeData';
+import { Cet6Sidebar, Cet6ModuleId } from './Cet6Sidebar';
+import { Cet6ScoreView } from './Cet6ScoreView';
+import { Cet6ClozeView } from './Cet6ClozeView';
+import { Cet6TranslationView } from './Cet6TranslationView';
+import { Cet6WritingView } from './Cet6WritingView';
+import { Cet6SyntaxView } from './Cet6SyntaxView';
+import { Cet6GrammarView } from './Cet6GrammarView';
+import { Cet6MistakeView } from './Cet6MistakeView';
+import { Cet6EmergencyView } from './Cet6EmergencyView';
+import { Cet6MistakeItem, INITIAL_CET6_MISTAKES } from '../../data/cet6PracticeData';
 import {
-  TrendingUp,
-  Scissors,
-  Languages,
-  PenTool,
-  Split,
-  BookMarked,
-  ShieldAlert,
+  PanelLeftOpen,
+  GraduationCap,
   Sparkles,
-  Award,
-  Zap,
-  Layers,
-  ArrowRight
+  CheckCircle2,
+  Calendar,
+  Clock,
+  Compass
 } from 'lucide-react';
 
-export type Cet6Tab =
-  | 'strategy'
-  | 'cloze'
-  | 'translation'
-  | 'writing'
-  | 'syntax'
-  | 'grammar'
-  | 'mistakes'
-  | 'emergency';
-
 export const Cet6Workbench: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Cet6Tab>('strategy');
+  const [activeModule, setActiveModule] = useState<Cet6ModuleId>('score');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // 全局收录错题回调（可从选词填空、翻译、长难句、语法任意组件调用）
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
   const handleAddMistake = (item: Omit<Cet6MistakeItem, 'id' | 'createdAt' | 'isMastered'>) => {
     try {
       const saved = localStorage.getItem('cet6_mistakes');
-      const list = saved ? JSON.parse(saved) : [];
-      list.unshift({
+      const list: Cet6MistakeItem[] = saved ? JSON.parse(saved) : INITIAL_CET6_MISTAKES;
+      const newItem: Cet6MistakeItem = {
         ...item,
-        id: `mis-${Date.now()}`,
+        id: 'mistake-' + Date.now(),
         createdAt: new Date().toISOString().split('T')[0],
-        isMastered: false
-      });
-      localStorage.setItem('cet6_mistakes', JSON.stringify(list));
-    } catch (e) {}
+        isMastered: false,
+      };
+      const updated = [newItem, ...list];
+      localStorage.setItem('cet6_mistakes', JSON.stringify(updated));
+      showToast(`已成功将「${item.title}」收入专属错题本！`);
+    } catch (e) {
+      console.error(e);
+      showToast('保存错题失败，请重试');
+    }
   };
 
+  const moduleTitles: Record<Cet6ModuleId, { title: string; desc: string; tag: string }> = {
+    score: {
+      title: '提分规划与考场时间表',
+      desc: '388 分 ➔ 425+ 分差距归因，130 分钟考场答题与收卷节奏表，不盲目刷题。',
+      tag: '战略底盘'
+    },
+    cloze: {
+      title: '选词填空四步专项突破',
+      desc: '抓词尾辨词性、看空前后找线索、单空快速排除，4-5 分钟挑出 4 道好拿分的题。',
+      tag: '必抓送分题'
+    },
+    translation: {
+      title: '汉译英台阶演练工坊',
+      desc: '划主谓宾定主干、高频词汇提示、套用 10 大句型、实操动笔试写与范文对照。',
+      tag: '稳扎稳打'
+    },
+    writing: {
+      title: '五段万能作文与仿写',
+      desc: '个人成长 ➔ 他人影响 ➔ 社会价值底层逻辑，逐段背诵打卡与 180 词即时仿写。',
+      tag: '写作基本盘'
+    },
+    syntax: {
+      title: '真题长难句步步拆解',
+      desc: '层层剥离修饰从句，5 秒锁定主谓宾主干，彻底解决回读与读不懂的问题。',
+      tag: '阅读攻坚'
+    },
+    grammar: {
+      title: '真题核心语法实战',
+      desc: '非谓语动词、定语从句、倒装强调、虚拟语气高频题型实测与错因剖析。',
+      tag: '单题突破'
+    },
+    mistakes: {
+      title: '专属错题本与攻坚归因',
+      desc: '按词性看错、句意理解偏差、盲区、粗心归类，复练标记攻克，拒绝反复踩坑。',
+      tag: '查漏补缺'
+    },
+    emergency: {
+      title: '考场保底应急锦囊',
+      desc: '举例卡壳套句、大脑空白保底 5 步默写法、考前 20 分钟必背 10 句，慌乱急救。',
+      tag: '保底护航'
+    },
+  };
+
+  const currentModuleInfo = moduleTitles[activeModule];
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/60 pb-16">
-      {/* 顶部专属二级子导航条 */}
-      <div className="bg-white border-b border-slate-200 sticky top-14 sm:top-16 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2 overflow-x-auto hide-scrollbar">
-            {/* 专属标识 */}
-            <div className="hidden lg:flex items-center space-x-2 shrink-0 mr-3">
-              <div className="w-8 h-8 rounded-xl bg-indigo-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                CET6
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fadeIn space-y-6">
+      {/* Toast 提示 */}
+      {toastMsg && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-wood-900 text-paper-50 px-4 py-2 rounded-xl text-xs font-serif shadow-xl flex items-center space-x-2 border border-stone-700 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-bamboo-400" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* 2-Column 主布局：左侧导航目录 + 右侧操作区 */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* 左侧专项目录（收起时不占宽度，保持与教资模块一致体验） */}
+        {!isSidebarCollapsed && (
+          <Cet6Sidebar
+            activeModule={activeModule}
+            onSelectModule={setActiveModule}
+            onCollapse={() => setIsSidebarCollapsed(true)}
+          />
+        )}
+
+        {/* 右侧主工作面板 */}
+        <div className="flex-1 min-w-0 space-y-6 w-full">
+          {/* 顶部长条状态卡片（严格参照教资顶部卡片风格） */}
+          <div className="bg-paper-card border border-paper-border rounded-2xl p-4 sm:p-6 shadow-scholarly flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1.5 flex-1 min-w-0">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                {/* 若左侧导航已收起，显示展开按钮 */}
+                {isSidebarCollapsed && (
+                  <button
+                    onClick={() => setIsSidebarCollapsed(false)}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 hover:text-wood-900 border border-paper-border text-xs font-serif transition mr-1"
+                    title="展开左侧备考目录"
+                  >
+                    <PanelLeftOpen className="w-3.5 h-3.5 text-bamboo-700" />
+                    <span>展开目录</span>
+                  </button>
+                )}
+
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-serif font-medium flex items-center space-x-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>英语六级备考</span>
+                </span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-paper-100 text-wood-700 font-serif border border-paper-border">
+                  {currentModuleInfo.tag}
+                </span>
+                <span className="text-xs text-wood-500 font-serif hidden sm:inline">
+                  琪琪专属 · 388 ➔ 425+ 分突破
+                </span>
               </div>
-              <div>
-                <span className="text-xs font-bold text-slate-900">琪琪六级专练台</span>
-                <span className="text-[10px] text-emerald-600 font-bold block">388 ➔ 425+ 突破</span>
-              </div>
+
+              <h1 className="text-xl sm:text-2xl font-serif font-bold text-wood-900 truncate">
+                {currentModuleInfo.title}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-wood-600 font-serif leading-relaxed">
+                {currentModuleInfo.desc}
+              </p>
             </div>
 
-            {/* 8 个专项导航按钮 */}
-            <div className="flex items-center space-x-1 shrink-0">
-              <button
-                onClick={() => setActiveTab('strategy')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'strategy'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                <span>1. 提分战报</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('cloze')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'cloze'
-                    ? 'bg-rose-600 text-white font-bold shadow-xs'
-                    : 'text-rose-700 hover:bg-rose-50'
-                }`}
-              >
-                <Scissors className="w-3.5 h-3.5" />
-                <span>2. 选词填空</span>
-                <span className="text-[9px] bg-rose-200 text-rose-900 px-1 rounded font-bold">送14分</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('translation')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'translation'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Languages className="w-3.5 h-3.5 text-rose-300" />
-                <span>3. 汉译英台阶</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('writing')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'writing'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <PenTool className="w-3.5 h-3.5 text-amber-300" />
-                <span>4. 万能作文</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('syntax')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'syntax'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Split className="w-3.5 h-3.5 text-sky-400" />
-                <span>5. 长难句拆解</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('grammar')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'grammar'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>6. 核心语法</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('mistakes')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'mistakes'
-                    ? 'bg-indigo-900 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <BookMarked className="w-3.5 h-3.5 text-purple-300" />
-                <span>7. 专属错题本</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('emergency')}
-                className={`btn-tactile px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 ${
-                  activeTab === 'emergency'
-                    ? 'bg-amber-600 text-white font-bold shadow-xs'
-                    : 'text-amber-700 hover:bg-amber-50'
-                }`}
-              >
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span>8. 考场急救包</span>
-              </button>
+            {/* 右侧微型状态指示器 */}
+            <div className="flex items-center space-x-3 text-xs font-serif text-wood-600 shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-paper-border">
+              <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-paper-50 rounded-xl border border-paper-border">
+                <Compass className="w-3.5 h-3.5 text-bamboo-700" />
+                <span>目标差距：37 分</span>
+              </div>
+              <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-paper-50 rounded-xl border border-paper-border">
+                <Clock className="w-3.5 h-3.5 text-cinnabar-700" />
+                <span>总时长：130 分钟</span>
+              </div>
             </div>
+          </div>
+
+          {/* 各子功能视图切换渲染 */}
+          <div className="w-full space-y-6">
+            {activeModule === 'score' && <Cet6ScoreView />}
+            {activeModule === 'cloze' && <Cet6ClozeView onAddMistake={handleAddMistake} />}
+            {activeModule === 'translation' && <Cet6TranslationView />}
+            {activeModule === 'writing' && <Cet6WritingView />}
+            {activeModule === 'syntax' && <Cet6SyntaxView onAddMistake={handleAddMistake} />}
+            {activeModule === 'grammar' && <Cet6GrammarView onAddMistake={handleAddMistake} />}
+            {activeModule === 'mistakes' && <Cet6MistakeView />}
+            {activeModule === 'emergency' && <Cet6EmergencyView />}
           </div>
         </div>
       </div>
-
-      {/* 主体工作区 */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* “今天想练什么？”快捷点选面板（在任何 Tab 顶部都提供即插即用入口） */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-indigo-500/20">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h3 className="font-bold text-sm sm:text-base">琪琪今天想练什么？（点选即刻沉浸练习）</h3>
-            </div>
-            <span className="text-[11px] text-slate-300 font-sans">
-              单词在百词斩刷完即可 · 无需刻板分阶段 · 直击痛点提分
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-xs">
-            {[
-              { tab: 'cloze', label: '选词填空秒杀', icon: '✂️', highlight: true },
-              { tab: 'translation', label: '汉译英台阶拆解', icon: '🌐', highlight: true },
-              { tab: 'writing', label: '5段万能作文仿写', icon: '✍️', highlight: true },
-              { tab: 'syntax', label: '长难句步步拆解', icon: '🌲', highlight: false },
-              { tab: 'grammar', label: '六级核心语法突击', icon: '⚡', highlight: false },
-              { tab: 'mistakes', label: '错题本归因攻坚', icon: '📕', highlight: false },
-              { tab: 'strategy', label: '388➔425+ 战报', icon: '📊', highlight: false },
-              { tab: 'emergency', label: '考场急救包必背', icon: '🚑', highlight: false }
-            ].map((btn) => (
-              <button
-                key={btn.tab}
-                onClick={() => setActiveTab(btn.tab as any)}
-                className={`btn-tactile p-2 rounded-xl text-center border transition cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                  activeTab === btn.tab
-                    ? 'bg-white text-indigo-950 font-bold border-white shadow-md'
-                    : btn.highlight
-                    ? 'bg-indigo-900/60 border-indigo-400/30 text-indigo-100 hover:bg-indigo-800/80'
-                    : 'bg-slate-800/60 border-slate-700/50 text-slate-300 hover:bg-slate-700/80'
-                }`}
-              >
-                <span className="text-sm">{btn.icon}</span>
-                <span className="text-[11px] truncate w-full">{btn.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab 页面渲染 */}
-        {activeTab === 'strategy' && <Cet6ScoreStrategy />}
-        {activeTab === 'cloze' && <Cet6ClozeTrainer onAddMistake={handleAddMistake} />}
-        {activeTab === 'translation' && <Cet6TranslationWorkshop onAddMistake={handleAddMistake} />}
-        {activeTab === 'writing' && <Cet6WritingModule />}
-        {activeTab === 'syntax' && (
-          <Cet6ClozeAndSyntax
-            onAddMistake={handleAddMistake}
-            onGoToClozeTrainer={() => setActiveTab('cloze')}
-          />
-        )}
-        {activeTab === 'grammar' && <Cet6GrammarPractice onAddMistake={handleAddMistake} />}
-        {activeTab === 'mistakes' && <Cet6MistakeNotebook />}
-        {activeTab === 'emergency' && <Cet6EmergencyPack />}
-      </main>
     </div>
   );
 };

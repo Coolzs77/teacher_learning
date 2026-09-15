@@ -215,15 +215,15 @@ export const App: React.FC = () => {
             </>
           ) : (
             <>
-              <p className="flex items-center justify-center space-x-1 font-sans">
-                <span className="font-bold text-indigo-900">英语六级真题备考工作台</span>
+              <p className="flex items-center justify-center space-x-1 font-serif">
+                <span className="font-bold text-wood-900">英语六级备战工作台</span>
                 <span>·</span>
-                <span className="text-rose-600 font-bold">琪琪专属 388 ➔ 425+ 分通关逆袭</span>
+                <span className="text-cinnabar-800 font-bold">琪琪专属 388 ➔ 425+ 分冲刺突破</span>
                 <span>·</span>
-                <span>选词填空秒杀 · ExamCraft真题语法树 · 5段万能作文 · 翻译语料</span>
+                <span>选词填空词性突破 · 真题长难句剥离 · 5段稳分写作 · 汉译英句型演练</span>
               </p>
-              <p className="text-[11px] text-stone-400">
-                纯前端架构 · 数据安全离线持久化 · 助力琪琪顺利拿下英语六级！
+              <p className="text-[11px] text-wood-500 font-serif">
+                纯前端架构 · 数据离线持久化 · 踏踏实实拿稳每一分，顺利通过六级！
               </p>
             </>
           )}

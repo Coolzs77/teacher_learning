@@ -978,3 +978,108 @@ export const TRANSLATION_DATA: TranslationFramework = {
     }
   ]
 };
+
+// 7. 考场应急保底锦囊 (贴地气、好背诵、卡壳急救)
+export const EMERGENCY_RESCUE_PACK: EmergencyRescuePack = {
+  exampleFallbacks: [
+    {
+      level: "入门级：自身经历法（好记不忘、容易上手）",
+      eng: "Take my own college life as a vivid case. When I first encountered academic difficulties, it was persistent practice that enabled me to overcome frustration and build self-confidence.",
+      chn: "拿我自己的大学生活来说。刚开始遇到学业困难时，正是坚持不懈的练习帮助我战胜了挫败感并建立了自信。（适用于意志品质、学习方法、坚持、挑战等话题）"
+    },
+    {
+      level: "进阶级：日常科技与生活习惯（自然贴切、有话可说）",
+      eng: "A notable illustration can be found in our everyday routines. With the widespread popularity of mobile applications and digital platforms, individuals are able to acquire knowledge more efficiently than ever before.",
+      chn: "日常生活中就能找到生动的例子。随着手机应用和数字化平台的普及，人们能够比以往任何时候都更高效地获取知识。（适用于科技创新、数字生活、时间管理、信息获取等话题）"
+    },
+    {
+      level: "稳妥级：援引调查研究与社会现象（客观规范、给分更稳）",
+      eng: "Recent surveys conducted by educational institutions have revealed that an overwhelming majority of undergraduates consider hands-on experience just as crucial as theoretical knowledge.",
+      chn: "教育机构近期的调查显示，绝大多数本科生认为动手实践经验与理论知识同样重要。（适用于实践能力、实习就业、大学教育、全面发展等话题）"
+    }
+  ],
+  blankMindGuaranteedFiveSteps: [
+    {
+      step: "第 1 步：引出热点现象",
+      slotTitle: "点明主题，说明当前引起大家关注",
+      eng: "In recent years, the issue regarding [填入主题词汇，如 digital literacy / artificial intelligence / mental health] has aroused extensive public concern across the nation.",
+      chn: "近年来，关于……的问题在全国范围内引起了广泛的社会关注。"
+    },
+    {
+      step: "第 2 步：亮出鲜明观点",
+      slotTitle: "给出自我立场，不模棱两可",
+      eng: "From my own perspective, although it brings certain inevitable challenges, its positive influence on our personal growth far outweighs the potential downsides.",
+      chn: "在我看来，尽管它带来了一些不可避免的挑战，但它对我们个人成长的积极影响远远超过了潜在弊端。"
+    },
+    {
+      step: "第 3 步：剖析根本原因",
+      slotTitle: "主干论述，支撑观点",
+      eng: "Primary among the driving forces behind this trend is that it equips young individuals with practical competence, thereby broadening their horizons in a competitive society.",
+      chn: "促成这一趋势的核心原因在于，它赋予了青年人实用能力，从而在竞争激烈的社会中拓宽了他们的视野。"
+    },
+    {
+      step: "第 4 步：联系实际生活",
+      slotTitle: "结合身边现实，避免空洞说教",
+      eng: "Furthermore, this development exerts a profound and lasting impact on our daily life, encouraging students to actively step out of their comfort zones.",
+      chn: "此外，这一发展对我们的日常生活产生了深远持久的影响，鼓励学生积极走出自己的舒适圈。"
+    },
+    {
+      step: "第 5 步：收尾总结呼吁",
+      slotTitle: "用规范句式总结展望，考场稳妥拿分",
+      eng: "Taking all these aspects into account, only when we embrace new changes with a rational mindset can we create a promising and fulfilling future.",
+      chn: "综合考虑上述各个方面，只有当我们以理性的心态拥抱新变化时，才能创造一个充满希望、充实丰盈的未来。"
+    }
+  ],
+  lastTwentyMinutesEssentialTen: [
+    {
+      index: 1,
+      eng: "With the rapid advancement of modern society, tremendous changes have taken place in people's lifestyles.",
+      chn: "随着现代社会的快速进步，人们的生活方式发生了巨大的变化。（万能首句，适合各类社会/科技/生活变化类作文）"
+    },
+    {
+      index: 2,
+      eng: "It is universally acknowledged that persistent effort plays an indispensable role in achieving personal goals.",
+      chn: "大家公认的是，坚持不懈的努力在实现个人目标中起着不可或缺的作用。（万能肯定句，主语和宾语可随意替换）"
+    },
+    {
+      index: 3,
+      eng: "There is no denying that innovative thinking exerts a profound and lasting influence on youth development.",
+      chn: "不可否认的是，创新思维对青年成长有着深远而持久的影响。（客观强调句型，比 think / believe 更规范）"
+    },
+    {
+      index: 4,
+      eng: "Only when we fully realize the significance of time management can we allocate our energy effectively.",
+      chn: "只有当我们充分意识到时间管理的重要性时，我们才能有效地分配精力。（Only+时间状语从句引起的倒装句，语法加分项）"
+    },
+    {
+      index: 5,
+      eng: "Under no circumstances should we ignore the importance of mental health during tough challenges.",
+      chn: "在任何情况下，我们在面对艰难挑战时都不应忽视心理健康的重要性。（否定词放句首的部分倒装，考场点睛之笔）"
+    },
+    {
+      index: 6,
+      eng: "Instead of passively complaining about obstacles, contemporary college students ought to actively explore solutions.",
+      chn: "与其消极抱怨障碍，当代大学生更应当积极探寻解决之道。（对比句式，展示积极向上的思想境界）"
+    },
+    {
+      index: 7,
+      eng: "It is high time that both colleges and students attached greater importance to practical capabilities.",
+      chn: "大学和学生双方是时候更加重视实践能力了。（It is high time that + 过去式，标准虚拟语气句型）"
+    },
+    {
+      index: 8,
+      eng: "Compared with traditional approaches, modern educational tools endow learners with unprecedented convenience.",
+      chn: "与传统方法相比，现代教育工具赋予了学习者前所未有的便利。（分词短语作状语+endow...with高级搭配）"
+    },
+    {
+      index: 9,
+      eng: "Not only does volunteer work cultivate a sense of responsibility, but it also enriches our social experience.",
+      chn: "志愿服务不仅培养了责任感，而且丰富了我们的社会阅历。（Not only置于句首的经典倒装句，考官非常喜欢看）"
+    },
+    {
+      index: 10,
+      eng: "Taking all the factors into consideration, we can safely arrive at the conclusion that self-discipline leads to true freedom.",
+      chn: "综合考虑所有因素，我们可以稳妥地得出结论：自律通往真正的自由。（万能收尾总结句，结尾段直接默写）"
+    }
+  ]
+};

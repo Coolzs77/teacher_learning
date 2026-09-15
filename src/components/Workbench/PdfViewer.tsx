@@ -21,11 +21,9 @@ import {
 // Setup worker with reliable multi-tier fallback
 if (typeof window !== 'undefined') {
   try {
-    const workerUrl = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
-    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+    const origin = window.location.origin;
+    const basePath = window.location.pathname.startsWith('/teacher_learning') ? '/teacher_learning' : '';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `${origin}${basePath}/pdf.worker.min.mjs`;
   } catch (e) {
     console.warn('PDF.js worker initialization fallback:', e);
     pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';

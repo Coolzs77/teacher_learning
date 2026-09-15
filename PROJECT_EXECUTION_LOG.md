@@ -126,6 +126,49 @@
 
 ---
 
+### 【阶段六：全服务器彻底清空重建、工作空间冗余大瘦身与 Service Worker 彻底拔除（彻底根治 PDF 问题）】
+- **做了什么**：
+  1. **云端服务器全盘擦除重建**：在阿里云服务器上临时安全备份 6 本 113MB 统编教材 PDF 后，彻底执行 `rm -rf /var/www/teacher_learning`，全面清空历史遗留的所有构建残留、旧版哈希文件与碎片，重新从零部署纯净生产环境。
+  2. **本地工作空间全域冗余大清理**：
+     - 删除项目根目录下重复占用的 6 本教材 PDF（共 117MB，与 `public/textbooks/` 冗余）；
+     - 删除早期试验性垃圾文本与脚本（`toc_raw.txt`、`dump_toc.py`、`extract_all_fulltext.py`、`extract_all_texts.py`、`generate_db.py`、`run_builder.py`、`test_extract_lesson.py` 及 Python 缓存）；
+     - 删除旧版未编号的冗余 `.bat` 脚本，工作空间代码体系清爽凝练。
+  3. **彻底拔除 Service Worker 拦截机制（终结“动态导入模块失败”根因）**：
+     - 深度定位用户截图报错：`Setting up fake worker failed: "Failed to fetch dynamically imported module: http://47.93.28.243/assets/pdf.worker.min-yatZIOMy.mjs"`；
+     - 根本原因在于 PWA Service Worker 会截获浏览器 Worker/动态 import() 的网络分发，在 HTTP 环境或缓存冲突时抛出安全异常；
+     - 坚决彻底移除 `public/sw.js`，并在 `index.html` 写入自愈脚本（任何打开网站的浏览器自动检测、注销历史遗留 Service Worker 并全量擦除 CacheStorage 缓存）；
+     - 将 Worker 固化为根目录下免编译、不带哈希的永久静态文件 `/pdf.worker.min.mjs`，永不变迁、永不 404。
+
+- **怎么做的**：
+  - **服务器端**：
+    ```bash
+    mkdir -p /var/textbooks_backup && cp -r /var/www/teacher_learning/textbooks/* /var/textbooks_backup/
+    rm -rf /var/www/teacher_learning
+    mkdir -p /var/www/teacher_learning/textbooks && cp -r /var/textbooks_backup/* /var/www/teacher_learning/textbooks/
+    rm -rf /var/textbooks_backup
+    ```
+  - **前端自愈逻辑（`index.html`）**：
+    ```javascript
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) registration.unregister();
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) caches.delete(name);
+      });
+    }
+    ```
+  - **重新构建与全量部署**：执行 `npm run build`，上传解包，赋予权限，热重载 Nginx。
+
+- **实测验证**：
+  - `http://47.93.28.243/`：`HTTP 200 OK`；
+  - `http://47.93.28.243/pdf.worker.min.mjs`：`HTTP 206 application/javascript`；
+  - `http://47.93.28.243/textbooks/...七年级上册.pdf`：通过 Node.js Range 请求抓取前 1024 字节，稳定返回 `HTTP 206 Partial Content`，PDF 签名 `%PDF-1.7` 校验完好。
+
+---
+
 ## 三、阿里云服务器（47.93.28.243）环境配置与架构细节
 
 ### 1. 服务器硬件与网络规格

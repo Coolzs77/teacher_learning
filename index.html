@@ -15,31 +15,28 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="语文教资试讲" />
-    <script type="module" crossorigin src="./assets/index-DvOeNUJE.js"></script>
+    <script type="module" crossorigin src="./assets/index-DH-lW6oE.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/react-vendor-BqH9RPIO.js">
     <link rel="modulepreload" crossorigin href="./assets/lucide-vendor-DTpk1y6b.js">
     <link rel="modulepreload" crossorigin href="./assets/confetti-vendor-oQXWb4Lk.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CgVz162r.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-9NjqNyYq.css">
   </head>
   <body class="bg-paper-100 text-wood-800 antialiased selection:bg-bamboo-200 selection:text-wood-900 min-h-screen">
     <div id="root"></div>
     <script>
-      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then((reg) => {
-            reg.onupdatefound = () => {
-              const installingWorker = reg.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = () => {
-                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    window.dispatchEvent(new CustomEvent('swUpdated', { detail: reg }));
-                  }
-                };
-              }
-            };
-          }).catch((err) => {
-            console.log('SW registration skipped:', err);
-          });
+      // Automatically clean up and unregister any legacy service workers to ensure 100% direct network streaming
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            caches.delete(name);
+          }
         });
       }
     </script>

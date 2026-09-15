@@ -222,7 +222,7 @@ export const App: React.FC = () => {
           <p className="flex items-center justify-center space-x-1">
             <span>初中语文教师资格证面试（10分钟试讲专项）研修工作台</span>
             <span>·</span>
-            <span>统编版初中语文 147 篇全景切片数据库</span>
+            <span>统编版初中语文 158 篇全景切片数据库</span>
           </p>
           <p className="text-[11px] text-stone-400">
             纯前端离线可用 · 状态持久化于本地 · 支持 GitHub Pages 静态托管

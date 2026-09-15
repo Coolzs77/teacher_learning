@@ -14,17 +14,20 @@ import {
   Eraser,
   Trash2,
   Check,
-  MousePointer
+  MousePointer,
+  RefreshCw
 } from 'lucide-react';
 
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
-// Setup worker with reliable fallback
+// Setup worker with reliable multi-tier fallback
 if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl || './pdf.worker.min.mjs';
+    const workerUrl = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
   } catch (e) {
-    console.warn('PDF.js worker initialization error:', e);
+    console.warn('PDF.js worker initialization fallback:', e);
     pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
   }
 }
@@ -49,6 +52,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   // Drawing Tools State
   const [activeTool, setActiveTool] = useState<DrawingTool>('pen');
@@ -72,34 +76,66 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
     setErrorMsg(null);
 
     const origin = window.location.origin;
-    const basePath = window.location.pathname.startsWith('/teacher_learning') ? '/teacher_learning' : '';
+    const path = window.location.pathname;
+    const basePath = path.startsWith('/teacher_learning') ? '/teacher_learning' : '';
 
     const candidateUrls = localFileUrl ? [localFileUrl] : [
-      `${origin}${basePath}/textbooks/${encodeURIComponent(fileName)}`,
-      `${origin}${basePath}/textbooks/${fileName}`,
       `${basePath}/textbooks/${encodeURIComponent(fileName)}`,
-      `${basePath}/textbooks/${fileName}`,
+      `${origin}${basePath}/textbooks/${encodeURIComponent(fileName)}`,
       `./textbooks/${encodeURIComponent(fileName)}`,
+      `/textbooks/${encodeURIComponent(fileName)}`,
+      `${basePath}/textbooks/${fileName}`,
+      `${origin}${basePath}/textbooks/${fileName}`,
       `./textbooks/${fileName}`,
-      `textbooks/${encodeURIComponent(fileName)}`,
-      `textbooks/${fileName}`
+      `/textbooks/${fileName}`
     ];
 
     const loadPdf = async () => {
       let loadedDoc: pdfjsLib.PDFDocumentProxy | null = null;
+      let lastError: any = null;
+
       for (const url of candidateUrls) {
         if (!isMounted) return;
+
+        // Stage 1: On-demand range chunk streaming with local cmaps
         try {
           const task = pdfjsLib.getDocument({
             url,
             rangeChunkSize: 65536,
-            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/',
+            disableAutoFetch: true,
+            disableStream: true,
+            cMapUrl: `${origin}${basePath}/cmaps/`,
             cMapPacked: true
           });
           loadedDoc = await task.promise;
           if (loadedDoc) break;
         } catch (err) {
-          console.warn('PDF load candidate failed for:', url, err);
+          lastError = err;
+        }
+
+        // Stage 2: Standard range streaming without cmaps
+        try {
+          if (!isMounted) return;
+          const task = pdfjsLib.getDocument({
+            url,
+            rangeChunkSize: 65536,
+            disableAutoFetch: true,
+            disableStream: true
+          });
+          loadedDoc = await task.promise;
+          if (loadedDoc) break;
+        } catch (err) {
+          lastError = err;
+        }
+
+        // Stage 3: Direct standard getDocument
+        try {
+          if (!isMounted) return;
+          const task = pdfjsLib.getDocument(url);
+          loadedDoc = await task.promise;
+          if (loadedDoc) break;
+        } catch (err) {
+          lastError = err;
         }
       }
 
@@ -108,8 +144,10 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
           setPdfDoc(loadedDoc);
           setNumPages(loadedDoc.numPages);
           setLoading(false);
+          setErrorMsg(null);
         } else {
-          setErrorMsg('未能在默认路径加载教材 PDF。您可直接切换至【课文全文与批注】阅读，或点击下方按钮从本地导入该册 PDF 文件。');
+          const detail = lastError?.message || '网络连接或资源加载超时';
+          setErrorMsg(`未能从路径加载教材文件（${detail}）。您可点击“重新尝试加载”，或点击下方按钮导入本地教材 PDF。`);
           setLoading(false);
         }
       }
@@ -120,7 +158,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
     return () => {
       isMounted = false;
     };
-  }, [fileName, localFileUrl]);
+  }, [fileName, localFileUrl, retryCount]);
 
   // Render current page to canvas & restore drawings
   const renderPage = useCallback(async () => {
@@ -485,20 +523,33 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
             <div>
               <h4 className="font-serif font-bold text-wood-900 text-base">教材原貌加载提示</h4>
               <p className="text-xs text-wood-600 mt-1 leading-relaxed">
-                未能从默认路径加载教材文件。您可直接切换至【课文全文与批注】阅读，或点击下方选择本地教材 PDF：
+                {errorMsg}
               </p>
             </div>
 
-            <label className="btn-tactile inline-flex items-center space-x-2 px-4 py-2 bg-bamboo-700 text-white rounded-lg text-xs font-medium cursor-pointer shadow">
-              <Upload className="w-4 h-4" />
-              <span>选择本地教材 PDF（{fileName}）</span>
-              <input
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </label>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setLocalFileUrl(null);
+                  setRetryCount(c => c + 1);
+                }}
+                className="btn-tactile inline-flex items-center space-x-1.5 px-4 py-2 bg-wood-800 hover:bg-wood-700 text-white rounded-xl text-xs font-medium cursor-pointer shadow transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>重新尝试加载</span>
+              </button>
+
+              <label className="btn-tactile inline-flex items-center space-x-1.5 px-4 py-2 bg-bamboo-700 hover:bg-bamboo-800 text-white rounded-xl text-xs font-medium cursor-pointer shadow transition">
+                <Upload className="w-3.5 h-3.5" />
+                <span>导入本地教材 PDF</span>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
+            </div>
           </div>
         )}
 

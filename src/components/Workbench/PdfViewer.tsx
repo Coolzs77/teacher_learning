@@ -17,15 +17,15 @@ import {
   MousePointer
 } from 'lucide-react';
 
-// Setup worker
-if (typeof window !== 'undefined' && 'Worker' in window) {
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Setup worker with reliable fallback
+if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl || './pdf.worker.min.mjs';
   } catch (e) {
     console.warn('PDF.js worker initialization error:', e);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.mjs';
   }
 }
 
@@ -71,14 +71,18 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
     setLoading(true);
     setErrorMsg(null);
 
-    // In GitHub Pages subpath /teacher_learning/, resolve path safely
-    const basePath = window.location.pathname.startsWith('/teacher_learning') ? '/teacher_learning' : '.';
+    const origin = window.location.origin;
+    const basePath = window.location.pathname.startsWith('/teacher_learning') ? '/teacher_learning' : '';
+
     const candidateUrls = localFileUrl ? [localFileUrl] : [
+      `${origin}${basePath}/textbooks/${encodeURIComponent(fileName)}`,
+      `${origin}${basePath}/textbooks/${fileName}`,
       `${basePath}/textbooks/${encodeURIComponent(fileName)}`,
-      `${basePath}/public/textbooks/${encodeURIComponent(fileName)}`,
+      `${basePath}/textbooks/${fileName}`,
       `./textbooks/${encodeURIComponent(fileName)}`,
-      `./public/textbooks/${encodeURIComponent(fileName)}`,
-      `../public/textbooks/${encodeURIComponent(fileName)}`
+      `./textbooks/${fileName}`,
+      `textbooks/${encodeURIComponent(fileName)}`,
+      `textbooks/${fileName}`
     ];
 
     const loadPdf = async () => {
@@ -88,14 +92,14 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
         try {
           const task = pdfjsLib.getDocument({
             url,
-            rangeChunkSize: 65536, // 64KB on-demand chunk streaming
-            disableAutoFetch: true, // Do not download the entire 15MB file upfront
-            disableStream: true
+            rangeChunkSize: 65536,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/',
+            cMapPacked: true
           });
           loadedDoc = await task.promise;
           if (loadedDoc) break;
-        } catch {
-          // try next candidate
+        } catch (err) {
+          console.warn('PDF load candidate failed for:', url, err);
         }
       }
 
@@ -105,7 +109,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({ fileName, initialPage, les
           setNumPages(loadedDoc.numPages);
           setLoading(false);
         } else {
-          setErrorMsg('未能在默认路径加载教材 PDF，您可直接点击上方按钮从本地导入该册 PDF 文件进行备课。');
+          setErrorMsg('未能在默认路径加载教材 PDF。您可直接切换至【课文全文与批注】阅读，或点击下方按钮从本地导入该册 PDF 文件。');
           setLoading(false);
         }
       }

@@ -31,6 +31,7 @@ import {
   Clock,
   Sparkles,
   RotateCcw,
+  BookmarkCheck,
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -761,7 +762,7 @@ ${activeLesson.speedPlan.homework}`;
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
                     <Edit3 className="w-4 h-4 text-bamboo-700" />
-                    <span>三、考场教学简案设计（备考室草稿纸速写）</span>
+                    <span>三、教学简案设计（备考室速写备课）</span>
                   </div>
                   <button
                     onClick={handleCopyPlan}
@@ -941,6 +942,38 @@ ${activeLesson.speedPlan.homework}`;
                   </div>
                 </div>
 
+                {/* 选项卡1与选项卡2协同看板：确保重点、切片与板书高度一致 */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-bamboo-50/90 via-paper-50 to-amber-50/60 border border-bamboo-200 shadow-sm space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-serif font-bold text-sm text-bamboo-950 flex items-center space-x-1.5">
+                      <BookmarkCheck className="w-4 h-4 text-bamboo-700" />
+                      <span>本课试讲核心切片与研讨重点（与选项卡1及板书严格保持一致）</span>
+                    </span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-700 text-white font-serif font-medium">
+                      定位段落：{activeLesson.goldenSlice.sliceRange}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs font-serif pt-1">
+                    <div className="p-3 bg-white/95 rounded-lg border border-bamboo-200/80 space-y-1 shadow-xs">
+                      <strong className="text-bamboo-900 block font-bold">🎯 选项卡1教学重点（板书主干）：</strong>
+                      <p className="text-wood-800 leading-relaxed">{activeLesson.speedPlan.keyPoints}</p>
+                    </div>
+
+                    <div className="p-3 bg-white/95 rounded-lg border border-paper-border space-y-1 shadow-xs">
+                      <strong className="text-wood-900 block font-bold">💬 精读探究主问题（课堂互动）：</strong>
+                      <p className="text-wood-800 leading-relaxed">{activeLesson.verbatimScript.deepDiveStage.teacherQuestion}</p>
+                    </div>
+                  </div>
+
+                  {activeLesson.speedPlan.difficulties && (
+                    <div className="text-xs font-serif text-wood-600 px-1 flex items-center space-x-1.5">
+                      <span className="font-bold text-amber-800">💡 教学难点对应：</span>
+                      <span>{activeLesson.speedPlan.difficulties}</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Paragraphs List with Inline Annotation Support */}
                 <div className="space-y-5 font-serif text-wood-900">
                   {currentLesson.fullText.paragraphs.map((para) => {
@@ -961,8 +994,9 @@ ${activeLesson.speedPlan.homework}`;
                           <div className="flex items-center space-x-2">
                             <span className="font-mono font-bold text-wood-700">自然段 {para.id}</span>
                             {para.isHighlightedSlice && (
-                              <span className="px-2 py-0.5 rounded-full bg-bamboo-700 text-white font-serif font-bold text-[11px]">
-                                🎯 建议10分钟精读教学段落
+                              <span className="px-2.5 py-0.5 rounded-full bg-bamboo-700 text-white font-serif font-bold text-[11px] flex items-center space-x-1">
+                                <BookmarkCheck className="w-3 h-3" />
+                                <span>🎯 建议10分钟精读教学段落（选项卡1教学重点聚焦处）</span>
                               </span>
                             )}
                           </div>
@@ -989,6 +1023,25 @@ ${activeLesson.speedPlan.homework}`;
                         <p className={`indent-8 font-serif text-wood-900 ${currentScale.tab2Para}`}>
                           {para.content}
                         </p>
+
+                        {/* 重点内容与设问直连卡片（与选项卡1和板书严格一致） */}
+                        {para.isHighlightedSlice && (
+                          <div className="mt-3 p-3.5 bg-white/95 border border-bamboo-300 rounded-xl space-y-1.5 text-xs font-serif text-wood-900 shadow-xs">
+                            <div className="flex items-center space-x-1.5 font-bold text-bamboo-900 pb-1 border-b border-bamboo-200/60">
+                              <BookmarkCheck className="w-3.5 h-3.5 text-bamboo-700" />
+                              <span>本段试讲重点与课堂设问（与选项卡1教学重点及板书一致）：</span>
+                            </div>
+                            <p className="text-wood-800">
+                              <strong className="text-bamboo-900">🎯 本课教学重点：</strong>{activeLesson.speedPlan.keyPoints}
+                            </p>
+                            <p className="text-wood-800">
+                              <strong className="text-bamboo-900">💬 课堂提问示范：</strong>{activeLesson.verbatimScript.deepDiveStage.teacherQuestion}
+                            </p>
+                            <p className="text-stone-600 italic">
+                              <strong>预设学生回答：</strong>{activeLesson.verbatimScript.deepDiveStage.studentAnswer}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Pinyin Notes if available */}
                         {para.pinyinNotes && para.pinyinNotes.length > 0 && (

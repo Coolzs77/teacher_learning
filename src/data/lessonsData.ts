@@ -132,7 +132,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "小草偷偷地从土里钻出来，嫩嫩的，绿绿的。园子里，田野里，瞧去，一大片一大片满是的。坐着，躺着，打两个滚，踢几脚球，赛几趟跑，捉几回迷藏。风轻悄悄的，草软绵绵的。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": [
             {
               "word": "朗润",
@@ -160,7 +160,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "朱自清“吹面不寒杨柳风”，不错的，像母亲的手抚摸着你。风里带来些新翻的泥土的气息，混着青草味儿，还有各种花的香，都在微微润湿的空气里酝酿。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -322,13 +322,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "小山整把济南围了个圈儿，只有北边缺着点儿口儿。这一圈小山在冬天特别可爱，好像是把济南放在一个小摇篮里，他们全安静不动地低声地说：“你们放心吧，这儿准保暖和。”真的，济南的人们在冬天是面上含笑的。他们一看那些小山，心中便觉得有了着落，有了依靠。他们由天上看到山上，便不觉地想起：“明天也许就是春天了吧？这样的温暖，今天夜里山草也许就绿起来了吧？”就是这点儿幻想不能一时实现，他们也并不着急，因为有这样慈善的冬天，干啥还希望别的呢！",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "最妙的是下点儿小雪呀。看吧，山上的矮松越发的青黑，树尖儿上顶着一髻儿白花，好像日本看护妇。山尖全白了，给蓝天镶上一道银边。山坡上有的地方雪厚点儿，有的地方草色还露着；这样，一道儿白，一道儿暗黄，给山们穿上一件带水纹的花衣；看着看着，这件花衣好像被风儿吹动，叫你希望看见一点儿更美的山的肌肤。等到快日落的时候，微黄的阳光斜射在山腰上，那点儿薄雪好像忽然害了羞，微微露出点儿粉色。就是下小雪吧，济南是受不住大雪的，那些小山太秀气！",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -826,7 +826,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "《秋天的怀念》是统编版初中语文七年级上册第二单元·挚爱亲情的重点课文，由作者【史铁生】创作。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -970,7 +970,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（朗读课文，把握文章主旨，品味细节描写。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -982,7 +982,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "【课下重点字词注释】：\n① 选自1985年8月2日《中国青年报》。略有改动。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -1318,7 +1318,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "8 《世说新语》二则咏雪谢太傅寒雪日内集，与儿女讲论文义。俄而雪骤，公欣然曰：“白雪纷纷何所似？”兄子胡儿曰：“撒盐空中差可拟。”兄女曰：“未若柳絮因风起。”公大笑乐。即公大兄无奕女，左将军王凝之妻也。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -2163,13 +2163,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（厘清行文思路，学习圈点批注，领会作者观点。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -2301,7 +2301,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "一脸雀斑的小内德说道：“嗨！我有主意了。我们很久没去爬悬崖了。”",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -2319,7 +2319,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 5,
           "content": "“快来呀！”杰里冲着我大喊 —— 他是我最好的朋友，“就因为你过去生病，所以就要当胆小鬼？这没道理。”“我来了！”我喊道，然后跟在他们后面跑。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -2793,13 +2793,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（练习默读与抓取核心信息，体会叙述中的感情倾向。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -4274,13 +4274,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "——记闻一多先生言行片段臧克家",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "【课下重点字词注释】：\n① 选自 1980 年 2 月 12 日《人民日报》。有改动。； 闻一多（1899—1946），湖北浠（ xī）水人，； 诗人、学者、民主战士。代表作有诗集《红； 烛》《死水》，学术著作《神话与诗》《唐诗杂； 论》等。臧克家（ 1905—2004），山东诸城； 人，诗人。代表作有诗集《烙印》等。； ② 〔仰之弥（mí）高〕和后面的“钻之弥坚”都； 出自《论语·子罕》，是颜回赞颂老师孔子的",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -4940,13 +4940,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "初，权谓吕蒙曰：“卿今当涂掌事，不可不学！”蒙辞以军中多务。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "权曰：“孤岂欲卿治经为博士邪！但当涉猎，见往事耳。卿言多务，孰若孤？孤常读书，自以为大有所益。”蒙乃始就学。及鲁肃过寻阳，与蒙论议，大惊曰：“卿今者才略，非复吴下阿蒙！”蒙曰：“士别三日，即更刮目相待，大兄何见事之晚乎！”肃遂拜蒙母，结友而别。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -5694,13 +5694,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "问女何所思，问女何所忆。女亦无所思，女亦无所忆。昨夜见军帖，可汗大点兵，军书十二卷，卷卷有爷名。阿爷无大儿，木兰无长兄，愿为市鞍马，从此替爷征。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "东市买骏马，西市买鞍鞯，南市买辔头，北市买长鞭。旦辞爷娘去，暮宿黄河边，不闻爷娘唤女声，但闻黄河流水鸣溅溅。旦辞黄河去，暮至黑山头，不闻爷娘唤女声，但闻燕山胡骑鸣啾啾。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -6162,7 +6162,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（抓住动作、语言细节，学习写批注。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -6300,7 +6300,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "那石板没经石匠光面，就铺在家门口。多年来，风吹雨淋，人踩牛踏，终于光滑了些，但磨不平那一颗颗硬币大的小凹凼。台阶上积了水时，从堂里望出去，有许多小亮点。天若放晴，穿堂风一吹，青石板比泥地干得快，父亲又用竹丝扫把扫了，石板上青幽幽的，宽敞阴凉，由不得人不去坐一坐，躺一躺。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -6318,7 +6318,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 5,
           "content": "父亲的个子高，他觉得坐在台阶上很舒服。父亲把屁股坐在最高的一级上，两只脚板就搁在最低的一级。他的脚板宽大，裂着许多干沟，沟里嵌着沙子和泥土。父亲的这双脚是洗不干净的，他一般都去凼里洗，拖着一双湿了的草鞋唿嗒唿嗒地走回来。大概到了过年，父亲才在家里洗一次脚。那天，母亲就特别高兴，亲自为他端了一大木盆水。盆水冒着热气，父亲就坐在台阶上很耐心地洗。因为沙子多，父亲要了个板刷在脚上沙啦沙啦地刷。后来父亲的脚终于洗好了，终于洗出了脚的本色，却也是黄几几的，是泥土的颜色。我为他倒水，倒出的是一盆泥浆，木盆底上还积了一层沙。父亲说洗了一次干净的脚，觉得这脚轻飘飘的没着落，踏在最硬实的青石板上也像踩在棉花上似的。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -6672,7 +6672,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "《卖油翁》是统编版初中语文七年级下册第三单元·凡人小事的重点课文，由作者【欧阳修】创作。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -6954,7 +6954,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "这是哀牢山南段的最高处。这么陡峭的山，这么茂密的树林，走上一天，路上也难得遇见几个人。夕阳西下，我们有点儿着急了，今夜要是赶不到山那边的太阳寨，只有在这深山中露宿了。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -6966,7 +6966,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "白色梨花开满枝头，多么美丽的一片梨树林啊！老余说：“这里有梨树，前边就会有人家。”",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -7440,13 +7440,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "《短文两篇（陋室铭/爱莲说）》是统编版初中语文七年级下册第四单元·修身处世的重点课文，由作者【刘禹锡/周敦颐】创作。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（略读课文，概括要点，联系自身实际体会。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -9534,7 +9534,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "向南扩展中。和中路军所遇敌情一样，我西路军当面之敌亦纷纷溃退，毫无斗志，我军所遇之抵抗，甚为微弱。此种情况，一方面由于人民解放军英勇善战，锐不可当；另一方面，这和国民党反动派拒绝签订和平协定，有很大关系。国民党的广大官兵一致希望和平，不想再打了，听见南京拒绝和平，都很泄气。战犯汤恩伯二十一日到芜湖督战，不起丝毫作用。汤恩伯认为南京、江阴段防线是很巩固的，弱点只存在于南京、九江一线。不料正是汤恩伯到芜湖的那一天，东面防线又被我军突破了。我东路三十五万大军与西路同日同时发起渡江作战。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -9666,7 +9666,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "1867年，瑞典化学家诺贝尔发明了黄色炸药，以后又发明了多种炸药，这使他获得巨额收入。1896年诺贝尔逝世，这笔巨款用来设立诺贝尔奖金。他留下来的资金每年的利息将支付这5 种诺贝尔奖金。诺贝尔基金会是这笔资金的合法拥有者，并管理这笔资金的投资，但与诺贝尔奖的评定无关。诺贝尔奖的评议权属于瑞典和挪威的诺贝尔奖评委会。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -10391,7 +10391,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "二、中国国民性中最缺乏的是什么？三、它的病根何在？",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -10403,7 +10403,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "（摘自许寿裳《亡友鲁迅印象记》）",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -10528,13 +10528,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "五很多作家都写过回忆母亲的文章，比如邹韬奋《我的母亲》、老舍《我的母亲》等。找来进行比较阅读，看看不同作者笔下的母亲形象、文章的写作手法、作品的语言风格等方面各有什么不同。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "【课下重点字词注释】：\na 节选自《托尔斯泰》（《三作家》，安徽文艺出； 版社 2000 年版）。王雪飞译。有改动。题目是； 编者加的。； b 〔髭（zī） 〕嘴上边的胡子。； c 〔髯（rán） 〕两腮的胡子。； d 〔绺（liǔ） 〕头发； 、胡须等许多根顺着聚在一； 起叫一绺。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -10792,7 +10792,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "“山川之美，古来共谈。”自然山水，或清幽，或雄奇，或秀丽，均显造化之妙。深入其中，总能让人流连忘返，引起无限的情思。古代诗文中有很多歌咏山水的优美篇章，阅读这类作品，可以获得美的享受，净化心灵，陶冶情操。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -10918,13 +10918,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "多趣味。每至晴初霜旦，林寒涧肃，常有高猿长啸，属引凄异，空谷传响，哀转久绝。故渔者歌曰：“巴东三峡巫峡长，猿鸣三声泪沾裳。”",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "【课下重点字词注释】：\na 〔飞漱（shù） 〕飞速地往下冲荡。； b 〔清荣峻茂〕水清树荣，山高草盛。荣，茂盛。； c 〔良〕甚，很。； d 〔晴初〕天刚放晴。； e 〔霜旦〕下霜的早晨。； f 〔肃〕肃杀，凄寒。； g 〔 属（zhǔ）引〕接连不断。属，连接。引，； 延长。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -11044,13 +11044,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "十月十二日夜，解衣欲睡，月色入户，欣然起行。念无与为乐者，遂至承天寺寻张怀民。怀民亦未寝，相与步于中庭。庭下如积水空明，水中藻、荇交横，盖竹柏影也。何夜无月？何处无竹柏？但少闲人如吾两人者耳。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "【课下重点字词注释】：\na 选自《苏轼文集》卷七十一（中华书局 1986； 年版）。承天寺，在今湖北黄冈南。苏轼； （1037—1101），字子瞻，号东坡居士，眉山； （今属四川）人，北宋文学家。此文写于作者； 贬官黄州期间。； b 〔元丰六年〕公元 1083 年。元丰，宋神宗赵； 顼（xū）年号（1078—1085）。； c 〔念〕考虑，想到。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -11330,7 +11330,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "阅读这些散文，领会作品的情思，可以培养审美情趣，丰富精神世界。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": [
             {
               "word": "蹒跚",
@@ -11370,7 +11370,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 6,
           "content": "到南京时，有朋友约去游逛，勾留了一日；第二日上午便须渡江到浦口，下午上车北去。父亲因为事忙，本已说定不送我，叫旅馆里一个熟识的茶房陪我同去。他再三嘱咐茶房，甚是仔细。但他终于不放心，怕茶房不妥帖；颇踌躇了一会。其实我那年已二十岁，北京已来往过两三次，是没有什么要紧的了。他踌躇了一会，终于决定还是自己送我去。我再三劝他不必去；他只说：“不要紧，他们去不好！”",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -11538,7 +11538,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "4. 他少年出外谋生，独立支持，做了许多大事。哪知老境却如此颓唐！他触目伤怀，自然情不能自已。情郁于中，自然要发之于外；家庭琐屑便往往触他之怒。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -11556,7 +11556,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 5,
           "content": "【课后思考探究参考】：\n读读写写\n朱自清父亲读《背影》\n1928 年，我（朱国华，朱自清的三弟——编者按）家已搬至扬州东关街仁丰\n里一所简陋的屋子。秋日的一天，我接到了开明书店寄赠的《背影》散文集，我\n手捧书本，不敢怠慢，一口气奔上二楼父亲卧室，让他老人家先睹为快。父亲已\n行动不便，挪到窗前，依靠在小椅上，戴上了老花眼镜，一字一句诵读着儿子的",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         }
       ]
@@ -11670,13 +11670,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "五写作时恰当使用象征手法，可以让读者咀嚼回味，给人留下深刻的印象。试选取你熟悉的某个事物，赋予它一定的象征意义，完成一次片段写作。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "【课下重点字词注释】：\na 选自《严文井选集》下册（人民文学出版社； 2001年版）。略有改动。严文井（1915—2005），； 原名严文锦，湖北武昌（今属武汉）人，作家。； a 选自《罗素自传》第一卷（商务印书馆 2015； 年版）。胡作玄、赵慧琪译。有改动。罗素； （1872—1970），英国哲学家、数学家、作家。； 获 1950 年诺贝尔文学奖。； b 〔濒（bīn）临〕紧接，临近。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -11940,7 +11940,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "说明重要纪念性建筑的文章，又可以引导我们了解波澜壮阔的历史，筑牢思想之基。而有关动物的文章，则引导我们去发现大自然的奥秘，激发科学探索的兴趣。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -11952,13 +11952,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "【课下重点字词注释】：\na 选自《桥梁史话》（北京出版社 2012 年版）。； 有删改。茅以昇（1896—1989），字唐臣，江； 苏镇江人，桥梁专家、教育家。； b 〔旅人桥〕据记载，这座桥在河南洛阳附近，； 约建成于西晋时期，后来塌毁了。； c 〔洨（xiáo）河〕在河北南部，流经赵县； （古； 称赵州）。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 5,
           "content": "【课后思考探究参考】：\n思考探究\n一文章为了说明中国石拱桥的特征，选取了许多例子。从课文中找出这些例\n子，提取关键信息，填写下面的表格。填完之后，纵向看一看，你有哪些\n发现？\n名称建造时间特点\n1 约282年可能是有记载的最早石拱桥",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         }
       ]
@@ -12078,19 +12078,19 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（辨析说明方法，理清说明顺序，品味说明文语言的准确性。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 4,
           "content": "【课下重点字词注释】：\na 选自《百科知识》1979 年第 4 期。略有删节。； 原题为《“拙政诸园寄深眷”——谈苏州园； 林》。拙政园，苏州古典园林之一，始建于明； 正德年间（1506—1521）。； b 〔轩榭（xiè） 〕轩； ，有窗户的廊子或小屋。榭，； 建筑在台上的房屋。； a 〔胸中有丘壑（ hè） 〕意思是设计者和匠师的",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -12492,7 +12492,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "本文有情节，有描写，读起来更像小故事，是带文学性的说明文。我们读这篇文章时，除了要感受其中的趣味，更要关注作者是如何在细致观察的基础上，客观记录蝉的习性与成长规律的，要学习其说明事物的独特方法，体会文中所体现的科学精神。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -12774,7 +12774,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -19497,19 +19497,19 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（熟读成诵，品析重点名句的表达特色。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 4,
           "content": "【课下重点字词注释】：\na 选自《范仲淹全集》（凤凰出版社 2004 年； 版）。岳阳楼，湖南岳阳西门城楼，扼长江，； 临洞庭。始为三国时吴国都督鲁肃训练水师； 时构筑的阅兵台。唐开元四年（ 716）在阅； 兵台旧址建楼。唐宋以后此楼多次重修，现； 存建筑为清同治六年（ 1867）建。范仲淹； （989—1052），字希文，谥号文正，苏州吴县； （今江苏苏州）人，北宋政治家、文学家。有",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -19641,7 +19641,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -20493,7 +20493,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "我们家赶忙答应了他的请求，并且决定在举行婚礼之后全家到哲尔赛岛去游玩一次。哲尔赛岛是穷人们最理想的游玩的地方。这个小岛是属英国管的。路并不远，乘小轮船渡过海，便到了。因此，一个法国人只要航行两个小时，就可以到一个邻国，看看这个国家的民族，并且研究一下这个不列颠国旗覆盖着的岛上的风俗习惯。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -20511,7 +20511,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 5,
           "content": "毫无疑义，父亲是被这种高贵的吃法打动了，走到我母亲和两个姐姐身边问：“你们要不要我请你们吃牡蛎？”",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -23252,7 +23252,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在这时候，众人也都哄笑起来：店内外充满了快活的空气。在这些时候，我可以附和着笑，掌柜是决不责备的。而且掌柜见了孔乙己，也每每这样问他，引人发笑。孔乙己自己知道不能和他们谈天，便只好向孩子说话。有一回对我说道：“你读过书么？”我略略点一点头。他说：“读过书，……我便考你一考。茴香豆的茴字，怎样写的？”我想，讨饭一样的人，也配考我么？便回过脸去，不再理会。孔乙己等了许久，很恳切的说道：“不能写罢？……我教给你，记着 ! 这些字应该记着。将来做掌柜的时候，写账要用。”我暗想我和掌柜的等级还很远呢，而且我们掌柜也从不将茴香豆上账；又好笑，又不耐烦，懒懒的答他道：“谁要你教，不是草头底下一个来回的回字么？”孔乙己显出极高兴的样子，将两个指头的长指甲敲着柜台，点头说：“对呀对呀 !……回字有四样写法，你知道么？”我愈不耐烦了，努着嘴走远。孔乙己刚用指甲蘸了酒，想在柜上写字，见我毫不热心，便又叹一口气，显出极惋惜的样子。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -23264,7 +23264,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 4,
           "content": "孔乙己是这样的使人快活，可是没有他，别人也便这么过。有一天，大约是中秋前的两三天，掌柜正在慢慢的结账，取下粉板，忽然说：“孔乙己长久没有来了。还欠十九个钱呢!”我才也觉得他的确长久没有来了。一个喝酒的人说道：“他怎么会来？……他打折了腿了。”掌柜说：“哦 !”“他总仍旧是偷。这一回，是自己发昏，竟偷到丁举人家里去了。他家的东西，偷得的么？”“后来怎么样？”“怎么样？先写服辩，后来是~ß\u0016rH打，打了大半夜，再打折了腿。”“后来呢？”“后来打折了腿了。”“打折了怎样呢？”“怎样？……谁晓得？许是死了。”掌柜也不再问，仍然慢慢的算他的账。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -23300,7 +23300,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 10,
           "content": "【课后思考探究参考】：\n思考探究\n一孔乙己是一个怎样的人？结合课文中的具体描写，联系人物所处的社会环\n境，谈谈你的理解。\n~ß\u0016rH\n阅读第二单元\n二小说多次写到人们的“笑”，找出具体语句，看看人们每次都是为什么而",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         }
       ]
@@ -23420,19 +23420,19 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（细读外貌、动作、心理细节，体会讽刺与批判手法。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
           "id": 3,
           "content": "结合课后思考探究与实际生活，加深对文本思想内涵的理解与体会。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 4,
           "content": "【课下重点字词注释】：\na 选自《契诃夫小说选》（人民文学出版社 1992； 年版）。汝龙译。有改动。契诃夫（1860—； 1904），俄国作家、戏剧家。主要作品有小说； 《第六病室》《装在套子里的人》，剧本《万尼； 亚舅舅》《樱桃园》等。； b 〔奥楚蔑洛夫〕俄语中，这个词的本义是； “疯； 癫的”，用它作姓有讽刺意味。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -24181,13 +24181,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "生，亦我所欲也；义，亦我所欲也。二者不可得兼，舍生而取义者也。生亦我所欲，所欲有甚于生者，故不为苟得也；死亦我所恶，所恶有甚于死者，故患有所不辟也。如使人之所欲莫甚于生，则凡可以得生者何不用也？使人之所恶莫甚于死者，则凡可以辟患者何不为也？由是则生而有不用也，由是则可以辟患而有不为也。是故所欲有甚于生者，所恶有甚于死者。非独贤者有是心也，人皆有之，贤者能勿丧耳。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "一箪食，一豆羹，得之则生，弗得则死。呼尔而与之，行道之人弗受；蹴尔而与之，乞人不屑也。万钟则不辩礼义而受之，万钟于我何加焉！",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -24649,7 +24649,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "《词四首（渔家傲·秋思/江城子/破阵子/满江红）》是统编版初中语文九年级下册第三单元·大义与劝学的重点课文，由作者【范仲淹/苏轼/辛弃疾/秋瑾】创作。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
@@ -24787,13 +24787,13 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 1,
           "content": "谈读书弗朗西斯·培根读书足以怡情，足以傅彩，足以长才。其怡情也，最见于独处幽居之时；其傅彩也，最见于高谈阔论之中；其长才也，最见于处世判事之际。练达之士虽能分别处理细事或一一判别枝节，然纵观统筹，全局策划，则舍好学深思者莫属。读书费时过多易惰，文采藻饰太盛则矫，全凭条文断事乃学究故态。读书补天然之不足，经验又补读书之不足，盖天生才干犹如自然花草，读书然后知如何修剪移接；而书中所示，如不以经验范之，则又大而无当。狡黠者鄙读书，无知者羡读书，唯明智之士用读书，然书并不以用处告人，用书之智不在书中，而在书外，全弗朗西斯·培根~ß\u0016rH凭观察得之。读书时不可存心诘难作者，不可尽信书上所言，亦不可只为寻章摘句，而应推敲细思。书有可浅尝者，有可吞食者，少数则须咀嚼消化。换言之，有只须读其部分者，有只须大体涉猎者，少数则须全读，读时须全神贯注，孜孜不倦。书亦可请人代读，取其所作摘要，但只限题材较次或价值不高者，否则书经提炼犹如水经蒸馏，味同嚼蜡矣。读书使人充实，讨论使人机智，作文使人准确。因此不常作文者须记忆特强，不常讨论者须天生聪颖，不常读书者须欺世有术，始能无知而显有知。读史使人明智，读诗使人灵秀，数学使人周密，科学使人深刻，伦理学使人庄重，逻辑修辞之学使人善辩：凡有所学，皆成性格。人之才智但有滞碍，无不可读适当之书使之顺畅，一如身体百病，皆可借相宜之运动除之。滚球利睾肾，射箭利胸肺，漫步利肠胃，骑术利头脑，诸如此类。如智力不集中，可令读数学，盖演题须全神贯注，稍有分散即须重演；如不能辨异，可令读经院哲学，盖是辈皆吹毛求疵之人；如不善求同，不善以一物阐证另一物，可令读律师之案卷。如此头脑中凡有缺陷，皆有特药可医。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         },
         {
           "id": 2,
           "content": "不求甚解马南邨一般人常常以为，对任何问题不求甚解都是不好的。其实也不尽然。我们虽然不必提倡不求甚解的态度，但是，盲目地反对不求甚解的态度同样没有充分的理由。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -27475,7 +27475,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 2,
           "content": "在课文学习中，紧扣单元语文要素（理清故事情节，把握主要人物言行特点。），重点品味文中的核心字词句段，落实朗读指导与阅读理解。",
-          "isHighlightedSlice": true,
+          "isHighlightedSlice": false,
           "pinyinNotes": []
         },
         {
@@ -27493,7 +27493,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 5,
           "content": "【课后思考探究参考】：\n思考探究\n一本文情辞恳切，感人肺腑。仿照示例，标示出下列语句中的停顿，有感情\n地朗读并背诵课文。\n示例：\n先帝创业未半 / 而中道崩殂，今 / 天下三分，益州 / 疲弊，此诚 / 危急存亡之\n秋也。",
-          "isHighlightedSlice": false,
+          "isHighlightedSlice": true,
           "pinyinNotes": []
         }
       ]
@@ -27755,7 +27755,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -27883,7 +27883,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28011,7 +28011,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28139,7 +28139,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28267,7 +28267,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28395,7 +28395,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28523,7 +28523,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28651,7 +28651,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28779,7 +28779,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -28907,7 +28907,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -29035,7 +29035,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,
@@ -29163,7 +29163,7 @@ export const LESSONS_DATA: Lesson[] = [
         {
           "id": 3,
           "content": "【例文对比与剖析】：\n【普通写法】：他站在讲台上，心里非常紧张，半天说不出话来。\n【精彩写法】：他两手紧紧攥着讲台边缘，指节泛白，嘴唇微微颤抖着，额角渗出一层细密的汗珠，喉结上下滚动了几次，才挤出一声微弱的呼喊。",
-          "isHighlightedSlice": true
+          "isHighlightedSlice": false
         },
         {
           "id": 4,

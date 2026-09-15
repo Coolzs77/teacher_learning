@@ -23,26 +23,26 @@ export interface VariantInfo {
 export const LESSON_VARIANTS: VariantInfo[] = [
   {
     id: 0,
-    name: '考纲标准标杆版',
-    tagline: '标准一课一得 · 紧扣教参考点与考场常规',
+    name: '教参常规设计版',
+    tagline: '一课一得 · 紧扣统编教参重点与考场常规',
     badgeColor: 'bg-bamboo-100 text-bamboo-800 border-bamboo-200'
   },
   {
     id: 1,
-    name: '情境感知与美读品析型',
-    tagline: '以读促悟 · 声情并茂 · 咬文嚼字品味语言之妙',
+    name: '以读促悟品读版',
+    tagline: '抓住关键语句 · 朗读品味语言与情感内涵',
     badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200'
   },
   {
     id: 2,
-    name: '主问题导学与微任务链型',
-    tagline: '思维进阶 · 任务驱动 · 以核心问题串联探究课堂',
+    name: '主问题引导探究版',
+    tagline: '问题驱动 · 启发思维 · 串联课堂师生研讨',
     badgeColor: 'bg-blue-100 text-blue-800 border-blue-200'
   },
   {
     id: 3,
-    name: '考场速通与核心切片冲刺型',
-    tagline: '直击评分项 · 精准控时 · 10分钟高分结构化呈现',
+    name: '核心切片重点精讲版',
+    tagline: '重点突出 · 切片深入 · 讲练结合把控时间',
     badgeColor: 'bg-purple-100 text-purple-800 border-purple-200'
   }
 ];
@@ -217,36 +217,36 @@ export function getLessonWithVariant(baseLesson: Lesson, variantId: number): Les
     };
   }
 
-  // Variant 3: 考场速通与核心切片冲刺型
+  // Variant 3: 核心切片重点精讲版
   if (variantId === 3) {
-    const leadIn = `上课！同学们好，请坐！“温故而知新，可以为师矣。”在上节课中，我们初读了${author}的《${title}》，梳理了整体框架。这节课，我们直奔主题，把目光聚焦在全篇最具代表性的核心段落上，展开我们的10分钟深度研读！请同学们翻开课本第XX页……`;
-    const question = `考点核心直击：请大家用3分钟时间默读核心切片，根据考卷要求，思考并归纳：该片段中运用的核心表现手法是什么？它是如何为表现文章主旨服务的？`;
-    const answer = `生：该片段运用了借景抒情（或对比烘托/层层递进）的手法，通过关键语句的表现力，深化了文章的核心主题。`;
-    const feedback = `归纳极为准确，语言精炼到位！这就告诉我们，答题和赏析都要紧扣手法与情感的双向绑定。请同学们看黑板，我们把这个公式记录下来：手法标靶 + 文本印证 + 情感归宿！`;
-    const mainBoard = `《${title}》考场高分结构化板书\n【课题定位】：${author} · 《${title}》\n┌─ 核心切片：${baseLesson.goldenSlice.sliceRange}\n├─ 技法提炼：手法精当 · 语言典范\n└─ 主旨升华：一课一得 · 紧扣考纲\n【考官点拨】：讲练结合 · 结构清晰`;
+    const leadIn = `“同学们好，请坐！上节课我们整体感知了${author}的《${title}》，了解了文章大意。这节课，我们重点精读全篇最具代表性的核心段落，体会作者独特的语言风格与表达技巧。请大家翻开课本……”`;
+    const question = `“请大家默读本段，边读边画出体现表现手法的关键语句，思考作者是如何通过这些语句来表达文章中心思想的？”`;
+    const answer = `“学生回答：该片段运用了生动的描写（或对比/借景抒情）手法，突出了主题。”`;
+    const feedback = `“大家体会得很深入。分析重点语句时，要抓准词语的表达效果，结合上下文来理解。（板书核心关键词）”`;
+    const mainBoard = `《${title}》 · ${author}\n【核心切片】：${baseLesson.goldenSlice.sliceRange}\n  ├── 语言特色：精准贴切 · 意蕴丰富\n  ├── 表达技巧：层次分明 · 情景交融\n  └── 主旨探究：一课一得 · 扎实落实\n【教学建议】：讲练结合 · 结构清晰`;
 
     return {
       ...baseLesson,
       goldenSlice: {
         ...baseLesson.goldenSlice,
-        sliceTitle: `【考场速通方案】直奔评分核心点，精准切片讲深讲透`,
-        oneGain: `一课一得：精准突破考卷规定考点，实现“导入1分半-切片5分钟-小结与板书3分半”黄金配比。`
+        sliceTitle: `【重点精讲方案】聚焦核心切片深入品析`,
+        oneGain: `一课一得：围绕教学重点开展师生研讨，时间分配科学，重点突出。`
       },
       speedPlan: {
         ...baseLesson.speedPlan,
-        keyPoints: `精准把握试题考查要求中的核心切片，讲练结合，在10分钟内展现出扎实的学科教学基本功。`,
-        difficulties: `板书与试讲口述的高效同步协同，确保10分钟不超时、不抢步、不踩雷。`
+        keyPoints: `准确把握核心切片中的重点字词句，通过提问与朗读指导引导学生理解文本。`,
+        difficulties: `板书与试讲口述的协同配合，时间分配合理，教学环节完整。`
       },
       verbatimScript: {
         ...baseLesson.verbatimScript,
         importStage: {
           teacherLines: leadIn,
-          actionNotes: '教态端庄干练，声音洪亮清晰，1分钟内干净利索切入核心，不拖泥带水。'
+          actionNotes: '教态端庄自然，语言清晰干练，快速切入教学主题。'
         },
         deepDiveStage: {
           ...baseLesson.verbatimScript.deepDiveStage,
-          title: '二、考点聚焦，精讲练评（考场速通研读切片）',
-          readingGuidance: '严格按照教资面试评分标准，讲清核心手法的概念、文本落脚点及考场问答模板。',
+          title: '二、重点切片，深入品读（核心研讨环节）',
+          readingGuidance: '指导学生抓住关键语句进行有感情朗读，语速适中，注重重音与停顿。',
           teacherQuestion: question,
           studentAnswer: answer,
           teacherFeedback: feedback

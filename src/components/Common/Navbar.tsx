@@ -154,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <GraduationCap className="w-3.5 h-3.5" />
-          <span>文体秘籍</span>
+          <span>文体教学</span>
         </button>
       </div>
     </header>

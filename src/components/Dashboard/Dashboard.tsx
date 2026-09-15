@@ -507,7 +507,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="flex items-center justify-between">
                 <span className="font-serif font-bold text-xs text-wood-800 flex items-center space-x-1.5">
                   <Award className="w-4 h-4 text-amber-600" />
-                  <span>常考高频篇目快速通道（考官最爱抽考）：</span>
+                  <span>常考高频篇目快速通道：</span>
                 </span>
                 <span className="text-[11px] text-wood-500">点击直达课文工作台</span>
               </div>
@@ -874,7 +874,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div className="flex items-center justify-between text-xs text-wood-500 font-serif pt-1">
-            <span>考官经验谈：考前建议累计演练不少于 30 篇不同文体课文，方能形成肌肉记忆。</span>
+            <span>备考建议：考前建议多演练不同文体课文，熟悉10分钟试讲节奏与板书书写。</span>
             <span className="font-mono text-wood-600">日均建议：20~40分钟</span>
           </div>
         </div>

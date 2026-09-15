@@ -130,10 +130,10 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
             </div>
 
             <h1 className="text-xl md:text-2xl font-serif font-black text-wood-900">
-              7大文体备考秘籍与试讲模型库
+              7大文体试讲教学要领与参考模型
             </h1>
             <p className="text-xs md:text-sm text-wood-600 font-serif leading-relaxed">
-              教资面试考官核心考查“文体意识”与“学科素养”。散文贵在声情并茂的朗读感染力，文言贵在文白对译与文化气象，说明文重在严谨说明方法与语言准确，小说重在人物与情节镜头，写作指导课重在审题技法切片与现场微练笔。吃透7大文体模型，考场抽题从容过关。
+              初中语文教学突出“文体意识”与“学科素养”。散文注重朗读品味与情感体会，文言文注重文白对译与文化内涵，说明文注重说明方法与语言准确性，小说注重人物形象与情节梳理，写作课注重立意构思与片段练笔。掌握各类文体特点，试讲设计更有条理。
             </p>
           </div>
 
@@ -158,58 +158,56 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
           <div className="space-y-4">
             <h3 className="font-serif font-bold text-sm text-wood-900 flex items-center space-x-2">
               <Clock className="w-4 h-4 text-bamboo-700" />
-              <span>一、10分钟全真时间配比与教学步骤骨架</span>
+              <span>一、10分钟 5 步教学流程骨架</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              {currentMethod.coreFramework.map((step, i) => (
+              {currentMethod.coreFramework.map((s, idx) => (
                 <div
-                  key={i}
-                  className="p-3.5 rounded-xl bg-paper-50 border border-paper-border space-y-2 flex flex-col justify-between hover:border-bamboo-300 transition"
+                  key={idx}
+                  className="p-3.5 rounded-xl bg-paper-50 border border-paper-border space-y-1.5 flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-center justify-between text-xs text-wood-500 font-mono">
-                      <span className="font-bold text-bamboo-800 font-serif">{step.step}</span>
-                      <span>{step.timing}</span>
+                    <div className="flex items-center justify-between text-xs font-bold text-bamboo-800 font-serif pb-1 border-b border-paper-border">
+                      <span>{s.step}</span>
+                      <span className="font-mono text-wood-500 font-normal">{s.timing}</span>
                     </div>
-                    <h4 className="font-serif font-bold text-sm text-wood-900 mt-1">
-                      {step.name}
-                    </h4>
-                    <p className="text-[11px] text-wood-600 mt-1 leading-snug">
-                      <strong>核心目标：</strong>{step.goal}
+                    <p className="font-serif font-bold text-wood-900 text-xs mt-1.5">
+                      {s.name}
+                    </p>
+                    <p className="font-serif text-[11px] text-wood-600 mt-1 leading-relaxed">
+                      {s.action}
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-paper-border/60 text-[11px] text-wood-700 leading-snug">
-                    {step.action}
+                  <div className="mt-2 pt-1 border-t border-paper-border/60 text-[10px] text-wood-400 font-serif">
+                    核心目标：{s.goal}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* 2. 考官雷区 vs 高分技巧 */}
+          {/* 2. 教学建议与易错点提示 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Deductions */}
-            <div className="p-5 rounded-xl bg-cinnabar-50/70 border border-cinnabar-200 space-y-3">
-              <h4 className="font-serif font-bold text-sm text-cinnabar-800 flex items-center space-x-2">
-                <AlertTriangle className="w-4 h-4 text-cinnabar-600" />
-                <span>考官必扣分雷区（千万避开）</span>
+            <div className="p-5 rounded-2xl bg-cinnabar-50/50 border border-cinnabar-200 space-y-3">
+              <h4 className="font-serif font-bold text-sm text-cinnabar-900 flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-cinnabar-700" />
+                <span>常见教学易错点（建议避开）</span>
               </h4>
-              <div className="space-y-2 text-xs font-serif text-cinnabar-900 leading-relaxed">
-                {currentMethod.examinerDeductions.map((d, i) => (
-                  <div key={i} className="flex items-start space-x-2">
-                    <span className="text-cinnabar-500 font-bold shrink-0">✕</span>
-                    <span>{d}</span>
-                  </div>
+              <ul className="space-y-2 font-serif text-xs md:text-sm text-wood-800">
+                {currentMethod.examinerDeductions.map((p, idx) => (
+                  <li key={idx} className="flex items-start space-x-2">
+                    <span className="text-cinnabar-700 font-bold">✕</span>
+                    <span>{p}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
-            {/* High score */}
-            <div className="p-5 rounded-xl bg-bamboo-50/70 border border-bamboo-200 space-y-3">
-              <h4 className="font-serif font-bold text-sm text-bamboo-800 flex items-center space-x-2">
+            <div className="p-5 rounded-2xl bg-bamboo-50/50 border border-bamboo-200 space-y-3">
+              <h4 className="font-serif font-bold text-sm text-bamboo-900 flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-bamboo-700" />
-                <span>考官青睐的高分制胜技巧</span>
+                <span>实用教学建议（建议采用）</span>
               </h4>
               <div className="space-y-2 text-xs font-serif text-wood-900 leading-relaxed">
                 {currentMethod.highScoreTechniques.map((h, i) => (

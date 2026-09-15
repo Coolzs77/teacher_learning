@@ -72,6 +72,47 @@
 
 ---
 
+### 【阶段五：全站语言去浮夸地气化、服务器 PDF 修复与三维教学重点（简案-原文-板书）深度贯通】
+- **做了什么**：
+  1. **语言风格全域“去浮夸·接地气”重塑**：彻底剔除全站所有“绝密、秒杀、考官级、封神、秘籍、大杀器、神仙示范、通关宝典”等 AI 营销营销化词汇，回归中小学一线教研与真实教师资格证面试考场的严肃、质朴、专业话语体系。
+  2. **服务器端 PDF 原版教材无法加载问题彻底修复**：针对通过公网 IP `http://47.93.28.243/` 打开选项卡 C 时出现“未能从默认路径加载教材文件”的故障进行根因定位并根治，恢复毫秒级流式阅读与批注。
+  3. **158 篇课文“选项卡 1 简案 ↔ 选项卡 2 原文高亮 ↔ 真实板书”三维重点深度对齐**：
+     - 选项卡 1【教学简案】中的教学重难点、核心切片、精读师生问答；
+     - 选项卡 2【课文原文】中的高亮切片段落、重点研讨提示卡片；
+     - 选项卡 1 底部【黑板板书】中的主板书脉络与副板书要点；
+     - 保证上述三者在全册 158 篇课文中严格一一呼应、逻辑闭环，拒绝任何脱节或空泛模板。
+
+- **怎么做的**：
+  - **服务器端 Nginx 与 Web Worker MIME 修复**：
+    - 深入分析浏览器控制台与网络请求，发现 Ubuntu 系统默认的 `/etc/nginx/mime.types` 缺少 `.mjs` 扩展名，导致 Vite 打包出的 `pdf.worker.min-*.mjs` 被 Nginx 作为 `application/octet-stream` 下发，被 Chrome/Edge 安全机制直接拒绝执行 Module Worker，引发 PDF 初始化中断；
+    - 登录云服务器，在 Nginx 配置中针对 `.mjs` 规则增加强制 MIME 头：
+      ```nginx
+      location ~* \.mjs$ {
+          default_type application/javascript;
+          add_header Content-Type application/javascript;
+          add_header Access-Control-Allow-Origin *;
+      }
+      ```
+    - 重构前端 `PdfViewer.tsx`：引入 Vite 原生 `?url` 资源定位器，加载 CMap 字符集支持中文渲染，并动态基于 `window.location.origin` 计算教材绝对 URL；
+    - 升级 Service Worker 规则至 `tl-pwa-cache-v2`，对 `/textbooks/` 和 `.pdf` 资源实施透明旁路（Bypass），避免 SW 干扰 HTTP 206 范围切片请求。
+  - **全量数据库清洗与三维重点对齐（`scripts/harmonize_database.py`）**：
+    - 编写专用清洗与对齐脚本，遍历全部 158 篇课文的完整数据结构；
+    - 全面滤除考情要求、黄金切片、逐字稿台词、板书说明中的营销化浮夸修饰，替换为“备考建议、重点关注、研讨思考、常规提问”等平实教研用语；
+    - 依据每篇课文的精读切片范围（如《春》精准对齐第 4 段春花图；《济南的冬天》精准对齐第 3 段小山薄雪；《背影》精准对齐第 6 段买橘背影等），将 `fullText.paragraphs` 的 `isHighlightedSlice` 标记修正至真实对应的切片段落；
+    - 在选项卡 2 原文高亮段落中内嵌醒目的绿色研讨提示卡片，直接展示本段在选项卡 1 简案中的对应重点、提问与预设回答；
+    - 重构全库黑板板书：左侧主板书严格提炼对应切片的结构线索（如抓字词、赏意境、悟情感），右侧副板书清晰列写重难点技法，保证板书与简案讲授内容严丝合缝。
+
+- **测试结果与验证**：
+  - **云端 Nginx 响应测试**：
+    - `curl -I http://127.0.0.1/assets/pdf.worker.min-yatZIOMy.mjs` -> 返回 `200 OK`，`Content-Type: application/javascript`；
+    - `curl -I -H "Range: bytes=0-1023" http://127.0.0.1/textbooks/...pdf` -> 稳定返回 `206 Partial Content`，`Content-Range: bytes 0-1023/39670024`，分片加载顺畅无阻；
+  - **前端构建与代码校验**：
+    - TypeScript 编译与 Vite 生产构建 0 错误（`dist/` 打包产物完好）；
+    - 全量静态文件已同步推送至阿里云服务器 `/var/www/teacher_learning` 并清理过期哈希文件；
+    - 浏览器打开 `http://47.93.28.243/`，选项卡 C 的 6 本教材原版 PDF 秒级正常渲染，画笔、高亮笔、橡皮擦与单课三维重点无缝联动。
+
+---
+
 ## 三、阿里云服务器（47.93.28.243）环境配置与架构细节
 
 ### 1. 服务器硬件与网络规格

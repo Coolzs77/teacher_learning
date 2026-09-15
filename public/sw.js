@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tl-pwa-cache-v1';
+const CACHE_NAME = 'tl-pwa-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -39,6 +39,11 @@ self.addEventListener('fetch', (event) => {
 
   // For API or non-http requests, ignore
   if (!url.protocol.startsWith('http')) return;
+
+  // Let browser natively handle range requests for large PDF textbooks
+  if (url.pathname.includes('/textbooks/') || url.pathname.endsWith('.pdf')) {
+    return;
+  }
 
   // Stale-While-Revalidate strategy for static assets
   event.respondWith(

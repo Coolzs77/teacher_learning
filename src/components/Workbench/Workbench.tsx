@@ -1,7 +1,14 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Lesson, Genre, StudyStatus, BookId } from '../../types';
 import { LESSONS_DATA } from '../../data/lessonsData';
 import { Chalkboard } from '../Common/Chalkboard';
+import {
+  LESSON_VARIANTS,
+  getLessonWithVariant,
+  applyCustomLessonEdits,
+  LessonCustomData
+} from '../../utils/lessonVariants';
+import { LessonEditModal } from './LessonEditModal';
 import {
   BookOpen,
   Search,
@@ -113,10 +120,22 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<StudyStatus | 'all'>('all');
   const [expandedUnits, setExpandedUnits] = useState<Record<number, boolean>>({ [currentLesson.unit]: true });
 
-  // Left Sidebar Collapsible state (左侧目录一栏，支持收起后完全隐藏不占位)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  // Directory Sidebar state (Left column, completely disappears when collapsed)
+  const [isTOCCollapsed, setIsTOCCollapsed] = useState<boolean>(false);
 
-  // Font Size Scaler state (Problem 5: 标准 大 特大)
+  // Lesson Variant & Single-Lesson Regeneration state
+  const [variantIndex, setVariantIndex] = useState<number>(() => {
+    const saved = localStorage.getItem(`tl_variant_idx_${currentLesson.id}`);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [customEdits, setCustomEdits] = useState<LessonCustomData | null>(() => {
+    const saved = localStorage.getItem(`tl_custom_lesson_${currentLesson.id}`);
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+
+  // Font Size Scaler state (标准 大 特大)
   const [fontSize, setFontSize] = useState<FontSizeLevel>(() => {
     return (localStorage.getItem('tl_font_size') as FontSizeLevel) || 'large';
   });
@@ -127,7 +146,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   const [noteContent, setNoteContent] = useState<string>(userNotes[currentLesson.id] || '');
   const [noteSavedToast, setNoteSavedToast] = useState(false);
 
-  // Paragraph-level annotations (Problem 8)
+  // Paragraph-level annotations
   const [paraNotes, setParaNotes] = useState<Record<number, string>>({});
   const [editingParaId, setEditingParaId] = useState<number | null>(null);
   const [tempParaText, setTempParaText] = useState<string>('');
@@ -136,6 +155,13 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     setSelectedBook(currentLesson.book);
     setExpandedUnits(prev => ({ ...prev, [currentLesson.unit]: true }));
     setNoteContent(userNotes[currentLesson.id] || '');
+
+    // Load variant and custom edits for current lesson
+    const savedVar = localStorage.getItem(`tl_variant_idx_${currentLesson.id}`);
+    setVariantIndex(savedVar ? parseInt(savedVar, 10) : 0);
+
+    const savedCustom = localStorage.getItem(`tl_custom_lesson_${currentLesson.id}`);
+    setCustomEdits(savedCustom ? JSON.parse(savedCustom) : null);
 
     // Load paragraph annotations for current lesson
     try {
@@ -150,6 +176,52 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     }
   }, [currentLesson.id]);
 
+  // Compute active lesson design with variant + custom edits applied
+  const baseVariantLesson = useMemo(() => {
+    return getLessonWithVariant(currentLesson, variantIndex);
+  }, [currentLesson, variantIndex]);
+
+  const activeLesson = useMemo(() => {
+    return applyCustomLessonEdits(baseVariantLesson, customEdits);
+  }, [baseVariantLesson, customEdits]);
+
+  const isCustomEdited = Boolean(customEdits && Object.keys(customEdits).length > 0);
+
+  // Single-lesson design regeneration ("换一版设计" / 刷新)
+  const handleRegenerateLessonDesign = () => {
+    setIsRegenerating(true);
+    const nextIdx = (variantIndex + 1) % LESSON_VARIANTS.length;
+    setVariantIndex(nextIdx);
+    localStorage.setItem(`tl_variant_idx_${currentLesson.id}`, nextIdx.toString());
+    if (customEdits) {
+      localStorage.removeItem(`tl_custom_lesson_${currentLesson.id}`);
+      setCustomEdits(null);
+    }
+    setTimeout(() => {
+      setIsRegenerating(false);
+      setFontToast(`已为《${currentLesson.title}》重新生成【${LESSON_VARIANTS[nextIdx].name}】！`);
+      setTimeout(() => setFontToast(null), 3000);
+    }, 300);
+  };
+
+  const handleSaveCustomEdits = (data: LessonCustomData) => {
+    setCustomEdits(data);
+    localStorage.setItem(`tl_custom_lesson_${currentLesson.id}`, JSON.stringify(data));
+    setIsEditModalOpen(false);
+    setFontToast(`已保存《${currentLesson.title}》专属定制教案！`);
+    setTimeout(() => setFontToast(null), 3000);
+  };
+
+  const handleResetToDefault = () => {
+    localStorage.removeItem(`tl_custom_lesson_${currentLesson.id}`);
+    localStorage.removeItem(`tl_variant_idx_${currentLesson.id}`);
+    setCustomEdits(null);
+    setVariantIndex(0);
+    setIsEditModalOpen(false);
+    setFontToast(`已恢复《${currentLesson.title}》考纲官方标准版！`);
+    setTimeout(() => setFontToast(null), 3000);
+  };
+
   const handleFontSizeChange = (level: FontSizeLevel) => {
     setFontSize(level);
     localStorage.setItem('tl_font_size', level);
@@ -157,10 +229,10 @@ export const Workbench: React.FC<WorkbenchProps> = ({
     setTimeout(() => setFontToast(null), 2500);
   };
 
-  const handleSelectLesson = (lesson: Lesson) => {
+  const handleSelectLessonFromTOC = (lesson: Lesson) => {
     onSelectLesson(lesson);
-    if (window.innerWidth < 1024) {
-      setSidebarCollapsed(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsTOCCollapsed(true);
     }
   };
 
@@ -206,30 +278,30 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   };
 
   const handleCopyPlan = () => {
-    const stepsText = currentLesson.speedPlan.steps
+    const stepsText = activeLesson.speedPlan.steps
       .map((s) => `${s.step}. ${s.name}（${s.duration}）：${s.coreAction}`)
       .join('\n');
 
-    const fullPlanText = `《${currentLesson.title}》10分钟试讲简案（考场速记提纲）
-作者：${currentLesson.author} | 文体：${currentLesson.genre}
+    const fullPlanText = `《${activeLesson.title}》10分钟试讲简案（考场速记提纲）
+作者：${activeLesson.author} | 文体：${activeLesson.genre}
 ----------------------------------------
 【一课一得目标】：
-- 知识要点：${currentLesson.speedPlan.objectives.knowledge}
-- 过程方法：${currentLesson.speedPlan.objectives.process}
-- 情感升华：${currentLesson.speedPlan.objectives.emotional}
+- 知识要点：${activeLesson.speedPlan.objectives.knowledge}
+- 过程方法：${activeLesson.speedPlan.objectives.process}
+- 情感升华：${activeLesson.speedPlan.objectives.emotional}
 
 【核心教学切片】：
-${currentLesson.goldenSlice.sliceRange}
-聚焦要点：${currentLesson.goldenSlice.sliceTitle}
+${activeLesson.goldenSlice.sliceRange}
+聚焦要点：${activeLesson.goldenSlice.sliceTitle}
 
 【教学过程五步流程】：
 ${stepsText}
 
 【黑板板书核心】：
-${currentLesson.blackboard.mainBoard}
+${activeLesson.blackboard.mainBoard}
 
 【课后作业】：
-${currentLesson.speedPlan.homework}`;
+${activeLesson.speedPlan.homework}`;
 
     navigator.clipboard.writeText(fullPlanText);
     setCopiedPlan(true);
@@ -247,316 +319,345 @@ ${currentLesson.speedPlan.homework}`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fadeIn space-y-6">
-      {/* Top Banner Toolbar (Responsive 2-tier layout) */}
-      <div className="bg-paper-card p-4 md:p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
-        {/* Row 1: Title, Meta & Primary Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Left: Sidebar toggle + Title & Meta */}
-          <div className="flex items-center space-x-3 min-w-0">
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm flex-shrink-0"
-              title={sidebarCollapsed ? '展开课文目录' : '收起课文目录'}
-            >
-              {sidebarCollapsed ? (
-                <>
-                  <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
-                  <span className="text-xs font-serif font-bold text-bamboo-900 hidden sm:inline">展开目录 (158篇)</span>
-                </>
-              ) : (
-                <>
-                  <PanelLeftClose className="w-4 h-4 text-wood-600" />
-                  <span className="text-xs font-serif font-medium text-wood-700 hidden sm:inline">收起目录</span>
-                </>
-              )}
-            </button>
-
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] px-2 py-0.5 rounded bg-wood-200 text-wood-800 font-serif">
-                  {currentLesson.bookName} · {currentLesson.unitTitle}
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-bamboo-100 text-bamboo-800 font-serif font-medium">
-                  {currentLesson.genre}
-                </span>
-                <span className="text-amber-700 text-xs font-bold font-mono">
-                  {'★'.repeat(currentLesson.star)}
-                </span>
-              </div>
-              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-wood-900 mt-1 truncate">
-                《{currentLesson.title}》
-                <span className="text-xs sm:text-sm font-normal text-wood-600 ml-2">作者：{currentLesson.author}</span>
-              </h1>
-            </div>
-          </div>
-
-          {/* Right: Quick Trial CTA Button */}
-          <div className="flex items-center space-x-2 flex-shrink-0 self-end sm:self-auto">
-            <button
-              onClick={() => onAddToDaily(currentLesson)}
-              className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif cursor-pointer shadow-sm"
-              title="加入今日模拟练待办"
-            >
-              <CalendarPlus className="w-3.5 h-3.5 text-bamboo-700" />
-              <span className="hidden sm:inline">加入待办</span>
-            </button>
-
-            <button
-              onClick={onStartTrialTimer}
-              className="btn-tactile flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-bamboo-700 text-white hover:bg-bamboo-800 text-xs font-serif font-bold shadow cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-              <span>开启10分钟试讲</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Row 2: Font Size Switcher & Status Badges */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-paper-border/60">
-          {/* Font Size Adjuster (Problem 5: 标准 大 特大) */}
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm">
-              <span className="text-[11px] text-wood-600 font-serif font-medium pl-1.5 pr-0.5 flex items-center space-x-1">
-                <Type className="w-3.5 h-3.5 text-bamboo-700" />
-                <span className="hidden sm:inline">字号:</span>
-              </span>
-              <button
-                onClick={() => handleFontSizeChange('normal')}
-                className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
-                  fontSize === 'normal'
-                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                    : 'text-wood-700 hover:bg-paper-200'
-                }`}
-                title="标准字号"
-              >
-                标准
-              </button>
-              <button
-                onClick={() => handleFontSizeChange('large')}
-                className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
-                  fontSize === 'large'
-                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                    : 'text-wood-700 hover:bg-paper-200'
-                }`}
-                title="大字号"
-              >
-                大
-              </button>
-              <button
-                onClick={() => handleFontSizeChange('xlarge')}
-                className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
-                  fontSize === 'xlarge'
-                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                    : 'text-wood-700 hover:bg-paper-200'
-                }`}
-                title="特大字号"
-              >
-                特大
-              </button>
-            </div>
-
-            {fontToast && (
-              <span className="text-[11px] text-bamboo-800 bg-bamboo-50 border border-bamboo-200 px-2 py-0.5 rounded-lg animate-fadeIn font-serif hidden md:inline">
-                ✓ {fontToast}
-              </span>
-            )}
-          </div>
-
-          {/* Manual Status Buttons */}
-          <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm overflow-x-auto">
-            <span className="text-[11px] text-wood-500 font-serif px-1 hidden lg:inline">备考进度:</span>
-            <button
-              onClick={() => onUpdateStatus(currentLesson.id, 'unlearned')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
-                currentStatus === 'unlearned' ? 'bg-white text-wood-800 shadow font-bold ring-1 ring-wood-300' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-            >
-              ⚪ 未学
-            </button>
-            <button
-              onClick={() => onUpdateStatus(currentLesson.id, 'practicing')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
-                currentStatus === 'practicing' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-sm' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-            >
-              🟡 备课中
-            </button>
-            <button
-              onClick={() => onUpdateStatus(currentLesson.id, 'mastered')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
-                currentStatus === 'mastered' ? 'bg-bamboo-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-            >
-              🟢 已掌握
-            </button>
-            <button
-              onClick={() => onUpdateStatus(currentLesson.id, 'review_needed')}
-              className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
-                currentStatus === 'review_needed' ? 'bg-cinnabar-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
-              }`}
-            >
-              🔴 需复习
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Layout: Left Column (Directory) + Right Column (Stacked Upper & Lower sections) */}
+      {/* 2-Column Layout: Left Directory Column + Right Column (Top Summary + Bottom Tabs) */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* ================= 左边一栏: 课文目录导航 (折叠后彻底隐藏不占地方) ================= */}
-        {!sidebarCollapsed && (
-          <aside className="w-full lg:w-80 shrink-0 bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-4 space-y-3.5 sticky top-20 max-h-[calc(100vh-6rem)] flex flex-col animate-fadeIn">
-            {/* Sidebar Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-paper-border">
+        {/* Left Column: Lesson Directory (Completely hidden when collapsed, taking zero space) */}
+        {!isTOCCollapsed && (
+          <div className="w-full lg:w-80 shrink-0 bg-paper-card rounded-2xl border border-paper-border shadow-scholarly flex flex-col max-h-[calc(100vh-100px)] sticky top-20 z-10 transition-all">
+            {/* Directory Header with Collapse Button */}
+            <div className="p-3.5 border-b border-paper-border flex items-center justify-between bg-paper-100/70 rounded-t-2xl">
               <div className="flex items-center space-x-2">
                 <BookOpen className="w-4 h-4 text-bamboo-700" />
-                <span className="font-serif font-bold text-sm text-wood-900">初中语文教材目录</span>
+                <span className="font-serif font-bold text-xs text-wood-900">初中语文统编教材目录</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-serif font-medium">158篇</span>
               </div>
               <button
-                onClick={() => setSidebarCollapsed(true)}
-                className="p-1 rounded-lg hover:bg-paper-200 text-wood-600 transition cursor-pointer flex items-center space-x-1 text-xs"
-                title="收起目录"
+                onClick={() => setIsTOCCollapsed(true)}
+                className="px-2 py-1 rounded-lg hover:bg-paper-200 text-wood-600 hover:text-wood-900 transition cursor-pointer flex items-center space-x-1 text-xs font-serif"
+                title="收起课文目录"
               >
                 <PanelLeftClose className="w-3.5 h-3.5" />
-                <span className="text-[11px]">收起</span>
+                <span>收起</span>
               </button>
             </div>
 
-            {/* Book Selector Tabs (Horizontal Scroll Single Row) */}
-            <div className="flex items-center space-x-1.5 p-1 bg-paper-100 rounded-xl border border-paper-border text-xs font-serif overflow-x-auto scrollbar-none flex-nowrap shrink-0">
-              {BOOKS.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelectedBook(b.id)}
-                  className={`px-3 py-1.5 text-center rounded-lg transition cursor-pointer font-medium whitespace-nowrap flex-shrink-0 ${
-                    selectedBook === b.id
-                      ? 'bg-wood-800 text-paper-50 shadow-sm font-bold'
-                      : 'text-wood-700 hover:bg-paper-200'
-                  }`}
-                >
-                  {b.name.replace('年级', '')}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <div className="relative shrink-0">
-              <Search className="w-4 h-4 text-wood-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="搜索篇目 / 作者..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-paper-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif"
-              />
-            </div>
-
-            {/* Filters Row */}
-            <div className="grid grid-cols-2 gap-2 text-xs shrink-0">
-              <select
-                value={selectedGenre}
-                onChange={(e) => setSelectedGenre(e.target.value as any)}
-                className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
-              >
-                {GENRES.map((g) => (
-                  <option key={g.value} value={g.value}>
-                    {g.label}
-                  </option>
+            {/* Directory Body */}
+            <div className="p-3.5 space-y-3 overflow-y-auto flex-1">
+              {/* Book Selector Tabs (Horizontal Scroll Single Row) */}
+              <div className="flex items-center space-x-1.5 p-1 bg-paper-100 rounded-xl border border-paper-border text-xs font-serif overflow-x-auto scrollbar-none flex-nowrap">
+                {BOOKS.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBook(b.id)}
+                    className={`px-2.5 py-1 text-center rounded-lg transition cursor-pointer font-medium whitespace-nowrap flex-shrink-0 text-xs ${
+                      selectedBook === b.id
+                        ? 'bg-wood-800 text-paper-50 shadow-sm font-bold'
+                        : 'text-wood-700 hover:bg-paper-200'
+                    }`}
+                  >
+                    {b.name.replace('年级', '')}
+                  </button>
                 ))}
-              </select>
+              </div>
 
-              <select
-                value={selectedStatusFilter}
-                onChange={(e) => setSelectedStatusFilter(e.target.value as any)}
-                className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none"
-              >
-                <option value="all">全部备考状态</option>
-                <option value="unlearned">⚪ 未学习</option>
-                <option value="practicing">🟡 备课中</option>
-                <option value="mastered">🟢 已掌握</option>
-                <option value="review_needed">🔴 需复习</option>
-              </select>
-            </div>
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-wood-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="搜索篇目 / 作者..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-paper-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif"
+                />
+              </div>
 
-            {/* Lesson Tree by Units */}
-            <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
-              {unitsInBook.map((unitNum) => {
-                const lessonsInUnit = filteredLessons.filter((l) => l.unit === unitNum);
-                if (lessonsInUnit.length === 0) return null;
-                const unitTitle = lessonsInUnit[0].unitTitle;
-                const isExpanded = expandedUnits[unitNum] ?? true;
+              {/* Filters Row */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <select
+                  value={selectedGenre}
+                  onChange={(e) => setSelectedGenre(e.target.value as any)}
+                  className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none text-[11px]"
+                >
+                  {GENRES.map((g) => (
+                    <option key={g.value} value={g.value}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
 
-                return (
-                  <div key={unitNum} className="border border-paper-border rounded-xl overflow-hidden bg-white/50">
-                    <button
-                      onClick={() => toggleUnit(unitNum)}
-                      className="w-full flex items-center justify-between p-2.5 bg-paper-100/70 hover:bg-paper-200 text-left text-xs font-serif font-bold text-wood-900 cursor-pointer"
-                    >
-                      <span className="flex items-center space-x-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-bamboo-700" />
-                        <span>{unitTitle}</span>
-                      </span>
-                      <span className="text-wood-400">
-                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                      </span>
-                    </button>
+                <select
+                  value={selectedStatusFilter}
+                  onChange={(e) => setSelectedStatusFilter(e.target.value as any)}
+                  className="bg-white border border-paper-border rounded-lg px-2 py-1.5 text-wood-800 font-serif focus:outline-none text-[11px]"
+                >
+                  <option value="all">全部备考状态</option>
+                  <option value="unlearned">⚪ 未学习</option>
+                  <option value="practicing">🟡 备课中</option>
+                  <option value="mastered">🟢 已掌握</option>
+                  <option value="review_needed">🔴 需复习</option>
+                </select>
+              </div>
 
-                    {isExpanded && (
-                      <div className="p-1.5 space-y-1">
-                        {lessonsInUnit.map((lesson) => {
-                          const isSelected = lesson.id === currentLesson.id;
-                          const st = studyStatuses[lesson.id] || 'unlearned';
+              {/* Lesson Tree */}
+              <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+                {unitsInBook.map((unitNum) => {
+                  const lessonsInUnit = filteredLessons.filter((l) => l.unit === unitNum);
+                  if (lessonsInUnit.length === 0) return null;
+                  const unitTitle = lessonsInUnit[0].unitTitle;
+                  const isExpanded = expandedUnits[unitNum] ?? true;
 
-                          return (
-                            <button
-                              key={lesson.id}
-                              onClick={() => handleSelectLesson(lesson)}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition cursor-pointer ${
-                                isSelected
-                                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                                  : 'hover:bg-paper-100 text-wood-800'
-                              }`}
-                            >
-                              <div className="truncate flex-1 pr-2">
-                                <div className="text-xs font-serif truncate">
-                                  《{lesson.title}》
+                  return (
+                    <div key={unitNum} className="border border-paper-border rounded-xl overflow-hidden bg-white/50">
+                      <button
+                        onClick={() => toggleUnit(unitNum)}
+                        className="w-full flex items-center justify-between p-2 bg-paper-100/70 hover:bg-paper-200 text-left text-xs font-serif font-bold text-wood-900 cursor-pointer"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-bamboo-700" />
+                          <span>{unitTitle}</span>
+                        </span>
+                        <span className="text-wood-400">
+                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                        </span>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="p-1 space-y-1">
+                          {lessonsInUnit.map((lesson) => {
+                            const isSelected = lesson.id === currentLesson.id;
+                            const st = studyStatuses[lesson.id] || 'unlearned';
+
+                            return (
+                              <button
+                                key={lesson.id}
+                                onClick={() => handleSelectLessonFromTOC(lesson)}
+                                className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                                    : 'hover:bg-paper-100 text-wood-800'
+                                }`}
+                              >
+                                <div className="truncate flex-1 pr-2">
+                                  <div className="text-xs font-serif truncate">
+                                    《{lesson.title}》
+                                  </div>
+                                  <div className={`text-[10px] ${isSelected ? 'text-bamboo-100' : 'text-wood-500'}`}>
+                                    {lesson.author} · {lesson.genre}
+                                  </div>
                                 </div>
-                                <div className={`text-[10px] ${isSelected ? 'text-bamboo-100' : 'text-wood-500'}`}>
-                                  {lesson.author} · {lesson.genre}
-                                </div>
-                              </div>
 
-                              <div className="flex items-center space-x-1.5 flex-shrink-0">
-                                <span className={`text-[10px] ${isSelected ? 'text-amber-200' : 'text-amber-600'}`}>
-                                  {'★'.repeat(lesson.star)}
-                                </span>
-                                {st === 'mastered' && (
-                                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="已攻克" />
-                                )}
-                                {st === 'practicing' && (
-                                  <span className="w-2 h-2 rounded-full bg-amber-500" title="备课中" />
-                                )}
-                                {st === 'review_needed' && (
-                                  <span className="w-2 h-2 rounded-full bg-rose-500" title="需复习" />
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                                <div className="flex items-center space-x-1.5 flex-shrink-0">
+                                  <span className={`text-[10px] ${isSelected ? 'text-amber-200' : 'text-amber-600'}`}>
+                                    {'★'.repeat(lesson.star)}
+                                  </span>
+                                  {st === 'mastered' && (
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500" title="已掌握" />
+                                  )}
+                                  {st === 'practicing' && (
+                                    <span className="w-2 h-2 rounded-full bg-amber-500" title="备课中" />
+                                  )}
+                                  {st === 'review_needed' && (
+                                    <span className="w-2 h-2 rounded-full bg-rose-500" title="需复习" />
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </aside>
+          </div>
         )}
 
-        {/* ================= 右边主体区域: 两栏一上一下 ================= */}
-        <main className="flex-1 w-full min-w-0 space-y-6">
-          {/* ---------------- 右侧上栏: 核心研读选项卡区 ---------------- */}
-          <section className="space-y-6">
+        {/* Right Column: Two rows (Top Summary Card + Bottom Content Tabs) */}
+        <div className="flex-1 min-w-0 space-y-6 w-full">
+          {/* Right Column Top: The Summary Banner Toolbar (移到右栏的上边) */}
+          <div className="bg-paper-card p-4 md:p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
+            {/* Row 1: Title, Meta, Variant badge & Primary Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Left: Expand Directory Button (if collapsed) + Title & Meta */}
+              <div className="flex items-center space-x-3 min-w-0">
+                {isTOCCollapsed && (
+                  <button
+                    onClick={() => setIsTOCCollapsed(false)}
+                    className="p-2 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 transition cursor-pointer flex items-center space-x-1.5 shadow-sm flex-shrink-0"
+                    title="展开课文目录"
+                  >
+                    <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
+                    <span className="text-xs font-serif font-bold text-bamboo-900 hidden sm:inline">展开目录 (158篇)</span>
+                  </button>
+                )}
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-wood-200 text-wood-800 font-serif">
+                      {activeLesson.bookName} · {activeLesson.unitTitle}
+                    </span>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-bamboo-100 text-bamboo-800 font-serif font-medium">
+                      {activeLesson.genre}
+                    </span>
+                    <span className="text-amber-700 text-xs font-bold font-mono">
+                      {'★'.repeat(activeLesson.star)}
+                    </span>
+                    {/* Variant or Custom Badge */}
+                    {isCustomEdited ? (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-serif font-bold flex items-center space-x-1">
+                        <span>✏️ 个人定制版</span>
+                      </span>
+                    ) : variantIndex > 0 ? (
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-serif font-medium border flex items-center space-x-1 ${LESSON_VARIANTS[variantIndex].badgeColor}`}>
+                        <Sparkles className="w-3 h-3 text-bamboo-700" />
+                        <span>方案{variantIndex + 1}：{LESSON_VARIANTS[variantIndex].name}</span>
+                      </span>
+                    ) : null}
+                  </div>
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-wood-900 mt-1 truncate">
+                    《{activeLesson.title}》
+                    <span className="text-xs sm:text-sm font-normal text-wood-600 ml-2">作者：{activeLesson.author}</span>
+                  </h1>
+                </div>
+              </div>
+
+              {/* Right: Quick Actions (Regenerate, Edit, Add to Daily, Start Trial) */}
+              <div className="flex flex-wrap items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+                {/* Single-Lesson Regenerate / Refresh Button (换一版设计) */}
+                <button
+                  onClick={handleRegenerateLessonDesign}
+                  className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-serif font-medium cursor-pointer shadow-sm transition"
+                  title="重新生成本课试讲设计（换一版导入语、重点与逐字稿）"
+                >
+                  <RotateCcw className={`w-3.5 h-3.5 text-purple-700 ${isRegenerating ? 'animate-spin' : ''}`} />
+                  <span>换一版设计</span>
+                </button>
+
+                {/* Custom Edit Button (自定义修改) */}
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif cursor-pointer shadow-sm transition"
+                  title="自定义修改本课导入语、重点与逐字稿"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-bamboo-700" />
+                  <span>自定义修改</span>
+                </button>
+
+                {/* Add to Daily Task */}
+                <button
+                  onClick={() => onAddToDaily(currentLesson)}
+                  className="btn-tactile flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif cursor-pointer shadow-sm"
+                  title="加入今日模拟练待办"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5 text-bamboo-700" />
+                  <span className="hidden sm:inline">加入待办</span>
+                </button>
+
+                {/* Start 10-Minute Trial */}
+                <button
+                  onClick={onStartTrialTimer}
+                  className="btn-tactile flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-bamboo-700 text-white hover:bg-bamboo-800 text-xs font-serif font-bold shadow cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                  <span>开启10分钟试讲</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Row 2: Font Size Switcher & Status Badges */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-paper-border/60">
+              {/* Font Size Adjuster (标准 大 特大) */}
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm">
+                  <span className="text-[11px] text-wood-600 font-serif font-medium pl-1.5 pr-0.5 flex items-center space-x-1">
+                    <Type className="w-3.5 h-3.5 text-bamboo-700" />
+                    <span className="hidden sm:inline">字号:</span>
+                  </span>
+                  <button
+                    onClick={() => handleFontSizeChange('normal')}
+                    className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                      fontSize === 'normal'
+                        ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                        : 'text-wood-700 hover:bg-paper-200'
+                    }`}
+                    title="标准字号"
+                  >
+                    标准
+                  </button>
+                  <button
+                    onClick={() => handleFontSizeChange('large')}
+                    className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                      fontSize === 'large'
+                        ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                        : 'text-wood-700 hover:bg-paper-200'
+                    }`}
+                    title="大字号"
+                  >
+                    大
+                  </button>
+                  <button
+                    onClick={() => handleFontSizeChange('xlarge')}
+                    className={`px-3 py-1 text-xs rounded-lg font-serif transition cursor-pointer ${
+                      fontSize === 'xlarge'
+                        ? 'bg-bamboo-700 text-white font-bold shadow-sm'
+                        : 'text-wood-700 hover:bg-paper-200'
+                    }`}
+                    title="特大字号"
+                  >
+                    特大
+                  </button>
+                </div>
+
+                {fontToast && (
+                  <span className="text-[11px] text-bamboo-800 bg-bamboo-50 border border-bamboo-200 px-2 py-0.5 rounded-lg animate-fadeIn font-serif hidden md:inline">
+                    ✓ {fontToast}
+                  </span>
+                )}
+              </div>
+
+              {/* Manual Status Buttons */}
+              <div className="flex items-center bg-paper-100 border border-paper-border rounded-xl p-1 space-x-1 shadow-sm overflow-x-auto">
+                <span className="text-[11px] text-wood-500 font-serif px-1 hidden lg:inline">备考进度:</span>
+                <button
+                  onClick={() => onUpdateStatus(currentLesson.id, 'unlearned')}
+                  className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                    currentStatus === 'unlearned' ? 'bg-white text-wood-800 shadow font-bold ring-1 ring-wood-300' : 'text-wood-600 hover:bg-paper-200'
+                  }`}
+                >
+                  ⚪ 未学
+                </button>
+                <button
+                  onClick={() => onUpdateStatus(currentLesson.id, 'practicing')}
+                  className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                    currentStatus === 'practicing' ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold shadow-sm' : 'text-wood-600 hover:bg-paper-200'
+                  }`}
+                >
+                  🟡 备课中
+                </button>
+                <button
+                  onClick={() => onUpdateStatus(currentLesson.id, 'mastered')}
+                  className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                    currentStatus === 'mastered' ? 'bg-bamboo-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
+                  }`}
+                >
+                  🟢 已掌握
+                </button>
+                <button
+                  onClick={() => onUpdateStatus(currentLesson.id, 'review_needed')}
+                  className={`px-2 py-1 rounded-lg text-xs font-serif transition cursor-pointer whitespace-nowrap ${
+                    currentStatus === 'review_needed' ? 'bg-cinnabar-700 text-white shadow font-bold' : 'text-wood-600 hover:bg-paper-200'
+                  }`}
+                >
+                  🔴 需复习
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column Bottom: Triple Tabs Navigation & Content */}
+          <div className="w-full space-y-6">
           {/* Triple Tabs Navigation */}
           <div className="flex items-center border-b border-paper-border space-x-1 sm:space-x-2 bg-paper-card p-1.5 rounded-2xl border shadow-sm overflow-x-auto">
             <button
@@ -633,24 +734,24 @@ ${currentLesson.speedPlan.homework}`;
                 <div className={`space-y-2.5 font-serif text-wood-800 ${currentScale.tab1Body}`}>
                   <div className="p-3.5 bg-white rounded-xl border border-bamboo-200 space-y-1">
                     <strong className="text-bamboo-900 block font-bold">🎯 建议精讲段落切片：</strong>
-                    <p className={`text-wood-900 font-medium ${currentScale.tab1Heading}`}>{currentLesson.goldenSlice.sliceRange}</p>
+                    <p className={`text-wood-900 font-medium ${currentScale.tab1Heading}`}>{activeLesson.goldenSlice.sliceRange}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                     <div className="p-3.5 bg-white rounded-xl border border-paper-border space-y-1">
                       <strong className="text-wood-900 block font-bold">✨ 一课一得目标：</strong>
-                      <p className="text-wood-700">{currentLesson.goldenSlice.oneGain}</p>
+                      <p className="text-wood-700">{activeLesson.goldenSlice.oneGain}</p>
                     </div>
 
                     <div className="p-3.5 bg-white rounded-xl border border-paper-border space-y-1">
                       <strong className="text-wood-900 block font-bold">⏱️ 建议时间分配：</strong>
-                      <p className="text-wood-700 font-mono text-xs">{currentLesson.goldenSlice.timingGuide}</p>
+                      <p className="text-wood-700 font-mono text-xs">{activeLesson.goldenSlice.timingGuide}</p>
                     </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 flex items-start space-x-2">
                     <span className="font-bold flex-shrink-0">💡 备考提示：</span>
-                    <span>{currentLesson.goldenSlice.examinerTip}</span>
+                    <span>{activeLesson.goldenSlice.examinerTip}</span>
                   </div>
                 </div>
               </div>
@@ -673,23 +774,23 @@ ${currentLesson.speedPlan.homework}`;
 
                 <div className={`p-4 bg-paper-50 rounded-xl border border-paper-border font-serif space-y-2.5 text-wood-800 ${currentScale.tab1Body}`}>
                   <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                    <span className="font-bold text-wood-900">课型：{currentLesson.speedPlan.courseType}</span>
+                    <span className="font-bold text-wood-900">课型：{activeLesson.speedPlan.courseType}</span>
                     <span className="text-wood-500 text-xs">考场草稿提纲（建议备考室5-8分钟速成）</span>
                   </div>
 
                   <div>
                     <strong className="text-wood-900">【教学重点】：</strong>
-                    <span>{currentLesson.speedPlan.keyPoints}</span>
+                    <span>{activeLesson.speedPlan.keyPoints}</span>
                   </div>
 
                   <div>
                     <strong className="text-wood-900">【教学难点】：</strong>
-                    <span>{currentLesson.speedPlan.difficulties}</span>
+                    <span>{activeLesson.speedPlan.difficulties}</span>
                   </div>
 
                   <div className="space-y-1.5">
                     <strong className="text-wood-900 block">【教学过程（5步流程）】：</strong>
-                    {currentLesson.speedPlan.steps.map((s) => (
+                    {activeLesson.speedPlan.steps.map((s) => (
                       <div key={s.step} className="pl-2 flex items-start space-x-1.5">
                         <span className="font-bold text-bamboo-800 flex-shrink-0">{s.step}. {s.name}（{s.duration}）：</span>
                         <span className="text-wood-700">{s.coreAction}</span>
@@ -699,7 +800,7 @@ ${currentLesson.speedPlan.homework}`;
 
                   <div className="pt-2 border-t border-stone-200">
                     <strong className="text-wood-900">【课后作业】：</strong>
-                    <span>{currentLesson.speedPlan.homework}</span>
+                    <span>{activeLesson.speedPlan.homework}</span>
                   </div>
                 </div>
               </div>
@@ -723,11 +824,11 @@ ${currentLesson.speedPlan.homework}`;
                       第1步 · 导入新课（00:00 - 01:30）
                     </span>
                     <span className="text-[11px] text-wood-500 font-normal">
-                      教师活动：{currentLesson.verbatimScript.importStage.actionNotes}
+                      教师活动：{activeLesson.verbatimScript.importStage.actionNotes}
                     </span>
                   </div>
                   <p className={`font-serif text-wood-900 bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
-                    {currentLesson.verbatimScript.importStage.teacherLines}
+                    {activeLesson.verbatimScript.importStage.teacherLines}
                   </p>
                 </div>
 
@@ -738,11 +839,11 @@ ${currentLesson.speedPlan.homework}`;
                       第2步 · 初读感知（01:30 - 03:00）
                     </span>
                     <span className="text-[11px] text-wood-500 font-normal">
-                      教师活动：{currentLesson.verbatimScript.preliminaryReadStage.actionNotes}
+                      教师活动：{activeLesson.verbatimScript.preliminaryReadStage.actionNotes}
                     </span>
                   </div>
                   <p className={`font-serif text-wood-900 bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
-                    {currentLesson.verbatimScript.preliminaryReadStage.teacherLines}
+                    {activeLesson.verbatimScript.preliminaryReadStage.teacherLines}
                   </p>
                 </div>
 
@@ -753,34 +854,34 @@ ${currentLesson.speedPlan.homework}`;
                       第3步 · 精读切片深入探究（03:00 - 07:30 重点突破）
                     </span>
                     <span className="text-bamboo-800 font-medium">
-                      {currentLesson.verbatimScript.deepDiveStage.title}
+                      {activeLesson.verbatimScript.deepDiveStage.title}
                     </span>
                   </div>
 
                   <div className="space-y-2 font-serif">
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
                       <strong className="text-bamboo-800 block text-xs md:text-sm">【教师提问设计】：</strong>
-                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.teacherQuestion}</p>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{activeLesson.verbatimScript.deepDiveStage.teacherQuestion}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-stone-300 space-y-1">
                       <strong className="text-stone-700 block text-xs md:text-sm">【预设学生回答】：</strong>
-                      <p className={`text-wood-800 italic ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.studentAnswer}</p>
+                      <p className={`text-wood-800 italic ${currentScale.tab1Script}`}>{activeLesson.verbatimScript.deepDiveStage.studentAnswer}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
                       <strong className="text-bamboo-800 block text-xs md:text-sm">【教师评价与板书提示】：</strong>
-                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.teacherFeedback}</p>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{activeLesson.verbatimScript.deepDiveStage.teacherFeedback}</p>
                     </div>
 
                     <div className="bg-white p-3 rounded-lg border border-bamboo-200 space-y-1">
                       <strong className="text-bamboo-800 block text-xs md:text-sm">【追问启发】：</strong>
-                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.deepenQuestion}</p>
+                      <p className={`text-wood-900 ${currentScale.tab1Script}`}>{activeLesson.verbatimScript.deepDiveStage.deepenQuestion}</p>
                     </div>
 
                     <div className="bg-stone-50 p-3 rounded-lg border border-stone-300 space-y-1">
                       <strong className="text-wood-800 block text-xs md:text-sm">【朗读指导提示】：</strong>
-                      <p className={`text-wood-900 font-medium ${currentScale.tab1Script}`}>{currentLesson.verbatimScript.deepDiveStage.readingGuidance}</p>
+                      <p className={`text-wood-900 font-medium ${currentScale.tab1Script}`}>{activeLesson.verbatimScript.deepDiveStage.readingGuidance}</p>
                     </div>
                   </div>
                 </div>
@@ -793,10 +894,30 @@ ${currentLesson.speedPlan.homework}`;
                     </span>
                   </div>
                   <div className={`space-y-1 font-serif bg-white p-3 rounded-lg border border-paper-border ${currentScale.tab1Script}`}>
-                    <p className="text-wood-900">{currentLesson.verbatimScript.summaryAndHomeworkStage.summaryLines}</p>
-                    <p className="text-wood-700 pt-1">{currentLesson.verbatimScript.summaryAndHomeworkStage.homeworkLines}</p>
+                    <p className="text-wood-900">{activeLesson.verbatimScript.summaryAndHomeworkStage.summaryLines}</p>
+                    <p className="text-wood-700 pt-1">{activeLesson.verbatimScript.summaryAndHomeworkStage.homeworkLines}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* 5. 黑板板书设计 (Chalkboard Component - Problem 11) */}
+              <div className="bg-paper-card p-5 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
+                <div className="flex items-center justify-between pb-1">
+                  <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm">
+                    <Edit3 className="w-4 h-4 text-bamboo-700" />
+                    <span>五、黑板板书设计参考（结构化黑板呈现）</span>
+                  </div>
+                  <span className="text-xs text-wood-500 font-serif">
+                    左侧主板书呈现行文脉络与切片，右侧副板书呈现字词与技法
+                  </span>
+                </div>
+
+                <Chalkboard
+                  title={activeLesson.title}
+                  author={activeLesson.author}
+                  rawMainBoard={activeLesson.blackboard.mainBoard}
+                  subBoard={activeLesson.blackboard.subBoard}
+                />
               </div>
             </div>
           )}
@@ -933,6 +1054,37 @@ ${currentLesson.speedPlan.homework}`;
                     );
                   })}
                 </div>
+
+                {/* Overall Lesson Note Box */}
+                <div className="p-5 rounded-2xl bg-paper-50 border border-paper-border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif font-bold text-sm text-wood-900 flex items-center space-x-1.5">
+                      <Edit3 className="w-4 h-4 text-bamboo-700" />
+                      <span>本课备课总笔记（自动保存到浏览器本地）：</span>
+                    </span>
+                    {noteSavedToast && (
+                      <span className="text-xs text-bamboo-700 font-bold flex items-center space-x-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>笔记已保存</span>
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    rows={4}
+                    placeholder="在此记录本篇课文个人的试讲提问设计、导入语调整或板书心得..."
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    className={`w-full p-3 bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed ${currentScale.tab2Note}`}
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleSaveUserNote}
+                      className="btn-tactile px-4 py-2 bg-bamboo-700 text-white rounded-xl text-xs md:text-sm font-serif font-bold cursor-pointer shadow"
+                    >
+                      保存备课笔记
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -957,63 +1109,31 @@ ${currentLesson.speedPlan.homework}`;
               </Suspense>
             </div>
           )}
-        </section>
-
-        {/* ---------------- 右侧下栏: 全真黑板板书设计与随堂备课总笔记 ---------------- */}
-        <section className="space-y-6">
-          {/* 五、黑板板书设计参考 (Chalkboard Component) */}
-          <div className="bg-paper-card p-5 md:p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center space-x-2 text-wood-900 font-serif font-bold text-sm md:text-base">
-                <Edit3 className="w-4 h-4 text-bamboo-700" />
-                <span>五、全真黑板板书设计参考（结构化黑板呈现）</span>
-              </div>
-              <span className="text-xs text-wood-500 font-serif hidden sm:inline">
-                左侧主板书呈现行文脉络与切片，右侧副板书呈现字词与技法
-              </span>
-            </div>
-
-            <Chalkboard
-              title={currentLesson.title}
-              author={currentLesson.author}
-              rawMainBoard={currentLesson.blackboard.mainBoard}
-              subBoard={currentLesson.blackboard.subBoard}
-            />
-          </div>
-
-          {/* 随堂备课总笔记 (持久化保存) */}
-          <div className="bg-paper-card p-5 md:p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-serif font-bold text-sm md:text-base text-wood-900 flex items-center space-x-1.5">
-                <Edit3 className="w-4 h-4 text-bamboo-700" />
-                <span>《{currentLesson.title}》备课总笔记（自动保存到本地）：</span>
-              </span>
-              {noteSavedToast && (
-                <span className="text-xs text-bamboo-700 font-bold flex items-center space-x-1">
-                  <Check className="w-3.5 h-3.5" />
-                  <span>笔记已保存</span>
-                </span>
-              )}
-            </div>
-            <textarea
-              rows={4}
-              placeholder="在此记录本篇课文个人的试讲提问设计、导入语微调、现场互动模拟或板书心得..."
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              className={`w-full p-3 bg-white border border-paper-border rounded-xl focus:outline-none focus:ring-1 focus:ring-bamboo-600 font-serif leading-relaxed ${currentScale.tab2Note}`}
-            />
-            <div className="flex justify-end">
-              <button
-                onClick={handleSaveUserNote}
-                className="btn-tactile px-4 py-2 bg-bamboo-700 text-white rounded-xl text-xs md:text-sm font-serif font-bold cursor-pointer shadow"
-              >
-                保存备课笔记
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
-  </div>
+
+      {/* Lesson Custom Edit Modal */}
+      <LessonEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        lessonTitle={currentLesson.title}
+        author={currentLesson.author}
+        initialData={{
+          importScript: activeLesson.verbatimScript.importStage.teacherLines,
+          keyPoints: activeLesson.speedPlan.keyPoints,
+          difficulties: activeLesson.speedPlan.difficulties,
+          sliceRange: activeLesson.goldenSlice.sliceRange,
+          sliceTitle: activeLesson.goldenSlice.sliceTitle,
+          teacherQuestion: activeLesson.verbatimScript.deepDiveStage.teacherQuestion,
+          studentAnswer: activeLesson.verbatimScript.deepDiveStage.studentAnswer,
+          teacherFeedback: activeLesson.verbatimScript.deepDiveStage.teacherFeedback,
+          mainBoard: activeLesson.blackboard.mainBoard,
+        }}
+        onSave={handleSaveCustomEdits}
+        onReset={handleResetToDefault}
+        isCustomized={isCustomEdited}
+      />
+    </div>
   );
 };

@@ -14,7 +14,6 @@ import {
   BookOpen,
   Copy,
   Check,
-  ChevronLeft,
   ChevronRight,
   Bookmark,
   Scroll,
@@ -52,70 +51,26 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleSelectGenre = (idx: number) => {
-    setSelectedGenreIndex(idx);
-    if (window.innerWidth < 1024) {
-      setSidebarCollapsed(true);
-    }
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn">
-      {/* Header Banner */}
-      <div className="bg-paper-card rounded-2xl border border-paper-border p-6 md:p-8 shadow-scholarly space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5 min-w-0">
-            <div className="flex items-center space-x-2 text-bamboo-800 text-xs font-serif font-bold">
-              <GraduationCap className="w-4 h-4 text-bamboo-700" />
-              <span>初中语文面试核心方法论 · 7大文体万能试讲切片与板书模型</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-serif font-black text-wood-900">
-              7大文体备考秘籍与试讲模型库
-            </h1>
-          </div>
-
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="btn-tactile px-3.5 py-2 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-700 text-xs font-serif font-bold transition cursor-pointer flex items-center space-x-1.5 shadow-sm shrink-0 self-start sm:self-auto"
-            title={sidebarCollapsed ? "展开文体目录" : "收起文体目录"}
-          >
-            {sidebarCollapsed ? (
-              <>
-                <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
-                <span>展开文体目录 (7类)</span>
-              </>
-            ) : (
-              <>
-                <PanelLeftClose className="w-4 h-4 text-wood-600" />
-                <span>收起目录</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <p className="text-xs md:text-sm text-wood-600 font-serif leading-relaxed max-w-4xl">
-          教资面试考官核心考查“文体意识”与“学科素养”。散文贵在声情并茂的朗读感染力，文言贵在文白对译与文化气象，说明文重在严谨说明方法与语言准确，小说重在人物与情节镜头，写作指导课重在审题技法切片与现场微练笔。吃透7大文体模型，考场抽题从容过关。
-        </p>
-      </div>
-
-      {/* Main Container: Left Sidebar + Right Stacked Sections */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
+      {/* 2-Column Layout: Left Directory + Right (Top Summary + Bottom Content) */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Left Collapsible Sidebar (Completely disappears when collapsed) */}
+        {/* Left Column: Genre Directory (Completely hidden when collapsed, taking zero space) */}
         {!sidebarCollapsed && (
-          <aside className="w-full lg:w-64 shrink-0 bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-4 sticky top-20 z-10 space-y-3 animate-fadeIn">
-            {/* Collapse Toggle */}
+          <div className="w-full lg:w-72 shrink-0 bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-4 space-y-3 sticky top-20 z-10 transition-all">
+            {/* Directory Header with Collapse Button */}
             <div className="flex items-center justify-between pb-3 border-b border-paper-border">
-              <span className="font-serif font-bold text-xs text-wood-800 flex items-center space-x-1.5">
+              <span className="font-serif font-bold text-xs text-wood-900 flex items-center space-x-1.5">
                 <Bookmark className="w-3.5 h-3.5 text-bamboo-700" />
-                <span>文体分类导航</span>
+                <span>文体分类导航 (7大文体)</span>
               </span>
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="p-1 rounded-lg hover:bg-paper-200 text-wood-600 transition cursor-pointer flex items-center space-x-1 text-xs"
-                title="收起目录"
+                className="px-2 py-1 rounded-lg hover:bg-paper-200 text-wood-600 hover:text-wood-900 transition cursor-pointer flex items-center space-x-1 text-xs font-serif"
+                title="收起文体目录"
               >
                 <PanelLeftClose className="w-3.5 h-3.5" />
-                <span className="text-[11px]">收起</span>
+                <span>收起</span>
               </button>
             </div>
 
@@ -128,7 +83,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
                 return (
                   <button
                     key={m.genre}
-                    onClick={() => handleSelectGenre(idx)}
+                    onClick={() => setSelectedGenreIndex(idx)}
                     className={`w-full text-left p-2.5 rounded-xl text-xs font-serif transition-all duration-200 flex items-center justify-between cursor-pointer ${
                       isSelected
                         ? 'bg-bamboo-700 text-white font-bold shadow-sm'
@@ -148,27 +103,56 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
             <div className="mt-4 pt-3 border-t border-paper-border text-[11px] text-wood-500 font-serif leading-snug">
               涵盖 6 大常规文体与最新面试常考的<strong>写作指导专项课</strong>。
             </div>
-          </aside>
+          </div>
         )}
 
-        {/* Right Main Content Area: Stacked Top & Bottom Sections (右边两栏一上一下) */}
-        <main className="flex-1 w-full min-w-0 space-y-6">
-          {/* 上栏: 万能教学骨架、考官避坑与实操口语台词库 */}
-          <section className="bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-6 md:p-8 space-y-8">
-            {/* Header Title & Tagline */}
-            <div className="border-b border-paper-border pb-4 space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs px-2.5 py-0.5 rounded-md bg-bamboo-100 text-bamboo-800 border border-bamboo-200 font-serif font-bold">
-                  {currentMethod.genre}
-                </span>
-                <h2 className="text-xl md:text-2xl font-serif font-black text-wood-900">
-                  {currentMethod.title}
-                </h2>
+        {/* Right Column: Two rows (Top Summary Banner + Bottom Detailed Content) */}
+        <div className="flex-1 min-w-0 space-y-6 w-full">
+          {/* Right Column Top: The Summary Banner Card (移到右栏的上边) */}
+          <div className="bg-paper-card rounded-2xl border border-paper-border p-5 md:p-6 shadow-scholarly space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center space-x-2 text-bamboo-800 text-xs font-serif font-bold">
+                <GraduationCap className="w-4 h-4" />
+                <span>初中语文面试核心方法论 · 7大文体万能试讲切片与板书模型</span>
               </div>
-              <p className="text-xs md:text-sm text-wood-600 font-serif italic">
-                “{currentMethod.tagline}”
-              </p>
+
+              {/* Directory Toggle Button (when collapsed) */}
+              {sidebarCollapsed && (
+                <button
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-paper-100 hover:bg-paper-200 border border-paper-border text-wood-800 text-xs font-serif font-medium transition cursor-pointer shadow-sm"
+                  title="展开文体目录"
+                >
+                  <PanelLeftOpen className="w-4 h-4 text-bamboo-700" />
+                  <span>展开文体目录</span>
+                </button>
+              )}
             </div>
+
+            <h1 className="text-xl md:text-2xl font-serif font-black text-wood-900">
+              7大文体备考秘籍与试讲模型库
+            </h1>
+            <p className="text-xs md:text-sm text-wood-600 font-serif leading-relaxed">
+              教资面试考官核心考查“文体意识”与“学科素养”。散文贵在声情并茂的朗读感染力，文言贵在文白对译与文化气象，说明文重在严谨说明方法与语言准确，小说重在人物与情节镜头，写作指导课重在审题技法切片与现场微练笔。吃透7大文体模型，考场抽题从容过关。
+            </p>
+          </div>
+
+          {/* Right Column Bottom: Detailed Content Area */}
+          <div className="bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-6 md:p-8 space-y-8">
+          {/* Header Title & Tagline */}
+          <div className="border-b border-paper-border pb-4 space-y-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs px-2.5 py-0.5 rounded-md bg-bamboo-100 text-bamboo-800 border border-bamboo-200 font-serif font-bold">
+                {currentMethod.genre}
+              </span>
+              <h2 className="text-xl md:text-2xl font-serif font-black text-wood-900">
+                {currentMethod.title}
+              </h2>
+            </div>
+            <p className="text-xs md:text-sm text-wood-600 font-serif italic">
+              “{currentMethod.tagline}”
+            </p>
+          </div>
 
           {/* 1. 10分钟5步核心教学骨架 */}
           <div className="space-y-4">
@@ -315,10 +299,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
               </div>
             </div>
           </div>
-        </section>
 
-        {/* 下栏: 结构化黑板板书模型与代表篇目直达通道 */}
-        <section className="bg-paper-card rounded-2xl border border-paper-border shadow-scholarly p-6 md:p-8 space-y-6">
           {/* 4. 标准板书模型 UI 组件 (替换所有字符错位排版) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -326,7 +307,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
                 <Layout className="w-4 h-4 text-bamboo-700" />
                 <span>四、{currentMethod.genre}万能结构化板书模板</span>
               </h3>
-              <span className="text-xs text-wood-500 font-serif hidden sm:inline">
+              <span className="text-xs text-wood-500 font-serif">
                 考场黑板规范布局 · 主板书 70% + 副板书 30%
               </span>
             </div>
@@ -365,9 +346,11 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({ onSelectLesson
               })}
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   </div>
   );
 };
+
+

@@ -207,7 +207,7 @@ export const SLOT_DRILL_QUESTIONS: SlotDrillQuestion[] = [
   }
 ];
 
-// 单空秒杀演练库
+// 单题快速排除练习库
 export const SINGLE_BLANK_DRILLS: SingleBlankDrill[] = [
   {
     id: "sbd-1",
@@ -221,9 +221,9 @@ export const SINGLE_BLANK_DRILLS: SingleBlankDrill[] = [
       { letter: "D", word: "criticism", pos: "N", meaning: "批评，评论" }
     ],
     correctLetter: "A",
-    step1SlotAnalysis: "空格位于名词所有格 students' 与名词 thinking 之间，起定语修饰作用，必须填入【形容词】。",
-    step2Elimination: "扫视选项：B 是动词(-ize)，C 是副词(-ly)，D 是名词(-ism)，只有 A (critical) 是形容词！直接排除 B/C/D！",
-    step3ContextCheck: "代入 critical thinking（批判性思维），与后文的 rote learning（死记硬背）形成完美对仗，15秒拿下！"
+    step1SlotAnalysis: "空格位于名词所有格 students' 与名词 thinking 之间，起修饰作用，必须填入【形容词】。",
+    step2Elimination: "扫一眼选项：B 是动词(-ize)，C 是副词(-ly)，D 是名词(-ism)，只有 A (critical) 是形容词！直接选 A！",
+    step3ContextCheck: "critical thinking 意思是“批判性思维”，和后面的 rote learning（死记硬背）形成对比，完全正确！"
   },
   {
     id: "sbd-2",
@@ -237,9 +237,9 @@ export const SINGLE_BLANK_DRILLS: SingleBlankDrill[] = [
       { letter: "D", word: "accessible", pos: "Adj", meaning: "可进入的" }
     ],
     correctLetter: "B",
-    step1SlotAnalysis: "空格前是情态动词 must，空后是宾语 their research investments，必须填入【及物动词原形】。",
+    step1SlotAnalysis: "空格前是情态动词 must，空后是宾语 investments，必须填入【动词原形】。",
     step2Elimination: "选项中 A 是副词，C 是名词，D 是形容词，唯一的动词原形就是 B (accelerate)！",
-    step3ContextCheck: "accelerate investments 意为“加大/加速投资”，搭配完全通顺，20秒锁定！"
+    step3ContextCheck: "accelerate investments 意思是“加大投资”，搭配自然通顺！"
   },
   {
     id: "sbd-3",
@@ -253,18 +253,18 @@ export const SINGLE_BLANK_DRILLS: SingleBlankDrill[] = [
       { letter: "D", word: "conform", pos: "V", meaning: "遵从，符合" }
     ],
     correctLetter: "A",
-    step1SlotAnalysis: "并列连词 and 前面是形容词 quiet，后面修饰名词 environment，所以空格必须同样是【形容词】。",
-    step2Elimination: "选项 A 是形容词(-able)，B 为名/动词，C 为副词(-ly)，D 为动词。立即锁定 A！",
-    step3ContextCheck: "a quiet and comfortable environment 意思为“安静舒适的环境”，句意毫无瑕疵！"
+    step1SlotAnalysis: "连词 and 前面是形容词 quiet，后面修饰名词 environment，所以空格也必须是【形容词】。",
+    step2Elimination: "选项 A 是形容词(-able)，B 为名词/动词，C 为副词(-ly)，D 为动词。立即选 A！",
+    step3ContextCheck: "a quiet and comfortable environment 意思为“安静舒适的环境”，毫无悬念！"
   }
 ];
 
 // 整篇真题演练（真实六级难度 · 标注4道送分题）
 export const FULL_CLOZE_EXAM: FullClozeExam = {
   id: "full-cloze-2026",
-  title: "2026年真题同源演练：人工智能与未来工作模式重塑",
+  title: "2026年真题同源演练：人工智能与工作模式改变",
   source: "大学英语六级 Section A Banked Cloze 精选真题",
-  instruction: "选词填空共 10 空，每题 3.55 分。琪琪考场战术：先标词性，抓取标有【送分题】的 3~4 题，用时严格控制在 4 分钟以内！",
+  instruction: "选词填空共 10 空，每题 3.55 分。做题方法：先看词尾认词性，挑标有【送分题】的 3~4 题做，用时控制在 4 分钟以内！",
   quickPickupTip: "第 26 题（系表结构）、第 28 题（情态动词后动词原形）、第 31 题（修饰动词的副词）、第 33 题（名词所有格后名词）是四大绝对送分题，必须稳稳拿分！",
   passageTokens: [
     { text: "As artificial intelligence continues to reshape industries worldwide, workplace dynamics have become increasingly " },

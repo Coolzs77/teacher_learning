@@ -177,116 +177,116 @@ export const QIQI_SCORE_DIAGNOSIS: ScoreDiagnosis = {
   tacticalPlan: [
     {
       module: "选词填空 (Section A)",
-      currentScore: "约 0 ~ 3.5 分",
-      targetScore: "14.2 分 (对4题)",
-      pointsGain: "+11 ~ 14 分",
-      coreProblem: "过去直接放弃、全选同一字母，浪费了 35.5 分的盘子；最后时间总不够。",
-      breakthroughStrategy: "利用四步词性分类法（名动形副+后缀秒判），在 4-5 分钟内锁定 3-4 道语法特征极其明显的送分题，其余快速蒙选。绝不死磕！",
+      currentScore: "目前约 0 分",
+      targetScore: "目标 14.2 分 (做对4题)",
+      pointsGain: "+14 分",
+      coreProblem: "以前看都不看直接全蒙 C，白白扔掉了 35 分。",
+      breakthroughStrategy: "花 4 分钟看词尾（名/动/形/副），挑 4 道最简单的送分题做，剩下的全蒙。稳拿 14 分！",
       roiLevel: "极高 (考场提分主力)"
     },
     {
       module: "写作模块 (Writing)",
-      currentScore: "约 55 分",
-      targetScore: "75 分",
+      currentScore: "目前约 55 分",
+      targetScore: "目标 75 分",
       pointsGain: "+20 分",
-      coreProblem: "考前临时突击零散模板，逻辑不成体系，词汇拼写与语法易出低级错误。",
-      breakthroughStrategy: "固化‘个人成长 ➔ 他人影响 ➔ 社会价值’五段万能骨架，直接默写熟练架构，仅替换插空词库，确保字数 160-200 词且语法零失误。",
+      coreProblem: "考场硬憋句子，句式单调还容易拼错单词、错语法。",
+      breakthroughStrategy: "背熟固定的 5 段框架直接默写，把题目单词填进去，稳稳写满 180 词。",
       roiLevel: "极高 (考场提分主力)"
     },
     {
       module: "翻译模块 (Translation)",
-      currentScore: "约 54 分",
-      targetScore: "70 分",
+      currentScore: "目前约 54 分",
+      targetScore: "目标 70 分",
       pointsGain: "+16 分",
-      coreProblem: "平时几乎不练完整段落，看到传统文化和国情主题不知如何断句。",
-      breakthroughStrategy: "掌握 10 大万能主干句型（With the development of..., play an important role in...）+ 八大核心国情名词库，用短平快复合句保住语法正确度。",
+      coreProblem: "看到中文不会断句，逐字硬翻译成中式英语。",
+      breakthroughStrategy: "先找准主语和动词，套用 10 个常用好句型，少犯语法错，稳拿 70 分。",
       roiLevel: "极高 (考场提分主力)"
     },
     {
-      module: "长篇阅读与仔细阅读 (Section B & C)",
-      currentScore: "164 分 (良好基础)",
-      targetScore: "175 分",
+      module: "长篇阅读与仔细阅读 (Reading)",
+      currentScore: "目前 164 分 (底子不错)",
+      targetScore: "目标 175 分",
       pointsGain: "+11 分",
-      coreProblem: "遇长难句容易卡壳反复回读，导致做题时间被压缩，最后来不及看选词填空。",
-      breakthroughStrategy: "运用 ExamCraft 语法拆解法，剥离长定语从句和非谓语干扰，5秒锁定主谓宾核心，每篇仔细阅读多对 1 题（仔细阅读一题 14.2 分！）。",
+      coreProblem: "碰到修饰多的长句子就发懵，反复读浪费大把时间。",
+      breakthroughStrategy: "跳过长修饰，先抓谁做了什么。仔细阅读一题 14.2 分，每篇多对 1 题就稳过了！",
       roiLevel: "高"
     },
     {
       module: "听力理解 (Listening)",
-      currentScore: "115 分",
-      targetScore: "120 分 (保底维稳)",
+      currentScore: "目前 115 分",
+      targetScore: "目标 120 分 (稳住即可)",
       pointsGain: "+5 分",
-      coreProblem: "短期内听觉输入与语速反应难以突飞猛进，运气好蒙对多、不好则少。",
-      breakthroughStrategy: "不搞大体量题海战术消耗精力；严格执行‘听力4大保底军规’（试音抓题干核心词、盯住转折词 but/however/actually、首尾轮对话原则）。",
+      coreProblem: "语速一快脑子容易发懵，总想听懂每个单词导致后面全漏。",
+      breakthroughStrategy: "不搞题海战术。盯紧 but/however 转折词后面的句子，必须边听边涂答题卡！",
       roiLevel: "中等 (维稳为主)"
     }
   ],
   timeManagementRules: [
     {
-      stage: "阶段一：考前发卷与信息填涂",
+      stage: "阶段一：发卷与填信息",
       timeRange: "09:00 - 09:10",
       durationMinutes: 10,
-      action: "核对试卷完整性，填涂准考证号与姓名。绝不能提前答题。",
-      examinerWarning: "严禁提前动笔写正文，可默读作文题干确立核心立意。"
+      action: "核对试卷完整性，填好姓名和准考证号。",
+      examinerWarning: "千万别提前动笔写正文，可以先默读作文题想想写什么。"
     },
     {
-      stage: "阶段二：短文写作 (Writing)",
+      stage: "阶段二：写短文作文",
       timeRange: "09:10 - 09:40",
       durationMinutes: 30,
-      action: "在答题卡 1 上默写五段万能骨架，填入插空词汇，字迹清晰舒展，目标 180 词一次成型。",
-      examinerWarning: "30分钟一到立即停笔，绝不可占用听力时间！"
+      action: "在答题卡 1 上直接默写背好的 5 段作文，填入题目关键词，写够 180 词。",
+      examinerWarning: "30分钟一到必须停笔，绝不能占用听力时间！"
     },
     {
-      stage: "阶段三：听力考试 (Listening)",
+      stage: "阶段三：听力考试",
       timeRange: "09:40 - 10:05",
       durationMinutes: 25,
-      action: "边听边涂答题卡 1！听力录音播放完毕后监考老师立刻收答题卡 1，无额外涂卡时间。",
+      action: "边听边涂答题卡 1！录音放完监考老师立刻收答题卡 1，无补涂时间。",
       examinerWarning: "千万不要等听完全部再涂卡！必须边听边在卡 1 上涂黑！"
     },
     {
-      stage: "阶段四：仔细阅读 (Section C)",
+      stage: "阶段四：先做仔细阅读",
       timeRange: "10:10 - 10:35",
       durationMinutes: 25,
-      action: "精力最充沛时先做分值最高的两篇仔细阅读（共10题，每题14.2分，总分142分！）。",
-      examinerWarning: "仔细阅读是六级及格的压舱石，先做仔细阅读是高分考生的共识！"
+      action: "趁精力最好先做完两篇仔细阅读（共10题，每题14.2分，总分142分！）。",
+      examinerWarning: "分值最高！先做仔细阅读，别留到最后慌乱瞎猜！"
     },
     {
-      stage: "阶段五：长篇匹配 (Section B)",
+      stage: "阶段五：长篇匹配阅读",
       timeRange: "10:35 - 10:50",
       durationMinutes: 15,
-      action: "先读 10 道题干圈出专有名词、人名、数字和核心动词，再回原文扫读段落首尾句进行匹配。",
-      examinerWarning: "长篇阅读切忌通读全文，完全依靠关键词靶向定位！"
+      action: "先读 10 道题干圈出专有名词、人名、数字，再回原文扫读段落首尾句定位。",
+      examinerWarning: "切忌逐字通读全文，完全靠关键词快速定位段落！"
     },
     {
-      stage: "阶段六：选词填空 (Section A 战术抢分)",
+      stage: "阶段六：选词填空（只做4分钟）",
       timeRange: "10:50 - 10:55",
       durationMinutes: 5,
-      action: "仅花 4-5 分钟：先标 15 个词的词性（N/V/Adj/Adv），针对空格结构秒杀 3-4 道语法极其确定的题目（抢下14分），剩余题目快速蒙同一选项。",
-      examinerWarning: "坚决不在此题纠结超过 5 分钟！多拿 4 题就是白赚 14.2 分！"
+      action: "看词尾挑出最有把握的 3~4 道送分题填上，剩余题目全部快速蒙同一个选项。",
+      examinerWarning: "绝不纠结超过 5 分钟！做对 4 题就是白赚 14.2 分！"
     },
     {
-      stage: "阶段七：汉译英 (Translation)",
+      stage: "阶段七：汉译英翻译",
       timeRange: "10:55 - 11:20",
       durationMinutes: 25,
-      action: "通读全段，划出主谓宾，套用 10 大万能句型和 8 大国情主题词汇，卷面干净工整。",
-      examinerWarning: "宁可写简单句、主谓宾结构清晰的复合句，也绝不要写语法残缺的错句！"
+      action: "划出主谓宾，套用 10 个常用好句型，句子写简单通顺即可，不用生僻词。",
+      examinerWarning: "宁可写结构清晰的简单句，也绝不要写语法残缺的错句！"
     },
     {
-      stage: "阶段八：全面检查与收卷",
+      stage: "阶段八：全面检查收卷",
       timeRange: "11:20 - 11:25",
       durationMinutes: 5,
       action: "检查答题卡 2 是否填涂完整无漏涂、错位，确认准考证号无误。",
-      examinerWarning: "稳住心态，胜利到手！"
+      examinerWarning: "稳住心态，仔细检查答题卡！"
     }
   ]
 };
 
-// 2. 选词填空秒杀四步法与前缀后缀语法秘籍
+// 2. 选词填空4步快选与高频词尾技巧
 export const BANKED_CLOZE_RULES: BankedClozeTechnique = {
   step: 1,
-  title: "四步词性分类预判法（4分钟抢下14.2分）",
-  rule: "绝不先读文章！先给 15 个选项标注词性（N名词、V动词、Adj形容词、Adv副词），再根据空格前后的语法槽位直接缩小范围到 2-3 个候选词。",
-  example: "例：空格前为 ‘play a _____ role in’，空格必为形容词修饰 role。直接在标注了 Adj 的 3 个词中挑选，秒选 crucial / vital / significant！",
+  title: "看词尾挑送分题（4分钟拿14分）",
+  rule: "绝不先读文章！先看选项最后几个字母标出词性（N名词、V动词、Adj形容词、Adv副词），再看空格前后需要什么词，范围立刻缩小到2~3个词。",
+  example: "例：空格前是 ‘play a _____ role in’，这里必然缺形容词修饰 role。直接在标了 Adj 的词里挑，选出 crucial / vital / significant！",
   suffixRules: [
     {
       pos: "Noun (名词)",
@@ -333,7 +333,7 @@ export const BANKED_CLOZE_RULES: BankedClozeTechnique = {
   ]
 };
 
-// 3. 真题重难长难句语法树切片剖析 (ExamCraft 风格)
+// 3. 真题长难句抓主谓宾拆解
 export const COMPLEX_SENTENCE_SLICES: ComplexSentenceSlice[] = [
   {
     id: "syntax-1",
@@ -454,7 +454,7 @@ export const COMPLEX_SENTENCE_SLICES: ComplexSentenceSlice[] = [
 
 // 4. 核心写作万能骨架与真题演练 (整合自 user artifact `code_artifact (9).html`)
 export const WRITING_FRAMEWORK_DATA: WritingFramework = {
-  universalLogicTitle: "万能底层逻辑：个人成长 ➔ 他人影响 ➔ 社会价值 5段式黄金骨架",
+  universalLogicTitle: "作文 5 段思路：引出话题 ➔ 个人影响 ➔ 他人例子 ➔ 社会价值 ➔ 总结呼吁",
   universalFiveParagraphs: [
     {
       paraIndex: 1,

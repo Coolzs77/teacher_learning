@@ -5,15 +5,28 @@ import {
   Check,
   Copy,
   BookOpen,
-  Layers,
   Sparkles,
-  Lightbulb,
+  Award,
   CheckCircle2,
-  RotateCcw
+  RotateCcw,
+  Edit3
 } from 'lucide-react';
 
-export const Cet6WritingView: React.FC = () => {
-  const [subTab, setSubTab] = useState<'framework' | 'drafting' | 'exams' | 'vocab'>('framework');
+interface Cet6WritingViewProps {
+  activeSubSection?: string;
+}
+
+export const Cet6WritingView: React.FC<Cet6WritingViewProps> = ({
+  activeSubSection = 'template',
+}) => {
+  const currentSub = (activeSubSection === 'template'
+    ? 'framework'
+    : activeSubSection === 'drafting'
+    ? 'drafting'
+    : activeSubSection === 'essays'
+    ? 'exams'
+    : 'vocab') as 'framework' | 'drafting' | 'exams' | 'vocab';
+
   const [selectedExamId, setSelectedExamId] = useState('essay-1');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -48,358 +61,329 @@ export const Cet6WritingView: React.FC = () => {
   };
 
   const toggleMastered = (idx: number) => {
-    setMastered(prev => ({ ...prev, [idx]: !prev[idx] }));
+    setMastered((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const selectedExam = WRITING_FRAMEWORK_DATA.realExamEssays.find(e => e.id === selectedExamId) || WRITING_FRAMEWORK_DATA.realExamEssays[0];
+  const selectedExam = WRITING_FRAMEWORK_DATA.realExamEssays.find((e) => e.id === selectedExamId) || WRITING_FRAMEWORK_DATA.realExamEssays[0];
   const fullText = [p1, p2, p3, p4, p5].filter(Boolean).join('\n\n');
   const wordCount = fullText.trim() ? fullText.trim().split(/\s+/).length : 0;
-  const masteredCount = [1, 2, 3, 4, 5].filter(i => mastered[i]).length;
+  const masteredCount = [1, 2, 3, 4, 5].filter((i) => mastered[i]).length;
 
   return (
-    <div className="space-y-6 animate-fadeIn font-serif">
-      {/* 模块顶部卡片 */}
-      <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-paper-border pb-4">
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 border border-bamboo-200 text-xs font-bold">
-                第三优先级 · 锁定 75+ 分
-              </span>
-              <span className="text-xs text-wood-500">引入 ➔ 个人 ➔ 他人 ➔ 社会 ➔ 总结</span>
-            </div>
-            <h2 className="text-xl font-bold text-wood-900">
-              万能 5 段式作文体系与仿写工坊
-            </h2>
-            <p className="text-xs sm:text-sm text-wood-600 mt-1">
-              考场直接默写固定骨架与过渡词，把带有虚线标记的插槽替换为题目核心词，180词一次成型！
-            </p>
-          </div>
-
-          <div className="flex items-center bg-paper-100 p-1.5 rounded-xl border border-paper-border shrink-0 flex-wrap gap-1">
-            <button
-              onClick={() => setSubTab('framework')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'framework'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              1. 核心默写骨架
-            </button>
-            <button
-              onClick={() => setSubTab('drafting')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'drafting'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              2. 仿写演练工坊
-            </button>
-            <button
-              onClick={() => setSubTab('exams')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'exams'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              3. 真题拆解演练
-            </button>
-            <button
-              onClick={() => setSubTab('vocab')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'vocab'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              4. 系统插空词库
-            </button>
-          </div>
-        </div>
-
-        {/* ================= 子标签 1: 核心默写骨架 ================= */}
-        {subTab === 'framework' && (
-          <div className="space-y-4 pt-1">
-            {/* 默写打卡进度条 */}
-            <div className="bg-paper-100 border border-paper-border rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-lg bg-bamboo-700 text-white flex items-center justify-center font-mono font-bold text-xs">
-                  {masteredCount}/5
+    <div className="space-y-6 font-serif">
+      {/* 1. 核心背诵框架 */}
+      {currentSub === 'framework' && (
+        <div className="space-y-5 animate-card-enter">
+          {/* 背诵打卡进度卡片 */}
+          <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly card-planning">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-paper-border pb-4">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                    考前必背
+                  </span>
+                  <span className="text-xs text-wood-500">考场直接往里填词，180词写满</span>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-wood-900">
-                    5段底层默写骨架掌握进度：{Math.round((masteredCount / 5) * 100)}%
-                  </h4>
-                  <p className="text-[11px] text-wood-500">
-                    每段可点击“标记已掌握”打卡，考前5段必须全部默写熟练！
-                  </p>
-                </div>
+                <h3 className="font-bold text-lg text-wood-900 mt-1">
+                  作文 5 段思路：引言 ➔ 个人 ➔ 他人 ➔ 社会 ➔ 总结
+                </h3>
               </div>
 
-              <div className="w-full sm:w-40 bg-paper-300 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-bamboo-700 h-full transition-all duration-300 rounded-full"
-                  style={{ width: `${(masteredCount / 5) * 100}%` }}
-                />
+              <div className="flex items-center space-x-2 bg-paper-50 px-3.5 py-2 rounded-xl border border-paper-border self-start sm:self-auto">
+                <span className="text-xs text-wood-600">背诵进度：</span>
+                <span className="text-base font-mono font-bold text-bamboo-800">
+                  {masteredCount} / 5 段
+                </span>
+                <span className="text-xs text-cinnabar-800 font-bold">
+                  ({Math.round((masteredCount / 5) * 100)}%)
+                </span>
               </div>
             </div>
 
-            <div className="space-y-3.5">
-              {WRITING_FRAMEWORK_DATA.universalFiveParagraphs.map(para => {
-                const isDone = !!mastered[para.paraIndex];
+            {/* 逐段卡片展示与打卡 */}
+            <div className="space-y-3.5 mt-4">
+              {WRITING_FRAMEWORK_DATA.universalFiveParagraphs.map((para) => {
+                const isDone = Boolean(mastered[para.paraIndex]);
 
                 return (
                   <div
                     key={para.paraIndex}
-                    className={`p-4 rounded-xl border transition bg-paper-50 ${
-                      isDone ? 'border-bamboo-300 ring-1 ring-bamboo-200' : 'border-paper-border'
+                    className={`p-4 rounded-xl border transition-all card-writing space-y-3 ${
+                      isDone
+                        ? 'bg-paper-50 border-bamboo-400/80'
+                        : 'bg-paper-card border-paper-border'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className={`w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center font-mono ${
-                          isDone ? 'bg-bamboo-700 text-white' : 'bg-wood-800 text-white'
-                        }`}>
-                          {para.paraIndex}
+                        <span className="text-xs px-2 py-0.5 rounded bg-wood-800 text-paper-50 font-bold">
+                          第 {para.paraIndex} 段
                         </span>
-                        <span className="font-bold text-xs text-wood-900">{para.layerTitle}</span>
-                        <span className="text-[10px] px-1.5 py-0.2 bg-paper-200 text-wood-700 rounded">
-                          {para.layerBadge}
+                        <span className="text-xs font-bold text-wood-900">
+                          {para.layerTitle}
                         </span>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => toggleMastered(para.paraIndex)}
-                          className={`btn-tactile text-xs px-2 py-0.8 rounded-lg flex items-center space-x-1 cursor-pointer transition ${
-                            isDone
-                              ? 'bg-bamboo-100 text-bamboo-900 border border-bamboo-300 font-bold'
-                              : 'bg-paper-200 text-wood-700 hover:bg-paper-300'
-                          }`}
+                          onClick={() => handleCopy(`para-${para.paraIndex}`, para.englishTemplate)}
+                          className="text-xs px-2.5 py-1 rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer flex items-center space-x-1"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-bamboo-700" />
-                          <span>{isDone ? '已熟记' : '标记已掌握'}</span>
+                          {copiedKey === `para-${para.paraIndex}` ? (
+                            <>
+                              <Check className="w-3 h-3 text-bamboo-700" />
+                              <span className="text-bamboo-800 font-bold">已复制</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>复制</span>
+                            </>
+                          )}
                         </button>
 
                         <button
-                          onClick={() => handleCopy(`p-${para.paraIndex}`, `${para.englishTemplate}\n\n${para.chineseTranslation}`)}
-                          className="text-wood-400 hover:text-wood-700 p-1 cursor-pointer"
-                          title="复制段落"
+                          onClick={() => toggleMastered(para.paraIndex)}
+                          className={`text-xs px-3 py-1 rounded-lg font-bold transition flex items-center space-x-1 cursor-pointer ${
+                            isDone
+                              ? 'bg-bamboo-700 text-white shadow-xs'
+                              : 'bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border'
+                          }`}
                         >
-                          {copiedKey === `p-${para.paraIndex}` ? <Check className="w-3.5 h-3.5 text-bamboo-700" /> : <Copy className="w-3.5 h-3.5" />}
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{isDone ? '已背熟 ✓' : '标记已背熟'}</span>
                         </button>
                       </div>
                     </div>
 
-                    <div className="font-sans text-xs md:text-sm text-wood-900 leading-relaxed bg-paper-card p-3 rounded-lg border border-paper-border/80 mb-2">
+                    <div className="p-3 bg-paper-50 rounded-lg border border-paper-border text-xs sm:text-sm text-wood-900 leading-relaxed font-serif select-all">
                       {para.englishTemplate}
                     </div>
 
-                    <div className="text-[11px] text-wood-600 pl-2 border-l-2 border-paper-border mb-2">
+                    <div className="text-xs text-wood-600 bg-paper-100/60 p-2.5 rounded-lg leading-relaxed">
+                      <span className="font-bold text-wood-800">中文思路：</span>
                       {para.chineseTranslation}
                     </div>
-
-                    {para.fillSlots.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2 border-t border-paper-border/60 text-[11px]">
-                        {para.fillSlots.map(s => (
-                          <div key={s.slotId} className="bg-paper-card p-2 rounded border border-paper-border flex-1 min-w-[200px]">
-                            <span className="font-bold text-bamboo-800 block">📌 {s.slotPrompt}</span>
-                            <span className="font-sans text-wood-600 italic">示范: "{s.slotExample}"</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ================= 子标签 2: 仿写演练工坊 ================= */}
-        {subTab === 'drafting' && (
-          <div className="space-y-4 pt-1">
-            <div className="bg-paper-100 border border-paper-border p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center space-x-2">
-                <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
-                  wordCount >= 150 && wordCount <= 200
-                    ? 'bg-bamboo-100 text-bamboo-900 border-bamboo-300'
-                    : wordCount > 200
-                    ? 'bg-amberGold-100 text-wood-900 border-amberGold-600'
-                    : 'bg-cinnabar-50 text-cinnabar-900 border-cinnabar-200'
-                }`}>
-                  当前字数：{wordCount} 词
-                  {wordCount >= 150 && wordCount <= 200 && ' (★ 黄金字数！)'}
-                </span>
-                <span className="text-[11px] text-wood-500 hidden sm:inline">六级要求：150 ~ 200 词</span>
-              </div>
-
-              <button
-                onClick={() => handleCopy('full-draft', fullText)}
-                className="btn-tactile bg-bamboo-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1 cursor-pointer shadow-sm"
-              >
-                {copiedKey === 'full-draft' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>一键复制整篇作文</span>
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
+      {/* 2. 在线试写练习（实时计词） */}
+      {currentSub === 'drafting' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly card-writing space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-paper-border pb-4">
               <div>
-                <label className="font-bold text-wood-800 block mb-1">
-                  1. 引入段 (点题 + insightful and convincing)
-                </label>
-                <textarea
-                  rows={2}
-                  value={p1}
-                  onChange={e => setP1(e.target.value)}
-                  className="w-full p-2.5 bg-paper-50 border border-paper-border rounded-xl font-sans text-xs focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
+                <h3 className="font-bold text-base text-wood-900">
+                  在线填词实战（把题目给的词填进去，看看字数够不够）
+                </h3>
+                <p className="text-xs text-wood-600 mt-0.5">
+                  六级要求 150 - 200 词，写够 180 词最稳妥。
+                </p>
               </div>
 
-              <div>
-                <label className="font-bold text-wood-800 block mb-1">
-                  2. 个人成长层 (First and foremost + not only... but also...)
-                </label>
-                <textarea
-                  rows={3}
-                  value={p2}
-                  onChange={e => setP2(e.target.value)}
-                  className="w-full p-2.5 bg-paper-50 border border-paper-border rounded-xl font-sans text-xs focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-wood-800 block mb-1">
-                  3. 他人影响层 (In addition + A relevant example...)
-                </label>
-                <textarea
-                  rows={3}
-                  value={p3}
-                  onChange={e => setP3(e.target.value)}
-                  className="w-full p-2.5 bg-paper-50 border border-paper-border rounded-xl font-sans text-xs focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-wood-800 block mb-1">
-                  4. 社会价值层 (Last but not least + contributes to the advancement of society)
-                </label>
-                <textarea
-                  rows={2}
-                  value={p4}
-                  onChange={e => setP4(e.target.value)}
-                  className="w-full p-2.5 bg-paper-50 border border-paper-border rounded-xl font-sans text-xs focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-wood-800 block mb-1">
-                  5. 总结升华段 (Taking all these factors into account + Only by doing so...)
-                </label>
-                <textarea
-                  rows={2}
-                  value={p5}
-                  onChange={e => setP5(e.target.value)}
-                  className="w-full p-2.5 bg-paper-50 border border-paper-border rounded-xl font-sans text-xs focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= 子标签 3: 真题拆解演练 ================= */}
-        {subTab === 'exams' && (
-          <div className="space-y-4 pt-1">
-            <div className="flex flex-wrap gap-2 pb-1 border-b border-paper-border/60">
-              {WRITING_FRAMEWORK_DATA.realExamEssays.map(essay => (
-                <button
-                  key={essay.id}
-                  onClick={() => setSelectedExamId(essay.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1 ${
-                    selectedExamId === essay.id
-                      ? 'bg-wood-900 text-white font-bold shadow-sm'
-                      : 'bg-paper-100 text-wood-700 hover:bg-paper-200'
+              {/* 实时字数监控 */}
+              <div className="flex items-center space-x-3 bg-paper-50 px-4 py-2.5 rounded-xl border border-paper-border self-start sm:self-auto shrink-0">
+                <div className="text-right">
+                  <div className="text-[10px] text-wood-500">当前总字数</div>
+                  <div className="text-2xl font-bold font-mono text-wood-900">{wordCount}</div>
+                </div>
+                <div
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    wordCount >= 150 && wordCount <= 220
+                      ? 'bg-bamboo-700 text-white'
+                      : wordCount < 150
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-cinnabar-100 text-cinnabar-800'
                   }`}
                 >
-                  <PenTool className="w-3 h-3" />
-                  <span>{essay.title}</span>
-                </button>
+                  {wordCount >= 150 && wordCount <= 220
+                    ? '字数达标！(150~200词)'
+                    : wordCount < 150
+                    ? `还差 ${150 - wordCount} 词及格`
+                    : '略长，建议适当删减'}
+                </div>
+              </div>
+            </div>
+
+            {/* 作文话题输入 */}
+            <div className="space-y-1 bg-paper-50 p-3 rounded-xl border border-paper-border">
+              <label className="text-xs text-wood-600 font-bold">试卷给出的题目/核心话题：</label>
+              <input
+                type="text"
+                value={draftPrompt}
+                onChange={(e) => setDraftPrompt(e.target.value)}
+                placeholder="例如 The Importance of Persistence..."
+                className="w-full px-3 py-1.5 bg-paper-card border border-paper-border rounded-lg text-xs font-serif text-wood-900 focus:outline-none focus:ring-1 focus:ring-bamboo-600"
+              />
+            </div>
+
+            {/* 5 段输入框 */}
+            <div className="space-y-3 pt-2">
+              {[
+                { title: '第 1 段：引言段（亮明话题与态度）', val: p1, set: setP1 },
+                { title: '第 2 段：对个人（学到能力、不怕挫折）', val: p2, set: setP2 },
+                { title: '第 3 段：对他人（树立榜样 + 举个生活小例子）', val: p3, set: setP3 },
+                { title: '第 4 段：对社会（长远社会价值与推动力）', val: p4, set: setP4 },
+                { title: '第 5 段：结尾段（总结呼吁与展望）', val: p5, set: setP5 },
+              ].map((sec, idx) => (
+                <div key={idx} className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-wood-800">{sec.title}</span>
+                    <span className="text-wood-400 font-mono">
+                      {sec.val.trim() ? sec.val.trim().split(/\s+/).length : 0} 词
+                    </span>
+                  </div>
+                  <textarea
+                    value={sec.val}
+                    onChange={(e) => sec.set(e.target.value)}
+                    rows={3}
+                    className="w-full p-3 bg-paper-50 border border-paper-border rounded-xl text-xs sm:text-sm font-serif text-wood-900 focus:outline-none focus:ring-2 focus:ring-bamboo-500/30 focus:border-bamboo-600 transition"
+                  />
+                </div>
               ))}
             </div>
 
-            <div className="bg-paper-50 p-3.5 rounded-xl border border-paper-border text-xs space-y-1">
-              <span className="text-wood-400 font-bold block">命题方向：</span>
-              <p className="text-wood-900 font-bold">{selectedExam.chineseTopic}</p>
-              <p className="text-wood-600 italic font-sans">{selectedExam.examPrompt}</p>
+            {/* 一键拷贝全文 */}
+            <div className="flex justify-between items-center pt-3 border-t border-paper-border">
+              <button
+                onClick={() => {
+                  setP1('');
+                  setP2('');
+                  setP3('');
+                  setP4('');
+                  setP5('');
+                }}
+                className="px-3 py-1.5 rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 text-xs border border-paper-border transition cursor-pointer flex items-center space-x-1"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>清空重新写</span>
+              </button>
+
+              <button
+                onClick={() => handleCopy('fullEssay', fullText)}
+                className="px-4 py-2 rounded-xl bg-bamboo-700 hover:bg-bamboo-800 text-white text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              >
+                {copiedKey === 'fullEssay' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>已复制全文 180 词</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>复制整篇作文（考场模拟）</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. 真题范文参考 */}
+      {currentSub === 'exams' && (
+        <div className="space-y-4 animate-card-enter">
+          {/* 真题切换选择器 */}
+          <div className="bg-paper-card p-3 rounded-2xl border border-paper-border shadow-scholarly flex flex-wrap gap-2">
+            {WRITING_FRAMEWORK_DATA.realExamEssays.map((exam) => (
+              <button
+                key={exam.id}
+                onClick={() => setSelectedExamId(exam.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  selectedExamId === exam.id
+                    ? 'bg-bamboo-700 text-white shadow-xs'
+                    : 'bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border'
+                }`}
+              >
+                {exam.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly card-planning space-y-4">
+            <div className="border-b border-paper-border pb-3">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                {selectedExam.chineseTopic}
+              </span>
+              <h3 className="font-bold text-base text-wood-900 mt-1">
+                题目要求：{selectedExam.examPrompt}
+              </h3>
             </div>
 
+            {/* 5 段范文逐段展示 */}
             <div className="space-y-3">
               {[
-                { title: '第 1 段 · 引入段', eng: selectedExam.studentSampleEssay.para1Eng, chn: selectedExam.studentSampleEssay.para1Chn },
-                { title: '第 2 段 · 个人成长层', eng: selectedExam.studentSampleEssay.para2Eng, chn: selectedExam.studentSampleEssay.para2Chn },
-                { title: '第 3 段 · 他人影响层', eng: selectedExam.studentSampleEssay.para3Eng, chn: selectedExam.studentSampleEssay.para3Chn },
-                { title: '第 4 段 · 社会价值层', eng: selectedExam.studentSampleEssay.para4Eng, chn: selectedExam.studentSampleEssay.para4Chn },
-                { title: '第 5 段 · 总结升华段', eng: selectedExam.studentSampleEssay.para5Eng, chn: selectedExam.studentSampleEssay.para5Chn },
-              ].map((p, i) => (
-                <div key={i} className="p-3.5 bg-paper-50 rounded-xl border border-paper-border space-y-1.5">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-wood-800">{p.title}</span>
-                    <button
-                      onClick={() => handleCopy(`ex-p-${i}`, p.eng)}
-                      className="text-wood-400 hover:text-wood-700 p-0.5 cursor-pointer"
-                    >
-                      {copiedKey === `ex-p-${i}` ? <Check className="w-3.5 h-3.5 text-bamboo-700" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
+                { label: '第 1 段 (引出话题)', eng: selectedExam.studentSampleEssay.para1Eng, chn: selectedExam.studentSampleEssay.para1Chn },
+                { label: '第 2 段 (个人成长)', eng: selectedExam.studentSampleEssay.para2Eng, chn: selectedExam.studentSampleEssay.para2Chn },
+                { label: '第 3 段 (他人影响与日常举例)', eng: selectedExam.studentSampleEssay.para3Eng, chn: selectedExam.studentSampleEssay.para3Chn },
+                { label: '第 4 段 (社会长远价值)', eng: selectedExam.studentSampleEssay.para4Eng, chn: selectedExam.studentSampleEssay.para4Chn },
+                { label: '第 5 段 (总结展望)', eng: selectedExam.studentSampleEssay.para5Eng, chn: selectedExam.studentSampleEssay.para5Chn },
+              ].map((item, i) => (
+                <div key={i} className="p-3.5 bg-paper-50 rounded-xl border border-paper-border space-y-1.5 card-writing">
+                  <div className="text-xs font-bold text-bamboo-800">{item.label}</div>
+                  <div className="text-xs sm:text-sm text-wood-900 leading-relaxed select-all">
+                    {item.eng}
                   </div>
-                  <p className="font-sans text-xs md:text-sm text-wood-900 leading-relaxed bg-paper-card p-2.5 rounded border border-paper-border/60">
-                    {p.eng}
-                  </p>
-                  <p className="text-[11px] text-wood-600 pl-2">
-                    {p.chn}
-                  </p>
+                  <div className="text-xs text-wood-500 pt-1 border-t border-paper-border/60">
+                    {item.chn}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ================= 子标签 4: 系统插空词库 ================= */}
-        {subTab === 'vocab' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            {WRITING_FRAMEWORK_DATA.pluginVocabBanks.map((bank, idx) => (
-              <div key={idx} className="p-4 bg-paper-50 rounded-xl border border-paper-border space-y-2.5">
-                <div className="flex items-center justify-between pb-2 border-b border-paper-border">
-                  <div className="flex items-center space-x-1.5">
-                    <span>{bank.icon}</span>
-                    <span className="font-bold text-xs text-wood-900">{bank.category}</span>
-                  </div>
-                  <span className="text-[10px] text-wood-500">点击右侧直接复制</span>
+      {/* 4. 常用替换好词 */}
+      {currentSub === 'vocab' && (
+        <div className="space-y-4 animate-card-enter">
+          <div className="bg-paper-card rounded-2xl p-4 sm:p-5 border border-paper-border shadow-scholarly">
+            <h3 className="font-bold text-base text-wood-900">
+              作文提分加分词（挑一两个写进去，阅卷老师给分更高）
+            </h3>
+            <p className="text-xs text-wood-600 mt-0.5">
+              点击词组可直接复制，替换到上面的填词练习框里。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {WRITING_FRAMEWORK_DATA.pluginVocabBanks.map((cat, idx) => (
+              <div
+                key={idx}
+                className="bg-paper-card rounded-xl p-4 border border-paper-border shadow-scholarly card-vocab space-y-3"
+              >
+                <div className="flex items-center space-x-2 border-b border-paper-border pb-2">
+                  <span className="text-base">{cat.icon}</span>
+                  <h4 className="font-bold text-xs text-wood-900">{cat.category}</h4>
                 </div>
 
-                <div className="space-y-2">
-                  {bank.phrases.map((ph, pIdx) => (
-                    <div key={pIdx} className="flex items-start justify-between gap-2 text-xs">
+                <div className="space-y-1.5">
+                  {cat.phrases.map((p, pIdx) => (
+                    <div
+                      key={pIdx}
+                      onClick={() => handleCopy(`vocab-${idx}-${pIdx}`, p.eng)}
+                      className="p-2 bg-paper-50 hover:bg-paper-100 rounded-lg border border-paper-border transition cursor-pointer flex items-center justify-between text-xs"
+                    >
                       <div>
-                        <div className="font-sans font-bold text-wood-900">{ph.eng}</div>
-                        <div className="text-[11px] text-wood-500">{ph.chn}</div>
+                        <div className="font-bold font-mono text-wood-900">{p.eng}</div>
+                        <div className="text-[11px] text-wood-500">{p.chn}</div>
                       </div>
-                      <button
-                        onClick={() => handleCopy(`vb-${idx}-${pIdx}`, ph.eng)}
-                        className="text-wood-400 hover:text-wood-700 p-0.5 cursor-pointer shrink-0"
-                      >
-                        {copiedKey === `vb-${idx}-${pIdx}` ? <Check className="w-3 h-3 text-bamboo-700" /> : <Copy className="w-3 h-3" />}
-                      </button>
+                      <span className="text-[10px] text-wood-400">
+                        {copiedKey === `vocab-${idx}-${pIdx}` ? '已复制' : '复制'}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

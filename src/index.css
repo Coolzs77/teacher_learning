@@ -6,11 +6,44 @@
   body {
     background-color: #FAF8F5;
     color: #2D241E;
+    font-family: "Noto Serif SC", "Source Han Serif SC", STSong, SimSun, serif;
     font-feature-settings: "palt" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
+
+  /* 默认所有标题和强调均采用古典衬线 */
+  h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
+    font-family: "Noto Serif SC", "Source Han Serif SC", STSong, SimSun, serif;
+  }
 }
+
+/* 各类别卡片专属动效系统 */
+/* 1. 规划/目标卡片：沉稳浮升，温润墨影 */
+.card-planning {
+  @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-scholarly-hover hover:border-bamboo-400;
+}
+
+/* 2. 练习/做题卡片：弹性质感，触觉回馈 */
+.card-practice {
+  @apply transition-all duration-200 ease-out hover:border-bamboo-400 hover:shadow-md;
+}
+
+/* 3. 词汇/句型卡片：纸质微浮雕感 */
+.card-vocab {
+  @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:bg-paper-50 active:translate-y-0;
+}
+
+/* 4. 写作/翻译工坊卡片：舒展专注 */
+.card-writing {
+  @apply transition-all duration-300 ease-out hover:border-stone-400 hover:shadow-scholarly;
+}
+
+/* 5. 错题/急救卡片：警示守护，印章感 */
+.card-rescue {
+  @apply transition-all duration-200 ease-out hover:border-cinnabar-300 hover:shadow-md;
+}
+
 
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {

@@ -1,464 +1,393 @@
 import React, { useState } from 'react';
 import { TRANSLATION_DATA } from '../../data/cet6Data';
-import { TRANSLATION_STEPPING_DATA, SteppingSentence, Cet6MistakeItem } from '../../data/cet6PracticeData';
+import { TRANSLATION_STEPPING_DATA } from '../../data/cet6PracticeData';
 import {
   Languages,
   Copy,
   Check,
   Sparkles,
-  BookOpen,
-  Zap,
-  AlertTriangle,
-  Send,
+  ArrowRight,
+  RotateCcw,
   BookMarked,
-  ArrowRight
+  Eye,
+  Edit3,
+  Lightbulb
 } from 'lucide-react';
 
 interface Cet6TranslationViewProps {
-  onAddMistake?: (item: Omit<Cet6MistakeItem, 'id' | 'createdAt' | 'isMastered'>) => void;
+  activeSubSection?: string;
+  onAddMistake?: (item: any) => void;
 }
 
-export const Cet6TranslationView: React.FC<Cet6TranslationViewProps> = ({ onAddMistake }) => {
-  const [subTab, setSubTab] = useState<'stepping' | 'patterns' | 'themes' | 'upgrade'>('stepping');
+export const Cet6TranslationView: React.FC<Cet6TranslationViewProps> = ({
+  activeSubSection = 'practice',
+  onAddMistake,
+}) => {
+  // 扁平化所有例句方便逐句练习
+  const allSentences = TRANSLATION_STEPPING_DATA.flatMap((t) =>
+    t.sentences.map((s) => ({
+      ...s,
+      themeTitle: t.themeTitle,
+      icon: t.icon,
+    }))
+  );
 
-  // 台阶演练状态
-  const [topicId, setTopicId] = useState(TRANSLATION_STEPPING_DATA[0].id);
-  const [sentenceIdx, setSentenceIdx] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [userDraft, setUserDraft] = useState('');
-  const [showCompare, setShowCompare] = useState(false);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedThemeId, setSelectedThemeId] = useState('theme-history');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // 主题词库
-  const [themeId, setThemeId] = useState('theme-culture');
-
-  const currentTopic = TRANSLATION_STEPPING_DATA.find(t => t.id === topicId) || TRANSLATION_STEPPING_DATA[0];
-  const currentSentence = currentTopic.sentences[sentenceIdx] || currentTopic.sentences[0];
-  const selectedTheme = TRANSLATION_DATA.eightCoreThemes.find(t => t.id === themeId) || TRANSLATION_DATA.eightCoreThemes[0];
+  const currentSentence = allSentences[currentStepIndex % allSentences.length];
+  const currentTheme = TRANSLATION_DATA.eightCoreThemes.find((t) => t.id === selectedThemeId) || TRANSLATION_DATA.eightCoreThemes[0];
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 2000);
   };
 
-  const handleCopy = (key: string, text: string) => {
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSaveMistake = (s: SteppingSentence) => {
+  const handleCollectMistake = () => {
     if (onAddMistake) {
       onAddMistake({
         type: 'translation',
         typeLabel: '汉译英',
-        title: `翻译金句积累: ${s.chinese.slice(0, 18)}...`,
-        sourceContext: s.chinese,
-        myMistake: userDraft || '初始思路不够地道',
-        correctAnswer: s.standardTranslation,
+        title: `翻译练习: ${currentSentence.chinese.slice(0, 18)}...`,
+        sourceContext: currentSentence.chinese,
+        myMistake: userDraft || '主谓宾句式不熟练',
+        correctAnswer: currentSentence.standardTranslation,
         reason: 'meaning_error',
-        reasonLabel: '🏷️ 句式单薄',
-        qiqiInsight: `${s.patternTitle}。避坑提醒：${s.pitfallWarning}`
+        reasonLabel: '句型套用生疏',
+        qiqiInsight: currentSentence.pitfallWarning,
       });
-      showToast('✓ 已收录至翻译金句与错题库！');
+      showToast('已将这句练习收录到错题本！');
     }
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn font-serif">
+    <div className="space-y-6 font-serif">
+      {/* Toast */}
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-50 bg-wood-900 text-bamboo-200 text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center space-x-2 border border-bamboo-600">
-          <Sparkles className="w-4 h-4 text-amberGold-600" />
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-wood-900 text-paper-50 px-4 py-2 rounded-xl text-xs shadow-xl flex items-center space-x-2 border border-stone-700 animate-fadeIn">
+          <Check className="w-4 h-4 text-bamboo-400" />
           <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* 模块顶部卡片 */}
-      <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-paper-border pb-4">
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full bg-cinnabar-50 text-cinnabar-800 border border-cinnabar-200 text-xs font-bold">
-                第二优先级 · 冲刺 70+ 分
-              </span>
-              <span className="text-xs text-wood-500">主谓宾拆解 ➔ 万能句型套入 ➔ 动笔试写对照</span>
+      {/* 1. 句子逐句练写 */}
+      {activeSubSection === 'practice' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly card-writing space-y-4">
+            <div className="flex items-center justify-between border-b border-paper-border pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-base">{currentSentence.icon}</span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                  {currentSentence.themeTitle.split(' ')[0]}
+                </span>
+                <span className="text-xs text-wood-500 font-mono">
+                  第 {currentStepIndex + 1} / {allSentences.length} 句
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setCurrentStepIndex((prev) => (prev + 1) % allSentences.length);
+                    setUserDraft('');
+                    setShowAnswer(false);
+                  }}
+                  className="px-3 py-1 text-xs rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer"
+                >
+                  换下一句 ➔
+                </button>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-wood-900">
-              汉译英台阶演练工坊与常用词库
-            </h2>
-            <p className="text-xs sm:text-sm text-wood-600 mt-1">
-              翻译拉开分数的不是生僻词，而是句子的骨架！先把主语和动词定住，再套用句型，杜绝中式直译。
+
+            <div className="space-y-2">
+              <div className="text-xs text-wood-500">中文待译句子：</div>
+              <div className="text-base sm:text-lg font-bold text-wood-900 leading-relaxed bg-paper-50 p-4 rounded-xl border border-paper-border select-all">
+                {currentSentence.chinese}
+              </div>
+            </div>
+
+            {/* 抓主谓宾 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+              <div className="bg-bamboo-50 p-3 rounded-xl border border-bamboo-200 space-y-0.5">
+                <span className="text-[11px] font-bold text-bamboo-800">主语（谁）：</span>
+                <p className="text-xs text-bamboo-900 font-bold">{currentSentence.mainSubject}</p>
+              </div>
+              <div className="bg-paper-100 p-3 rounded-xl border border-paper-border space-y-0.5">
+                <span className="text-[11px] font-bold text-wood-800">谓语（做了什么）：</span>
+                <p className="text-xs text-wood-900 font-bold">{currentSentence.mainPredicate}</p>
+              </div>
+              <div className="bg-paper-100 p-3 rounded-xl border border-paper-border space-y-0.5">
+                <span className="text-[11px] font-bold text-wood-800">宾语（什么对象）：</span>
+                <p className="text-xs text-wood-900 font-bold">{currentSentence.mainObject}</p>
+              </div>
+            </div>
+
+            {/* 推荐句型 */}
+            <div className="bg-paper-50 p-3 rounded-xl border border-paper-border space-y-1">
+              <span className="text-xs font-bold text-wood-700 flex items-center space-x-1">
+                <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                <span>推荐套用句型：</span>
+              </span>
+              <p className="text-xs text-wood-900 font-mono font-bold leading-relaxed">
+                {currentSentence.patternTitle}
+              </p>
+            </div>
+
+            {/* 核心词汇提示 */}
+            <div className="bg-paper-50 p-3 rounded-xl border border-paper-border space-y-1.5">
+              <div className="text-xs text-wood-500 font-bold">参考单词直接给（点击可复制）：</div>
+              <div className="flex flex-wrap gap-2">
+                {currentSentence.keyVocabList.map((vocab, i) => (
+                  <span
+                    key={i}
+                    onClick={() => handleCopy(vocab.eng, `hint-${i}`)}
+                    className="text-xs px-2.5 py-1 rounded-lg bg-paper-card border border-paper-border text-wood-800 hover:border-bamboo-400 hover:bg-paper-100 transition cursor-pointer card-vocab flex items-center space-x-1"
+                    title="点击复制这个词"
+                  >
+                    <span>{vocab.chn}：</span>
+                    <strong className="font-mono">{vocab.eng}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 动笔试写框 */}
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-wood-800 flex items-center space-x-1">
+                  <Edit3 className="w-3.5 h-3.5 text-bamboo-700" />
+                  <span>动手敲一遍（练一遍考场才不会慌）：</span>
+                </span>
+                <span className="text-wood-400 font-mono">
+                  {userDraft.trim() ? userDraft.trim().split(/\s+/).length : 0} 词
+                </span>
+              </div>
+              <textarea
+                value={userDraft}
+                onChange={(e) => setUserDraft(e.target.value)}
+                placeholder="试着在这敲出你的英文翻译..."
+                rows={3}
+                className="w-full p-3.5 bg-paper-50 border border-paper-border rounded-xl text-sm font-serif text-wood-900 focus:outline-none focus:ring-2 focus:ring-bamboo-500/30 focus:border-bamboo-600 transition"
+              />
+            </div>
+
+            {/* 对照答案与错题收录 */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={() => setShowAnswer(!showAnswer)}
+                className="px-4 py-2 rounded-xl bg-bamboo-700 hover:bg-bamboo-800 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-xs cursor-pointer"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>{showAnswer ? '隐藏参考范文' : '对照老师参考范文'}</span>
+              </button>
+
+              <button
+                onClick={handleCollectMistake}
+                className="px-3 py-2 rounded-xl bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border text-xs transition flex items-center space-x-1 cursor-pointer"
+              >
+                <BookMarked className="w-3.5 h-3.5 text-bamboo-700" />
+                <span>记入错题本</span>
+              </button>
+            </div>
+
+            {/* 范文展开与避坑 */}
+            {showAnswer && (
+              <div className="p-4 bg-paper-50 rounded-xl border border-bamboo-300 space-y-3 animate-card-enter">
+                <div>
+                  <div className="text-xs text-bamboo-800 font-bold mb-1">老师地道范文：</div>
+                  <div className="text-sm font-bold text-wood-900 leading-relaxed select-all bg-paper-card p-3 rounded-lg border border-paper-border">
+                    {currentSentence.standardTranslation}
+                  </div>
+                </div>
+
+                <div className="text-xs text-cinnabar-800 bg-cinnabar-50 p-2.5 rounded-lg border border-cinnabar-200 leading-relaxed">
+                  <strong className="font-bold">避坑提醒：</strong>
+                  {currentSentence.pitfallWarning}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. 10 大常用高分句型库 */}
+      {activeSubSection === 'patterns' && (
+        <div className="space-y-4 animate-card-enter">
+          <div className="bg-paper-card rounded-2xl p-4 sm:p-5 border border-paper-border shadow-scholarly">
+            <h3 className="font-bold text-base text-wood-900">
+              10 个最管用的汉译英句型（背熟直接套，避免直译）
+            </h3>
+            <p className="text-xs text-wood-600 mt-0.5">
+              主谓宾清晰，阅卷老师给分稳，不用复杂生词也能拿高分。
             </p>
           </div>
 
-          <div className="flex items-center bg-paper-100 p-1.5 rounded-xl border border-paper-border shrink-0 flex-wrap gap-1">
-            <button
-              onClick={() => setSubTab('stepping')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'stepping'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              1. 台阶拆解练习
-            </button>
-            <button
-              onClick={() => setSubTab('patterns')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'patterns'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              2. 10大万能句型
-            </button>
-            <button
-              onClick={() => setSubTab('themes')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'themes'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              3. 8大国情主题词
-            </button>
-            <button
-              onClick={() => setSubTab('upgrade')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
-                subTab === 'upgrade'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              4. 高频替换词
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {TRANSLATION_DATA.tenUniversalSentencePatterns.map((item) => (
+              <div
+                key={item.id}
+                className="bg-paper-card rounded-xl p-4 border border-paper-border shadow-scholarly card-vocab space-y-2.5"
+              >
+                <div className="flex items-center justify-between border-b border-paper-border pb-2">
+                  <span className="text-xs font-bold text-bamboo-800 bg-bamboo-50 px-2 py-0.5 rounded border border-bamboo-200">
+                    句型 {item.id} · {item.chinesePattern}
+                  </span>
+                  <button
+                    onClick={() => handleCopy(item.englishPattern, `pat-${item.id}`)}
+                    className="text-xs text-wood-600 hover:text-wood-900 flex items-center space-x-1 px-2 py-0.5 bg-paper-100 rounded hover:bg-paper-200 transition cursor-pointer"
+                  >
+                    {copiedId === `pat-${item.id}` ? (
+                      <span className="text-bamboo-800 font-bold">已复制</span>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>复制</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="text-xs font-mono text-wood-900 font-bold bg-paper-50 p-2 rounded-lg border border-paper-border">
+                  {item.englishPattern}
+                </div>
+
+                <div className="space-y-1 text-xs text-wood-700 bg-paper-100/50 p-2 rounded-lg">
+                  <div className="text-wood-500 font-serif">例：{item.exampleChn}</div>
+                  <div className="text-wood-900 font-serif font-bold select-all">
+                    {item.exampleEng}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* ================= 子标签 1: 台阶实战演练 ================= */}
-        {subTab === 'stepping' && (
-          <div className="space-y-5 pt-1">
-            {/* 主题横向切换 */}
-            <div className="flex flex-wrap gap-2 pb-1 border-b border-paper-border/60">
-              {TRANSLATION_STEPPING_DATA.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setTopicId(t.id);
-                    setSentenceIdx(0);
-                    setUserDraft('');
-                    setShowCompare(false);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1.5 ${
-                    topicId === t.id
-                      ? 'bg-wood-900 text-white font-bold shadow-sm'
-                      : 'bg-paper-100 text-wood-700 hover:bg-paper-200'
-                  }`}
-                >
-                  <span>{t.icon}</span>
-                  <span>{t.themeTitle.split(' ')[0]}</span>
-                </button>
-              ))}
+      {/* 3. 8 大国情主题词库 */}
+      {activeSubSection === 'themes' && (
+        <div className="space-y-4 animate-card-enter">
+          {/* 主题选择横条（单行整洁） */}
+          <div className="bg-paper-card p-3 rounded-2xl border border-paper-border shadow-scholarly flex flex-wrap gap-1.5">
+            {TRANSLATION_DATA.eightCoreThemes.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setSelectedThemeId(t.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                  selectedThemeId === t.id
+                    ? 'bg-bamboo-700 text-white shadow-xs'
+                    : 'bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border'
+                }`}
+              >
+                <span>{t.icon}</span>
+                <span>{t.themeName}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly card-planning space-y-4">
+            <div className="flex items-center justify-between border-b border-paper-border pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-xl">{currentTheme.icon}</span>
+                <h3 className="font-bold text-base text-wood-900">
+                  {currentTheme.themeName} · 高频双语词汇
+                </h3>
+              </div>
+              <span className="text-xs text-wood-500">点击词汇直接复制</span>
             </div>
 
-            {/* 句子切片导航 */}
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-wood-500">句子列表：</span>
-              {currentTopic.sentences.map((s, idx) => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    setSentenceIdx(idx);
-                    setUserDraft('');
-                    setShowCompare(false);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-xs transition cursor-pointer ${
-                    sentenceIdx === idx
-                      ? 'bg-bamboo-100 text-bamboo-800 font-bold border border-bamboo-300'
-                      : 'text-wood-600 hover:bg-paper-100'
-                  }`}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {currentTheme.keywords.map((kw, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => handleCopy(kw.eng, `theme-kw-${idx}`)}
+                  className="p-3 bg-paper-50 rounded-xl border border-paper-border hover:border-bamboo-400 hover:bg-paper-card transition cursor-pointer card-vocab flex items-center justify-between"
                 >
-                  第 {idx + 1} 句
-                </button>
-              ))}
-            </div>
-
-            {/* 台阶练习主体 */}
-            <div className="bg-paper-50 rounded-2xl p-5 md:p-6 border border-paper-border space-y-5">
-              {/* 中文原句 */}
-              <div>
-                <span className="text-[11px] text-wood-400 font-bold block mb-1">
-                  中文真题原句：
-                </span>
-                <div className="p-4 bg-paper-card text-wood-900 rounded-xl border border-paper-border text-base md:text-lg leading-relaxed shadow-xs font-bold">
-                  {currentSentence.chinese}
-                </div>
-              </div>
-
-              {/* 台阶 1: 主干切片 */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-wood-800 block">
-                  第一步 · 划出主谓宾（先定住句子的骨架）
-                </span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                  <div className="bg-paper-card p-3 rounded-xl border border-paper-border">
-                    <span className="text-[10px] text-bamboo-800 bg-bamboo-100 px-1.5 py-0.5 rounded font-bold">
-                      核心主语
-                    </span>
-                    <p className="text-xs font-bold text-wood-900 mt-1">{currentSentence.mainSubject}</p>
+                  <div>
+                    <div className="text-xs font-bold text-wood-900">{kw.chn}</div>
+                    <div className="text-xs text-wood-600 font-mono mt-0.5">{kw.eng}</div>
                   </div>
-
-                  <div className="bg-paper-card p-3 rounded-xl border border-paper-border">
-                    <span className="text-[10px] text-wood-800 bg-paper-200 px-1.5 py-0.5 rounded font-bold">
-                      核心动词 (谓语)
-                    </span>
-                    <p className="text-xs font-bold text-wood-900 mt-1">{currentSentence.mainPredicate}</p>
-                  </div>
-
-                  <div className="bg-paper-card p-3 rounded-xl border border-paper-border">
-                    <span className="text-[10px] text-cinnabar-800 bg-cinnabar-50 px-1.5 py-0.5 rounded font-bold">
-                      核心宾语 / 结果
-                    </span>
-                    <p className="text-xs font-bold text-wood-900 mt-1">{currentSentence.mainObject}</p>
-                  </div>
-                </div>
-
-                <div className="p-2.5 bg-paper-card rounded-lg border border-paper-border text-xs text-wood-700">
-                  <strong className="text-wood-900">修饰成分：</strong> {currentSentence.modifiersInfo}
-                </div>
-              </div>
-
-              {/* 台阶 2 & 3: 词汇与句型 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-paper-card p-3.5 rounded-xl border border-paper-border space-y-1.5">
-                  <span className="text-xs font-bold text-wood-800 block">第二步 · 考点词汇提示</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentSentence.keyVocabList.map((kv, kIdx) => (
-                      <span key={kIdx} className="text-xs bg-paper-100 px-2 py-0.5 rounded border border-paper-border text-wood-800">
-                        {kv.chn}: <strong className="font-sans">{kv.eng}</strong>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-paper-card p-3.5 rounded-xl border border-paper-border space-y-1.5">
-                  <span className="text-xs font-bold text-wood-800 block">第三步 · 推荐套用句型</span>
-                  <p className="text-xs text-bamboo-800 font-bold font-sans">
-                    {currentSentence.patternTitle}
-                  </p>
-                </div>
-              </div>
-
-              {/* 台阶 4: 用户自己动笔试写 */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-wood-800">
-                    第四步 · 琪琪动笔试写（亲手敲一遍，考场不发慌）
-                  </span>
-                  <span className="text-[11px] text-wood-500 font-sans">
-                    已写 {userDraft.trim().split(/\s+/).filter(Boolean).length} 词
-                  </span>
-                </div>
-
-                <textarea
-                  rows={3}
-                  value={userDraft}
-                  onChange={e => setUserDraft(e.target.value)}
-                  placeholder="在这里尝试输入你翻译的英文句子..."
-                  className="w-full p-3 bg-paper-card border border-paper-border rounded-xl text-xs md:text-sm font-sans focus:outline-hidden focus:ring-1 focus:ring-bamboo-600"
-                />
-
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      setUserDraft(currentSentence.standardTranslation);
-                      setShowCompare(true);
-                    }}
-                    className="text-xs text-wood-500 hover:text-bamboo-800 cursor-pointer"
-                  >
-                    直接填入老师示范范文
-                  </button>
-
-                  <button
-                    onClick={() => setShowCompare(true)}
-                    className="btn-tactile bg-bamboo-700 hover:bg-bamboo-800 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center space-x-1.5 cursor-pointer shadow-sm"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>查看老师示范译文并对照</span>
+                  <button className="text-wood-400 hover:text-wood-800 p-1">
+                    {copiedId === `theme-kw-${idx}` ? (
+                      <Check className="w-4 h-4 text-bamboo-700" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
-              </div>
-
-              {/* 台阶 5: 对照与避坑 */}
-              {showCompare && (
-                <div className="pt-3 border-t border-paper-border space-y-3 animate-fadeIn">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-paper-card p-3.5 rounded-xl border border-paper-border space-y-1">
-                      <span className="text-[11px] text-wood-500 font-bold block">你的实写译文：</span>
-                      <p className="text-xs font-sans text-wood-800 italic">
-                        {userDraft || '（未输入译文）'}
-                      </p>
-                    </div>
-
-                    <div className="bg-bamboo-50/70 p-3.5 rounded-xl border border-bamboo-200 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-bamboo-900 font-bold block">老师高分示范：</span>
-                        <button
-                          onClick={() => handleCopy(`std-${currentSentence.id}`, currentSentence.standardTranslation)}
-                          className="text-[11px] text-bamboo-800 hover:underline flex items-center space-x-1 cursor-pointer"
-                        >
-                          {copiedKey === `std-${currentSentence.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          <span>复制范文</span>
-                        </button>
-                      </div>
-                      <p className="text-xs font-sans font-bold text-bamboo-950 leading-relaxed">
-                        {currentSentence.standardTranslation}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 避坑提醒 */}
-                  <div className="bg-cinnabar-50 p-3.5 rounded-xl border border-cinnabar-200 text-xs text-cinnabar-900 space-y-1">
-                    <div className="flex items-center space-x-1.5 font-bold">
-                      <AlertTriangle className="w-3.5 h-3.5 text-cinnabar-700" />
-                      <span>考场容易扣分的地方：</span>
-                    </div>
-                    <p className="leading-relaxed pl-5">{currentSentence.pitfallWarning}</p>
-                  </div>
-
-                  <div className="flex justify-end pt-1">
-                    <button
-                      onClick={() => handleSaveMistake(currentSentence)}
-                      className="btn-tactile bg-wood-900 text-white text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 cursor-pointer shadow-sm"
-                    >
-                      <BookMarked className="w-3.5 h-3.5 text-amberGold-600" />
-                      <span>存进翻译错题/金句库</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
-          </div>
-        )}
 
-        {/* ================= 子标签 2: 10大万能句型 ================= */}
-        {subTab === 'patterns' && (
-          <div className="space-y-3 pt-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {TRANSLATION_DATA.tenUniversalSentencePatterns.map(pat => (
-                <div key={pat.id} className="p-4 rounded-xl border border-paper-border bg-paper-50 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-wood-900 flex items-center space-x-1.5">
-                      <span className="w-5 h-5 rounded-full bg-bamboo-100 text-bamboo-800 text-[11px] font-bold flex items-center justify-center font-mono">
-                        {pat.id}
-                      </span>
-                      <span>{pat.chinesePattern}</span>
+            <div className="space-y-2 pt-2 border-t border-paper-border">
+              <div className="text-xs text-wood-500 font-bold">考场现成可用的好句子：</div>
+              <div className="space-y-1.5">
+                {currentTheme.advancedExpressions.map((exp, i) => (
+                  <div
+                    key={i}
+                    onClick={() => handleCopy(exp.split(' (')[0], `exp-${i}`)}
+                    className="text-xs p-2.5 bg-paper-100/70 rounded-lg border border-paper-border hover:bg-paper-100 text-wood-800 transition cursor-pointer flex items-center justify-between select-all"
+                  >
+                    <span>{exp}</span>
+                    <span className="text-[10px] text-wood-400 shrink-0 ml-2">
+                      {copiedId === `exp-${i}` ? '已复制' : '复制'}
                     </span>
-                    <button
-                      onClick={() => handleCopy(`p-${pat.id}`, pat.englishPattern)}
-                      className="text-wood-400 hover:text-wood-700 p-1 cursor-pointer"
-                    >
-                      {copiedKey === `p-${pat.id}` ? <Check className="w-3.5 h-3.5 text-bamboo-700" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-
-                  <div className="font-sans text-xs font-bold text-bamboo-900 bg-paper-card p-2 rounded-lg border border-paper-border">
-                    {pat.englishPattern}
-                  </div>
-
-                  <div className="text-[11px] text-wood-600 bg-paper-card p-2 rounded-lg border border-paper-border space-y-0.5">
-                    <div>例句：{pat.exampleChn}</div>
-                    <div className="font-sans text-wood-800 italic">{pat.exampleEng}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= 子标签 3: 8大国情主题词 ================= */}
-        {subTab === 'themes' && (
-          <div className="space-y-4 pt-1">
-            <div className="flex flex-wrap gap-2 pb-1 border-b border-paper-border/60">
-              {TRANSLATION_DATA.eightCoreThemes.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setThemeId(t.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center space-x-1 ${
-                    themeId === t.id
-                      ? 'bg-wood-900 text-white font-bold shadow-sm'
-                      : 'bg-paper-100 text-wood-700 hover:bg-paper-200'
-                  }`}
-                >
-                  <span>{t.icon}</span>
-                  <span>{t.themeName}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-paper-50 p-4 rounded-xl border border-paper-border space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-paper-border">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl">{selectedTheme.icon}</span>
-                  <h4 className="text-sm font-bold text-wood-900">{selectedTheme.themeName}常用词</h4>
-                </div>
-                <span className="text-[11px] text-wood-500">直接点右侧复制</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {selectedTheme.keywords.map((kw, idx) => (
-                  <div key={idx} className="p-2.5 bg-paper-card rounded-lg border border-paper-border flex items-center justify-between">
-                    <span className="text-xs text-wood-800">{kw.chn}</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-sans text-xs font-bold text-wood-900">{kw.eng}</span>
-                      <button
-                        onClick={() => handleCopy(`k-${selectedTheme.id}-${idx}`, kw.eng)}
-                        className="text-wood-400 hover:text-wood-700 p-0.5 cursor-pointer"
-                      >
-                        {copiedKey === `k-${selectedTheme.id}-${idx}` ? <Check className="w-3 h-3 text-bamboo-700" /> : <Copy className="w-3 h-3" />}
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ================= 子标签 4: 高频替换词 ================= */}
-        {subTab === 'upgrade' && (
-          <div className="space-y-3 pt-1">
-            <div className="bg-bamboo-50 p-3.5 rounded-xl border border-bamboo-200 text-xs text-bamboo-900">
-              <strong>阅卷老师采分建议：</strong> 别通篇写 important, help, make 这些初中词汇。换成 vital, foster, enhance，老师一眼看过去档次立刻提升！
-            </div>
+      {/* 4. 高频替换词表 */}
+      {activeSubSection === 'replacements' && (
+        <div className="space-y-4 animate-card-enter">
+          <div className="bg-paper-card rounded-2xl p-4 sm:p-5 border border-paper-border shadow-scholarly">
+            <h3 className="font-bold text-base text-wood-900">
+              别总写初中词汇！用这几个高级词替换：
+            </h3>
+            <p className="text-xs text-wood-600 mt-0.5">
+              阅卷老师每天看几百份卷子，偶尔换上 vital、foster、enhance，老师一眼看过去分数立刻提升。
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {TRANSLATION_DATA.advancedVocabularyReplacements.map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-paper-50 rounded-xl border border-paper-border space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-wood-400">别老写：</span>
-                      <span className="line-through text-cinnabar-800 font-sans font-bold mr-1.5">{item.originalWord}</span>
-                      <span className="text-wood-600">({item.meaning})</span>
-                    </div>
-                    <span className="text-[10px] bg-bamboo-100 text-bamboo-800 px-1.5 py-0.2 rounded font-bold">
-                      推荐替换
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {TRANSLATION_DATA.advancedVocabularyReplacements.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-paper-card rounded-xl p-4 border border-paper-border shadow-scholarly card-vocab space-y-2.5"
+              >
+                <div className="flex items-center justify-between border-b border-paper-border pb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs line-through text-wood-400 font-mono">
+                      {item.originalWord}
                     </span>
-                  </div>
-
-                  <div className="font-sans text-sm font-bold text-bamboo-900">
-                    ➔ {item.upgradedWords}
-                  </div>
-
-                  <div className="text-[11px] text-wood-600 bg-paper-card p-2 rounded border border-paper-border">
-                    例：<span className="font-sans italic text-wood-800">{item.exampleUsage}</span>
+                    <span className="text-xs text-wood-500">({item.meaning})</span>
+                    <span className="text-xs font-bold text-bamboo-800">➔ 替换为：</span>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="text-sm font-bold text-bamboo-900 font-mono bg-paper-50 p-2.5 rounded-lg border border-bamboo-200">
+                  {item.upgradedWords}
+                </div>
+
+                <div className="text-xs text-wood-600 bg-paper-100/60 p-2 rounded-lg">
+                  <span className="font-bold text-wood-800">考场例句：</span>
+                  {item.exampleUsage}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

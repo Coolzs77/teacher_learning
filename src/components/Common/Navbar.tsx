@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <p className="hidden sm:block text-[11px] text-wood-500 font-serif">
               {mainModule === 'chinese'
                 ? '统编版6册 · 158篇课文教学设计、原文与结构化板书'
-                : '选词填空秒杀 · ExamCraft长难句拆解 · 5段万能作文 · 翻译语料'}
+                : '选词认词尾 · 长难句抓主干 · 作文背5段 · 翻译套句型'}
             </p>
           </div>
         </div>
@@ -95,14 +95,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onSelectMainModule('cet6')}
             className={`btn-tactile flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs md:text-sm transition cursor-pointer ${
               mainModule === 'cet6'
-                ? 'bg-indigo-900 text-white font-bold shadow-xs'
+                ? 'bg-bamboo-800 text-white font-bold shadow-xs'
                 : 'text-wood-700 hover:text-wood-900 hover:bg-paper-100/70'
             }`}
-            title="切换至英语六级真题逆袭工作台（琪琪专属 388➔425+）"
+            title="切换到英语六级备考（琪琪专属 388➔425+）"
           >
             <Target className="w-3.5 h-3.5 text-amber-300" />
             <span>英语六级</span>
-            <span className="hidden sm:inline text-[10px] bg-rose-500 text-white px-1 py-0.2 rounded font-mono">
+            <span className="hidden sm:inline text-[10px] bg-cinnabar-700 text-white px-1 py-0.2 rounded font-mono">
               +37分
             </span>
           </button>

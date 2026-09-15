@@ -117,7 +117,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-wood-800 flex flex-col font-sans selection:bg-bamboo-200">
+    <div className="min-h-screen bg-[#FAF8F5] text-wood-800 flex flex-col font-serif selection:bg-bamboo-200">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-wood-900 text-paper-50 px-4 py-2 rounded-xl text-xs font-serif shadow-xl flex items-center space-x-2 border border-stone-700 animate-fadeIn">
@@ -126,24 +126,22 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Navigation */}
-      <Navbar
-        mainModule={mainModule}
-        onSelectMainModule={setMainModule}
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        onOpenExamSimulator={() => setIsExamModalOpen(true)}
-        examDaysLeft={daysLeft}
-        timerActive={isTimerOpen}
-        onToggleTimer={() => setIsTimerOpen(!isTimerOpen)}
-      />
+      {mainModule === 'chinese' ? (
+        <>
+          {/* Main Navigation for Chinese Module */}
+          <Navbar
+            mainModule={mainModule}
+            onSelectMainModule={setMainModule}
+            currentTab={currentTab}
+            onSelectTab={setCurrentTab}
+            onOpenExamSimulator={() => setIsExamModalOpen(true)}
+            examDaysLeft={daysLeft}
+            timerActive={isTimerOpen}
+            onToggleTimer={() => setIsTimerOpen(!isTimerOpen)}
+          />
 
-      {/* Main Body Content by Active Module */}
-      <main className="flex-1">
-        {mainModule === 'cet6' ? (
-          <Cet6Workbench />
-        ) : (
-          <>
+          {/* Main Body Content for Chinese Module */}
+          <main className="flex-1">
             {currentTab === 'dashboard' && (
               <Dashboard
                 onSelectLesson={handleSelectLesson}
@@ -174,34 +172,26 @@ export const App: React.FC = () => {
             {currentTab === 'methodology' && (
               <MethodologyView onSelectLesson={handleSelectLesson} />
             )}
-          </>
-        )}
-      </main>
+          </main>
 
-      {/* Floating 10-Minute Trial Timer Widget (For Chinese Mode) */}
-      {mainModule === 'chinese' && (
-        <FloatingTimer
-          isOpen={isTimerOpen}
-          onClose={() => setIsTimerOpen(false)}
-          activeLessonTitle={currentLesson.title}
-        />
-      )}
+          {/* Floating 10-Minute Trial Timer Widget (For Chinese Mode) */}
+          <FloatingTimer
+            isOpen={isTimerOpen}
+            onClose={() => setIsTimerOpen(false)}
+            activeLessonTitle={currentLesson.title}
+          />
 
-      {/* Full Exam Simulation Lottery Modal (For Chinese Mode) */}
-      {mainModule === 'chinese' && (
-        <ExamSimulatorModal
-          isOpen={isExamModalOpen}
-          onClose={() => setIsExamModalOpen(false)}
-          onSelectLesson={handleSelectLesson}
-          onStartTrialTimer={handleStartTrialTimer}
-        />
-      )}
+          {/* Full Exam Simulation Lottery Modal (For Chinese Mode) */}
+          <ExamSimulatorModal
+            isOpen={isExamModalOpen}
+            onClose={() => setIsExamModalOpen(false)}
+            onSelectLesson={handleSelectLesson}
+            onStartTrialTimer={handleStartTrialTimer}
+          />
 
-      {/* Scholarly Footer */}
-      <footer className="border-t border-paper-border bg-paper-50 py-6 text-center text-xs text-wood-500 font-serif">
-        <div className="max-w-7xl mx-auto px-4 space-y-1">
-          {mainModule === 'chinese' ? (
-            <>
+          {/* Scholarly Footer for Chinese */}
+          <footer className="border-t border-paper-border bg-paper-50 py-6 text-center text-xs text-wood-500 font-serif">
+            <div className="max-w-7xl mx-auto px-4 space-y-1">
               <p className="flex items-center justify-center space-x-1">
                 <span>初中语文教师资格证面试（10分钟试讲专项）研修工作台</span>
                 <span>·</span>
@@ -212,23 +202,15 @@ export const App: React.FC = () => {
               <p className="text-[11px] text-stone-400">
                 纯前端离线可用 · 状态持久化于本地 · 支持 200Mbps 云服务器极速秒开
               </p>
-            </>
-          ) : (
-            <>
-              <p className="flex items-center justify-center space-x-1 font-serif">
-                <span className="font-bold text-wood-900">英语六级备战工作台</span>
-                <span>·</span>
-                <span className="text-cinnabar-800 font-bold">琪琪专属 388 ➔ 425+ 分冲刺突破</span>
-                <span>·</span>
-                <span>选词填空词性突破 · 真题长难句剥离 · 5段稳分写作 · 汉译英句型演练</span>
-              </p>
-              <p className="text-[11px] text-wood-500 font-serif">
-                纯前端架构 · 数据离线持久化 · 踏踏实实拿稳每一分，顺利通过六级！
-              </p>
-            </>
-          )}
-        </div>
-      </footer>
+            </div>
+          </footer>
+        </>
+      ) : (
+        /* 英语六级：完全无顶部Navbar，全屏左侧分栏沉浸备战台 */
+        <main className="flex-1 min-h-screen bg-[#FAF8F5] font-serif">
+          <Cet6Workbench onSwitchToChinese={() => setMainModule('chinese')} />
+        </main>
+      )}
     </div>
   );
 };

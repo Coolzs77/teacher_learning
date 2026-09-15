@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   POS_DRILL_WORDS,
   SLOT_DRILL_QUESTIONS,
@@ -19,11 +19,15 @@ import {
 } from 'lucide-react';
 
 interface Cet6ClozeViewProps {
+  activeSubSection?: string;
   onAddMistake?: (item: Omit<Cet6MistakeItem, 'id' | 'createdAt' | 'isMastered'>) => void;
 }
 
-export const Cet6ClozeView: React.FC<Cet6ClozeViewProps> = ({ onAddMistake }) => {
-  const [subTab, setSubTab] = useState<'pos' | 'slot' | 'single' | 'full'>('pos');
+export const Cet6ClozeView: React.FC<Cet6ClozeViewProps> = ({
+  activeSubSection = 'pos',
+  onAddMistake,
+}) => {
+  const currentSubTab = activeSubSection as 'pos' | 'slot' | 'single' | 'full';
 
   // 1. 词性速测
   const [posIdx, setPosIdx] = useState(0);
@@ -35,7 +39,7 @@ export const Cet6ClozeView: React.FC<Cet6ClozeViewProps> = ({ onAddMistake }) =>
   const [slotPicked, setSlotPicked] = useState<string | null>(null);
   const currentSlot = SLOT_DRILL_QUESTIONS[slotIdx % SLOT_DRILL_QUESTIONS.length];
 
-  // 3. 单空秒杀排除
+  // 3. 单题快速排除
   const [singleIdx, setSingleIdx] = useState(0);
   const [singleLetter, setSingleLetter] = useState<string | null>(null);
   const currentSingle = SINGLE_BLANK_DRILLS[singleIdx % SINGLE_BLANK_DRILLS.length];
@@ -53,572 +57,586 @@ export const Cet6ClozeView: React.FC<Cet6ClozeViewProps> = ({ onAddMistake }) =>
 
   const handleSelectOption = (letter: string) => {
     if (activeBlank === null || submitted) return;
-    setAnswers(prev => ({ ...prev, [activeBlank]: letter }));
+    setAnswers((prev) => ({ ...prev, [activeBlank]: letter }));
     const blankList = [26, 27, 28, 29, 30, 31, 32, 33, 34, 35];
     const curr = blankList.indexOf(activeBlank);
-    const next = blankList.slice(curr + 1).find(b => !answers[b]);
+    const next = blankList.slice(curr + 1).find((b) => !answers[b]);
     if (next) {
       setActiveBlank(next);
-    } else {
-      setActiveBlank(null);
     }
   };
 
   const calculateScore = () => {
-    let count = 0;
-    const expMap = FULL_CLOZE_EXAM.blankExplanations;
-    Object.keys(expMap).forEach(k => {
-      const b = Number(k);
-      if (answers[b] === expMap[b].correctLetter) {
-        count++;
+    let correctCount = 0;
+    Object.entries(FULL_CLOZE_EXAM.blankExplanations).forEach(([blank, info]) => {
+      if (answers[Number(blank)] === info.correctLetter) {
+        correctCount += 1;
       }
     });
-    return (count * 3.55).toFixed(1);
+    return {
+      count: correctCount,
+      score: (correctCount * 3.55).toFixed(1),
+    };
   };
 
-  const handleSaveMistake = (title: string, context: string, myErr: string, correct: string, tip: string) => {
+  const handleSaveMistakeFromBlank = (blankNum: number) => {
+    const exp = FULL_CLOZE_EXAM.blankExplanations[blankNum];
+    if (!exp) return;
     if (onAddMistake) {
       onAddMistake({
         type: 'cloze',
         typeLabel: '选词填空',
-        title,
-        sourceContext: context,
-        myMistake: myErr,
-        correctAnswer: correct,
+        title: `选词第 ${blankNum} 空: [${exp.correctLetter}] ${exp.word}`,
+        sourceContext: `第 ${blankNum} 空 · 考查词性 [${exp.pos}] · 难度 [${exp.difficulty}]`,
+        myMistake: answers[blankNum] ? `我的作答: ${answers[blankNum]}` : '当时未作答或选错',
+        correctAnswer: `${exp.correctLetter}. ${exp.word} (${exp.pos})`,
         reason: 'pos_error',
         reasonLabel: '🏷️ 词性看错',
-        qiqiInsight: tip
+        qiqiInsight: exp.analysis,
       });
-      showToast('✓ 已收录到错题本！');
+      showToast(`已成功收录第 ${blankNum} 题至错题本！`);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 font-serif">
+      {/* Toast 提醒 */}
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-50 bg-wood-900 text-bamboo-200 text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center space-x-2 border border-bamboo-600">
-          <Sparkles className="w-4 h-4 text-amberGold-600" />
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-wood-900 text-paper-50 px-4 py-2 rounded-xl text-xs shadow-xl flex items-center space-x-2 border border-stone-700 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-bamboo-400" />
           <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* 模块顶部导航与说明 */}
-      <div className="bg-paper-card rounded-2xl p-5 sm:p-6 border border-paper-border shadow-scholarly space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-paper-border pb-4">
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full bg-cinnabar-50 text-cinnabar-800 border border-cinnabar-200 text-xs font-serif font-bold">
-                第一优先级 · 保底多拿 14 分
-              </span>
-              <span className="text-xs text-wood-500 font-serif">4分钟搞定 3~4 个送分题</span>
-            </div>
-            <h2 className="text-xl font-serif font-bold text-wood-900">
-              选词填空四步实战突击营
-            </h2>
-            <p className="text-xs sm:text-sm text-wood-600 font-serif mt-1">
-              先看单词后缀标词性，再看空格前后抓线索。不需要把文章全部读懂，挑出有把握的空先拿分！
-            </p>
-          </div>
-
-          {/* 四个步骤子标签 */}
-          <div className="flex items-center bg-paper-100 p-1.5 rounded-xl border border-paper-border shrink-0 flex-wrap gap-1">
-            <button
-              onClick={() => setSubTab('pos')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-serif transition cursor-pointer ${
-                subTab === 'pos'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              1. 看词尾认词性
-            </button>
-            <button
-              onClick={() => setSubTab('slot')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-serif transition cursor-pointer ${
-                subTab === 'slot'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              2. 看空前后找线索
-            </button>
-            <button
-              onClick={() => setSubTab('single')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-serif transition cursor-pointer ${
-                subTab === 'single'
-                  ? 'bg-bamboo-700 text-white font-bold shadow-sm'
-                  : 'text-wood-700 hover:bg-paper-200'
-              }`}
-            >
-              3. 单空排除演练
-            </button>
-            <button
-              onClick={() => setSubTab('full')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-serif transition cursor-pointer flex items-center space-x-1 ${
-                subTab === 'full'
-                  ? 'bg-cinnabar-700 text-white font-bold shadow-sm'
-                  : 'text-cinnabar-800 hover:bg-cinnabar-50'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>4. 真题整篇练习</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ================= 子标签 1: 看词尾认词性 ================= */}
-        {subTab === 'pos' && (
-          <div className="max-w-xl mx-auto space-y-5 py-2">
-            <div className="bg-paper-50 border-l-4 border-bamboo-700 p-3.5 rounded-r-xl text-xs text-wood-700 font-serif leading-relaxed">
-              <strong>练习方法：</strong> 不看整篇文章！先看单词后几个字母，快速点选是名词、动词、形容词还是副词。
+      {/* 步骤 1：看词尾认词性 */}
+      {currentSubTab === 'pos' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card border border-paper-border rounded-2xl p-5 sm:p-6 shadow-scholarly card-practice space-y-4">
+            <div className="flex items-center justify-between border-b border-paper-border pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                  第 1 步 · 词尾训练
+                </span>
+                <span className="text-xs text-wood-500 font-mono">
+                  第 {posIdx + 1} / {POS_DRILL_WORDS.length} 题
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setPosIdx((prev) => (prev + 1) % POS_DRILL_WORDS.length);
+                  setPosPicked(null);
+                }}
+                className="px-3 py-1 text-xs rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer"
+              >
+                换下一个单词 ➔
+              </button>
             </div>
 
-            <div className="bg-paper-50 rounded-2xl p-6 border border-paper-border text-center space-y-4 shadow-sm">
-              <span className="text-[11px] text-wood-400 font-serif">
-                第 {posIdx + 1} / {POS_DRILL_WORDS.length} 题
-              </span>
-              <div className="font-serif text-3xl font-black text-wood-900 tracking-wide">
+            <div className="text-center py-6 space-y-2 bg-paper-50 rounded-xl border border-paper-border">
+              <p className="text-xs text-wood-500">只看后面几个字母，这个词是什么词性？</p>
+              <h3 className="text-3xl sm:text-4xl font-bold font-mono text-wood-900 tracking-wider">
                 {currentPosWord.word}
-              </div>
+              </h3>
+              <p className="text-xs text-wood-600">中文释义：{currentPosWord.meaning}</p>
+            </div>
 
-              {/* 四个词性按钮 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-md mx-auto pt-2">
-                {[
-                  { pos: 'N', label: 'Noun (名词)' },
-                  { pos: 'V', label: 'Verb (动词)' },
-                  { pos: 'Adj', label: 'Adj (形容词)' },
-                  { pos: 'Adv', label: 'Adv (副词)' },
-                ].map(b => {
-                  const isPicked = posPicked === b.pos;
-                  const isRight = b.pos === currentPosWord.correctPos;
+            {/* 四个词性选项按钮 */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: '名词 (N)', val: 'N' },
+                { label: '动词 (V)', val: 'V' },
+                { label: '形容词 (Adj)', val: 'Adj' },
+                { label: '副词 (Adv)', val: 'Adv' },
+              ].map((btn) => {
+                const isPicked = posPicked === btn.val;
+                const isCorrect = btn.val === currentPosWord.correctPos;
 
-                  return (
-                    <button
-                      key={b.pos}
-                      onClick={() => setPosPicked(b.pos)}
-                      disabled={posPicked !== null}
-                      className={`btn-tactile py-2.5 px-2 rounded-xl text-xs border transition cursor-pointer font-serif flex flex-col items-center justify-center ${
-                        isPicked
-                          ? isRight
-                            ? 'bg-bamboo-700 text-white border-bamboo-700 font-bold'
-                            : 'bg-cinnabar-700 text-white border-cinnabar-700 font-bold'
-                          : posPicked !== null && isRight
-                          ? 'bg-bamboo-100 text-bamboo-900 border-bamboo-300 font-bold'
-                          : 'bg-paper-card border-paper-border text-wood-800 hover:bg-paper-100'
-                      }`}
-                    >
-                      <span className="text-sm font-bold">{b.pos}</span>
-                      <span className="text-[10px] opacity-80">{b.label.split(' ')[1]}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                let btnStyle = 'bg-paper-card border-paper-border text-wood-800 hover:bg-paper-100';
+                if (posPicked) {
+                  if (isCorrect) {
+                    btnStyle = 'bg-bamboo-700 text-white border-bamboo-800 shadow-sm animate-bounce-gentle';
+                  } else if (isPicked) {
+                    btnStyle = 'bg-cinnabar-100 text-cinnabar-800 border-cinnabar-300 animate-shake';
+                  }
+                }
 
-              {/* 答案反馈与词尾总结 */}
-              {posPicked !== null && (
-                <div className={`p-4 rounded-xl text-left border text-xs font-serif space-y-2 animate-fadeIn ${
+                return (
+                  <button
+                    key={btn.val}
+                    onClick={() => setPosPicked(btn.val)}
+                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${btnStyle} active:scale-95`}
+                  >
+                    {btn.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 即时反馈 */}
+            {posPicked && (
+              <div
+                className={`p-4 rounded-xl border space-y-2 animate-card-enter ${
                   posPicked === currentPosWord.correctPos
-                    ? 'bg-bamboo-50 border-bamboo-200'
-                    : 'bg-cinnabar-50 border-cinnabar-200'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1.5 font-bold">
-                      {posPicked === currentPosWord.correctPos ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-bamboo-700" />
-                          <span className="text-bamboo-800">回答正确！</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-4 h-4 text-cinnabar-700" />
-                          <span className="text-cinnabar-800">
-                            看错了！正确词性为：{currentPosWord.posLabel}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <span className="text-wood-600">释义：{currentPosWord.meaning}</span>
-                  </div>
-
-                  <p className="text-wood-800 leading-relaxed">
-                    <strong>词尾规律：</strong> {currentPosWord.suffix}。{currentPosWord.ruleExplanation}
+                    ? 'bg-bamboo-50 border-bamboo-300 text-bamboo-900'
+                    : 'bg-cinnabar-50 border-cinnabar-200 text-cinnabar-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2 font-bold text-sm">
+                  {posPicked === currentPosWord.correctPos ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-bamboo-700" />
+                      <span>答对了！词性判断完全正确！</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5 text-cinnabar-700" />
+                      <span>选错啦，正确词性是：【{currentPosWord.posLabel}】</span>
+                    </>
+                  )}
+                </div>
+                <div className="text-xs space-y-1 pt-1 border-t border-black/10">
+                  <p>
+                    <strong>常考词尾规律：</strong>
+                    {currentPosWord.suffix}
                   </p>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-paper-border/60">
-                    <button
-                      onClick={() => handleSaveMistake(
-                        `选词填空词性看错: ${currentPosWord.word}`,
-                        currentPosWord.word,
-                        `当时误选了 ${posPicked}`,
-                        `正确为 ${currentPosWord.posLabel}`,
-                        currentPosWord.ruleExplanation
-                      )}
-                      className="text-wood-600 hover:text-bamboo-800 flex items-center space-x-1 cursor-pointer"
-                    >
-                      <BookMarked className="w-3.5 h-3.5" />
-                      <span>加入错题本</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setPosPicked(null);
-                        setPosIdx(prev => prev + 1);
-                      }}
-                      className="btn-tactile bg-bamboo-700 text-white px-3.5 py-1.5 rounded-lg flex items-center space-x-1 cursor-pointer font-bold"
-                    >
-                      <span>下一题</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ================= 子标签 2: 看空前后找线索 ================= */}
-        {subTab === 'slot' && (
-          <div className="max-w-xl mx-auto space-y-5 py-2">
-            <div className="bg-paper-50 border-l-4 border-bamboo-700 p-3.5 rounded-r-xl text-xs text-wood-700 font-serif leading-relaxed">
-              <strong>练习方法：</strong> 盯住空格前面和后面的单词，判断这个坑需要填入什么词性。
-            </div>
-
-            <div className="bg-paper-50 rounded-2xl p-6 border border-paper-border space-y-4 shadow-sm">
-              <span className="text-[11px] text-wood-400 font-serif block">
-                第 {slotIdx + 1} / {SLOT_DRILL_QUESTIONS.length} 题
-              </span>
-
-              <div className="p-4 bg-paper-card rounded-xl border border-paper-border font-serif text-base text-wood-900 leading-relaxed">
-                <span>{currentSlot.sentenceBefore} </span>
-                <span className="px-2 py-0.5 bg-paper-200 text-cinnabar-800 font-bold border-b-2 border-cinnabar-700">
-                  {currentSlot.blankPlaceholder}
-                </span>
-                <span> {currentSlot.sentenceAfter}</span>
-              </div>
-
-              <div className="text-xs font-bold text-wood-700 font-serif text-center">
-                请选出这个空格必须填入什么词性？
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-md mx-auto">
-                {['N', 'V', 'Adj', 'Adv'].map(pos => (
-                  <button
-                    key={pos}
-                    onClick={() => setSlotPicked(pos)}
-                    disabled={slotPicked !== null}
-                    className={`btn-tactile py-2 px-3 rounded-xl text-xs font-bold font-serif border transition cursor-pointer ${
-                      slotPicked === pos
-                        ? pos === currentSlot.correctPos
-                          ? 'bg-bamboo-700 text-white border-bamboo-700'
-                          : 'bg-cinnabar-700 text-white border-cinnabar-700'
-                        : slotPicked !== null && pos === currentSlot.correctPos
-                        ? 'bg-bamboo-100 text-bamboo-900 border-bamboo-300'
-                        : 'bg-paper-card border-paper-border text-wood-800 hover:bg-paper-100'
-                    }`}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-
-              {slotPicked !== null && (
-                <div className="bg-paper-card p-4 rounded-xl border border-paper-border text-xs font-serif space-y-2 animate-fadeIn">
-                  <div className="font-bold text-wood-900 flex items-center space-x-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amberGold-600" />
-                    <span>语法线索：{currentSlot.grammarClue}</span>
-                  </div>
-                  <p className="text-wood-700 leading-relaxed">{currentSlot.reason}</p>
-                  <div className="flex justify-end pt-2 border-t border-paper-border/60">
-                    <button
-                      onClick={() => {
-                        setSlotPicked(null);
-                        setSlotIdx(prev => prev + 1);
-                      }}
-                      className="btn-tactile bg-bamboo-700 text-white px-3.5 py-1.5 rounded-lg flex items-center space-x-1 cursor-pointer font-bold"
-                    >
-                      <span>下一题</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ================= 子标签 3: 单空排除演练 ================= */}
-        {subTab === 'single' && (
-          <div className="max-w-xl mx-auto space-y-5 py-2">
-            <div className="bg-paper-50 border-l-4 border-bamboo-700 p-3.5 rounded-r-xl text-xs text-wood-700 font-serif leading-relaxed">
-              <strong>练习方法：</strong> 真实考场节奏：先看空格需要什么词性，再看四个选项的词尾排除掉其他词性，15秒干脆利落挑出答案。
-            </div>
-
-            <div className="bg-paper-50 rounded-2xl p-6 border border-paper-border space-y-4 shadow-sm">
-              <span className="text-[11px] text-wood-400 font-serif block">
-                第 {singleIdx + 1} / {SINGLE_BLANK_DRILLS.length} 题
-              </span>
-
-              <div className="p-4 bg-paper-card rounded-xl border border-paper-border font-serif text-base text-wood-900 leading-relaxed">
-                {currentSingle.sentence}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {currentSingle.options.map(opt => (
-                  <button
-                    key={opt.letter}
-                    onClick={() => setSingleLetter(opt.letter)}
-                    disabled={singleLetter !== null}
-                    className={`btn-tactile p-3 rounded-xl text-xs font-serif text-left border transition cursor-pointer flex items-center justify-between ${
-                      singleLetter === opt.letter
-                        ? opt.letter === currentSingle.correctLetter
-                          ? 'bg-bamboo-700 text-white border-bamboo-700 font-bold'
-                          : 'bg-cinnabar-700 text-white border-cinnabar-700 font-bold'
-                        : singleLetter !== null && opt.letter === currentSingle.correctLetter
-                        ? 'bg-bamboo-100 text-bamboo-900 border-bamboo-300 font-bold'
-                        : 'bg-paper-card border-paper-border text-wood-800 hover:bg-paper-100'
-                    }`}
-                  >
-                    <div>
-                      <strong className="mr-1.5 font-mono">{opt.letter}. {opt.word}</strong>
-                      <span className="text-[11px] opacity-75">[{opt.pos}] {opt.meaning}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {singleLetter !== null && (
-                <div className="bg-paper-card p-4 rounded-xl border border-paper-border text-xs font-serif space-y-2 animate-fadeIn">
-                  <div className="font-bold text-bamboo-800 flex items-center space-x-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>做题三步回顾：</span>
-                  </div>
-                  <div className="space-y-1 text-wood-700 pl-2">
-                    <p><strong>第一步（找线索）：</strong>{currentSingle.step1SlotAnalysis}</p>
-                    <p><strong>第二步（排除项）：</strong>{currentSingle.step2Elimination}</p>
-                    <p><strong>第三步（代入验）：</strong>{currentSingle.step3ContextCheck}</p>
-                  </div>
-                  <div className="flex justify-end pt-2 border-t border-paper-border/60">
-                    <button
-                      onClick={() => {
-                        setSingleLetter(null);
-                        setSingleIdx(prev => prev + 1);
-                      }}
-                      className="btn-tactile bg-bamboo-700 text-white px-3.5 py-1.5 rounded-lg flex items-center space-x-1 cursor-pointer font-bold"
-                    >
-                      <span>下一题</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ================= 子标签 4: 真题整篇练习 ================= */}
-        {subTab === 'full' && (
-          <div className="space-y-4 pt-1">
-            <div className="bg-paper-100 border border-paper-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-serif">
-              <div>
-                <span className="text-xs text-cinnabar-800 font-bold bg-cinnabar-50 border border-cinnabar-200 px-2 py-0.5 rounded">
-                  ★ 重点标记题为送分题
-                </span>
-                <h3 className="font-bold text-wood-900 text-sm mt-1">
-                  {FULL_CLOZE_EXAM.title}
-                </h3>
-              </div>
-
-              <div className="flex items-center space-x-3 shrink-0">
-                <span className="text-xs text-wood-600">
-                  已填: <strong className="font-mono text-bamboo-800">{Object.keys(answers).length}</strong>/10
-                </span>
-
-                {submitted ? (
-                  <button
-                    onClick={() => {
-                      setAnswers({});
-                      setSubmitted(false);
-                      setActiveBlank(null);
-                    }}
-                    className="btn-tactile bg-wood-800 text-white text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>重新做一遍</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setSubmitted(true)}
-                    className="btn-tactile bg-bamboo-700 hover:bg-bamboo-800 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm cursor-pointer"
-                  >
-                    提交批改
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {submitted && (
-              <div className="bg-bamboo-50 border border-bamboo-200 rounded-xl p-4 flex items-center space-x-3 font-serif animate-fadeIn">
-                <div className="w-9 h-9 rounded-xl bg-bamboo-700 text-white font-bold flex items-center justify-center text-sm">
-                  ✓
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-bamboo-900">
-                    测算得分：{calculateScore()} 分 / 满分 35.5 分
-                  </h4>
-                  <p className="text-xs text-bamboo-700">
-                    {Number(calculateScore()) >= 14.2
-                      ? '恭喜达到保底及格线！4分钟拿下这些送分题，提分目标就完成了！'
-                      : '先把带【★】的4道送分题看熟，只要这4道做对，14.2分就到手了。'}
+                  <p className="leading-relaxed">
+                    <strong>备考提醒：</strong>
+                    {currentPosWord.ruleExplanation}
                   </p>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
 
-            {/* 左右分栏布局 */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              {/* 左侧文章 */}
-              <div className="lg:col-span-8 bg-paper-50 p-5 rounded-2xl border border-paper-border space-y-4 font-serif">
-                <div className="text-xs text-wood-500 border-b border-paper-border pb-2 flex justify-between">
-                  <span>点击文中带方括号的题号，在右侧选择单词填入</span>
-                  <span className="text-cinnabar-800 font-bold">★ 为必做送分题</span>
+      {/* 步骤 2：看空前后定词性 */}
+      {currentSubTab === 'slot' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card border border-paper-border rounded-2xl p-5 sm:p-6 shadow-scholarly card-practice space-y-4">
+            <div className="flex items-center justify-between border-b border-paper-border pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                  第 2 步 · 看空前后
+                </span>
+                <span className="text-xs text-wood-500 font-mono">
+                  第 {slotIdx + 1} / {SLOT_DRILL_QUESTIONS.length} 题
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSlotIdx((prev) => (prev + 1) % SLOT_DRILL_QUESTIONS.length);
+                  setSlotPicked(null);
+                }}
+                className="px-3 py-1 text-xs rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer"
+              >
+                下一题 ➔
+              </button>
+            </div>
+
+            <div className="bg-paper-50 p-4 rounded-xl border border-paper-border space-y-2">
+              <span className="text-xs text-wood-500">根据空格前后结构，判断此空必须填什么词性：</span>
+              <p className="text-base sm:text-lg font-bold text-wood-900 leading-relaxed">
+                <span>{currentSlot.sentenceBefore} </span>
+                <span className="inline-block px-3 py-0.5 mx-1 bg-amber-100 text-amber-900 border border-amber-300 rounded font-mono font-bold">
+                  [ 空格 ? ]
+                </span>
+                <span> {currentSlot.sentenceAfter}</span>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: '名词 (N)', val: 'N' },
+                { label: '动词 (V)', val: 'V' },
+                { label: '形容词 (Adj)', val: 'Adj' },
+                { label: '副词 (Adv)', val: 'Adv' },
+              ].map((btn) => {
+                const isPicked = slotPicked === btn.val;
+                const isCorrect = btn.val === currentSlot.correctPos;
+
+                let btnStyle = 'bg-paper-card border-paper-border text-wood-800 hover:bg-paper-100';
+                if (slotPicked) {
+                  if (isCorrect) {
+                    btnStyle = 'bg-bamboo-700 text-white border-bamboo-800 shadow-sm animate-bounce-gentle';
+                  } else if (isPicked) {
+                    btnStyle = 'bg-cinnabar-100 text-cinnabar-800 border-cinnabar-300 animate-shake';
+                  }
+                }
+
+                return (
+                  <button
+                    key={btn.val}
+                    onClick={() => setSlotPicked(btn.val)}
+                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${btnStyle} active:scale-95`}
+                  >
+                    {btn.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {slotPicked && (
+              <div
+                className={`p-4 rounded-xl border space-y-2 animate-card-enter ${
+                  slotPicked === currentSlot.correctPos
+                    ? 'bg-bamboo-50 border-bamboo-300 text-bamboo-900'
+                    : 'bg-cinnabar-50 border-cinnabar-200 text-cinnabar-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2 font-bold text-sm">
+                  {slotPicked === currentSlot.correctPos ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-bamboo-700" />
+                      <span>判断准确！这个空必然填【{currentSlot.posLabel}】！</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5 text-cinnabar-700" />
+                      <span>看走眼了，正确应填：【{currentSlot.posLabel}】</span>
+                    </>
+                  )}
                 </div>
+                <div className="text-xs space-y-1 pt-1 border-t border-black/10">
+                  <p>
+                    <strong>结构线索：</strong>
+                    {currentSlot.grammarClue}
+                  </p>
+                  <p>
+                    <strong>解题理由：</strong>
+                    {currentSlot.reason}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-                <div className="text-sm md:text-base leading-loose text-wood-900">
-                  {FULL_CLOZE_EXAM.passageTokens.map((token, idx) => {
-                    if (!token.isBlank || !token.blankIndex) {
-                      return <span key={idx}>{token.text}</span>;
-                    }
+      {/* 步骤 3：单题快速排除演练 */}
+      {currentSubTab === 'single' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card border border-paper-border rounded-2xl p-5 sm:p-6 shadow-scholarly card-practice space-y-4">
+            <div className="flex items-center justify-between border-b border-paper-border pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 font-bold">
+                  第 3 步 · 单题排除实战
+                </span>
+                <span className="text-xs text-wood-500 font-mono">
+                  第 {singleIdx + 1} / {SINGLE_BLANK_DRILLS.length} 题
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setSingleIdx((prev) => (prev + 1) % SINGLE_BLANK_DRILLS.length);
+                  setSingleLetter(null);
+                }}
+                className="px-3 py-1 text-xs rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer"
+              >
+                下一道真题 ➔
+              </button>
+            </div>
 
-                    const b = token.blankIndex;
-                    const ans = answers[b];
-                    const isSelected = activeBlank === b;
-                    const isEasy = FULL_CLOZE_EXAM.blankExplanations[b]?.difficulty.includes('送分');
+            <div className="bg-paper-50 p-4 rounded-xl border border-paper-border">
+              <div className="text-xs text-wood-500 mb-1">真题句子：</div>
+              <div className="text-sm sm:text-base font-bold text-wood-900 leading-relaxed select-all">
+                {currentSingle.sentence}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {currentSingle.options.map((opt) => {
+                const isChosen = singleLetter === opt.letter;
+                const isRight = opt.letter === currentSingle.correctLetter;
+
+                let optStyle = 'bg-paper-card border-paper-border text-wood-900 hover:border-bamboo-400';
+                if (singleLetter) {
+                  if (isRight) {
+                    optStyle = 'bg-bamboo-700 text-white border-bamboo-800 shadow-sm animate-bounce-gentle';
+                  } else if (isChosen) {
+                    optStyle = 'bg-cinnabar-100 text-cinnabar-800 border-cinnabar-300 animate-shake';
+                  }
+                }
+
+                return (
+                  <button
+                    key={opt.letter}
+                    onClick={() => setSingleLetter(opt.letter)}
+                    className={`p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${optStyle} active:scale-95`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="w-7 h-7 rounded-full bg-paper-200 text-wood-800 flex items-center justify-center font-bold text-xs">
+                        {opt.letter}
+                      </span>
+                      <div>
+                        <span className="font-bold text-sm font-mono">{opt.word}</span>
+                        <span className="text-xs ml-2 text-wood-500">[{opt.pos}]</span>
+                      </div>
+                    </div>
+                    <span className="text-xs text-wood-500">{opt.meaning}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {singleLetter && (
+              <div
+                className={`p-4 rounded-xl border space-y-2 animate-card-enter ${
+                  singleLetter === currentSingle.correctLetter
+                    ? 'bg-bamboo-50 border-bamboo-300 text-bamboo-900'
+                    : 'bg-cinnabar-50 border-cinnabar-200 text-cinnabar-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2 font-bold text-sm">
+                  {singleLetter === currentSingle.correctLetter ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-bamboo-700" />
+                      <span>太棒了！直接排除其他选项锁定正确答案！</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5 text-cinnabar-700" />
+                      <span>做错了，正确答案是：【{currentSingle.correctLetter}】</span>
+                    </>
+                  )}
+                </div>
+                <div className="text-xs space-y-1 pt-1 border-t border-black/10">
+                  <p>
+                    <strong>1. 空缺词性：</strong>
+                    {currentSingle.step1SlotAnalysis}
+                  </p>
+                  <p>
+                    <strong>2. 快速排除：</strong>
+                    {currentSingle.step2Elimination}
+                  </p>
+                  <p>
+                    <strong>3. 带入检查：</strong>
+                    {currentSingle.step3ContextCheck}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 步骤 4：整篇真题挑题实战 */}
+      {currentSubTab === 'full' && (
+        <div className="space-y-5 animate-card-enter">
+          <div className="bg-paper-card border border-paper-border rounded-2xl p-5 sm:p-6 shadow-scholarly space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-cinnabar-100 text-cinnabar-800 font-bold">
+                    只做 4 分钟 · 挑 4 道送分题
+                  </span>
+                  <span className="text-xs text-wood-500">共 10 空，每题 3.55 分</span>
+                </div>
+                <h3 className="font-bold text-base text-wood-900 mt-1">
+                  {FULL_CLOZE_EXAM.title}
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setAnswers({});
+                    setActiveBlank(null);
+                    setSubmitted(false);
+                  }}
+                  className="px-3 py-1 text-xs rounded-lg bg-paper-100 hover:bg-paper-200 text-wood-700 border border-paper-border transition cursor-pointer flex items-center space-x-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>重做整篇</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 做题提示 */}
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                <strong>挑题秘诀：</strong>标有“★ 送分题”的第 26、28、31、33 题语法特征最明显（系表结构、情态动词后动词原形、副词修饰动词、名词所有格），4分钟只做这4道拿14分，其余全蒙同一个选项！
+              </p>
+            </div>
+
+            {/* 真题文章阅读与填空交互 */}
+            <div className="p-4 sm:p-5 bg-paper-50 rounded-xl border border-paper-border leading-loose text-sm sm:text-base text-wood-900">
+              {FULL_CLOZE_EXAM.passageTokens.map((token, idx) => {
+                if (!token.isBlank || !token.blankIndex) {
+                  return <span key={idx}>{token.text}</span>;
+                }
+
+                const bIndex = token.blankIndex;
+                const isSelected = activeBlank === bIndex;
+                const userAns = answers[bIndex];
+                const exp = FULL_CLOZE_EXAM.blankExplanations[bIndex];
+                const isEasy = exp?.difficulty.includes('送分题');
+
+                let blankClass = 'bg-paper-card border-paper-border text-wood-700';
+                if (isSelected) {
+                  blankClass = 'bg-bamboo-100 border-bamboo-600 text-bamboo-900 ring-2 ring-bamboo-400';
+                } else if (userAns) {
+                  blankClass = 'bg-paper-200 border-wood-500 text-wood-900 font-bold';
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveBlank(bIndex)}
+                    className={`inline-flex items-center justify-center min-w-[56px] h-7 px-2 mx-1 border rounded-md font-mono text-xs cursor-pointer transition-all ${blankClass}`}
+                  >
+                    <span>{bIndex}:</span>
+                    <span className="ml-1 font-bold">{userAns || '___'}</span>
+                    {isEasy && <span className="text-cinnabar-700 text-[10px] ml-0.5">★</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 待选词池（点击直接填入当前选中的空） */}
+            <div className="space-y-2 pt-2">
+              <div className="text-xs text-wood-600 flex justify-between items-center">
+                <span>
+                  {activeBlank ? (
+                    <strong className="text-bamboo-800">
+                      正在填写第 {activeBlank} 空（点击下方单词填入）：
+                    </strong>
+                  ) : (
+                    <span>请先点击文章中的空格，再点击下方单词填入：</span>
+                  )}
+                </span>
+                <span className="text-[11px] text-wood-400">已填 {Object.keys(answers).length} / 10 空</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {FULL_CLOZE_EXAM.options.map((opt) => {
+                  const isUsed = Object.values(answers).includes(opt.letter);
+
+                  return (
+                    <button
+                      key={opt.letter}
+                      onClick={() => handleSelectOption(opt.letter)}
+                      disabled={!activeBlank || submitted}
+                      className={`p-2 rounded-lg border text-left transition text-xs font-serif ${
+                        isUsed
+                          ? 'bg-paper-100 text-wood-400 border-paper-border line-through'
+                          : 'bg-paper-card border-paper-border text-wood-900 hover:border-bamboo-500 hover:bg-paper-50 cursor-pointer card-vocab'
+                      }`}
+                    >
+                      <span className="font-bold font-mono text-bamboo-800 mr-1">
+                        [{opt.letter}]
+                      </span>
+                      <span className="font-mono font-medium">{opt.word}</span>
+                      <span className="text-[10px] text-wood-400 ml-1">({opt.pos})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 交卷判分与解析 */}
+            <div className="pt-3 border-t border-paper-border flex justify-between items-center">
+              {!submitted ? (
+                <button
+                  onClick={() => {
+                    setSubmitted(true);
+                    showToast('已完成批改，请查看下方逐空解析！');
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-bamboo-700 hover:bg-bamboo-800 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                >
+                  交卷看得分与送分题解析
+                </button>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <div className="text-xs">
+                    <span>得分：</span>
+                    <strong className="text-base text-cinnabar-800 font-mono">
+                      {calculateScore().score}
+                    </strong>
+                    <span> 分 (做对 {calculateScore().count} / 10 题)</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 答案与送分题逐空分析 */}
+            {submitted && (
+              <div className="mt-4 space-y-3 pt-3 border-t border-paper-border animate-card-enter">
+                <h4 className="font-bold text-sm text-wood-900 flex items-center space-x-1.5">
+                  <Award className="w-4 h-4 text-bamboo-700" />
+                  <span>各题分析（重点看标星的送分题）：</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(FULL_CLOZE_EXAM.blankExplanations).map(([blankNum, exp]) => {
+                    const bNum = Number(blankNum);
+                    const userLetter = answers[bNum];
+                    const isCorrect = userLetter === exp.correctLetter;
 
                     return (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveBlank(b)}
-                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 mx-1 rounded-lg border text-xs font-serif transition cursor-pointer ${
-                          isSelected
-                            ? 'ring-2 ring-bamboo-700 bg-paper-card border-bamboo-700 font-bold'
-                            : ans
-                            ? submitted
-                              ? ans === token.correctLetter
-                                ? 'bg-bamboo-100 text-bamboo-900 border-bamboo-300 font-bold'
-                                : 'bg-cinnabar-50 text-cinnabar-900 border-cinnabar-300 font-bold line-through'
-                              : 'bg-paper-200 text-wood-900 border-paper-border font-bold'
-                            : 'bg-paper-card border-paper-border text-wood-600 hover:border-bamboo-600'
+                      <div
+                        key={blankNum}
+                        className={`p-3.5 rounded-xl border space-y-1.5 ${
+                          isCorrect
+                            ? 'bg-bamboo-50/70 border-bamboo-300'
+                            : 'bg-paper-50 border-paper-border'
                         }`}
                       >
-                        <span className="font-mono text-wood-500">[{b}]</span>
-                        {isEasy && <span className="text-amberGold-600 font-bold">★</span>}
-                        <span className="font-bold">
-                          {ans ? `${ans}. ${FULL_CLOZE_EXAM.options.find(o => o.letter === ans)?.word}` : '填空'}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* 提交后逐题解析 */}
-                {submitted && (
-                  <div className="pt-4 border-t border-paper-border space-y-2.5">
-                    <span className="text-xs font-bold text-wood-800 block">逐题详细解析：</span>
-                    {Object.keys(FULL_CLOZE_EXAM.blankExplanations).map(key => {
-                      const b = Number(key);
-                      const exp = FULL_CLOZE_EXAM.blankExplanations[b];
-                      const myAns = answers[b];
-                      const isRight = myAns === exp.correctLetter;
-
-                      return (
-                        <div
-                          key={b}
-                          className={`p-3 rounded-xl border text-xs space-y-1 ${
-                            isRight ? 'bg-bamboo-50/70 border-bamboo-200' : 'bg-cinnabar-50/70 border-cinnabar-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-bold font-mono">[{b}]</span>
-                              <span className="font-bold text-wood-900">
-                                正确答案：{exp.correctLetter}. {exp.word} [{exp.pos}]
-                              </span>
-                              {exp.difficulty.includes('送分') && (
-                                <span className="text-[10px] bg-amberGold-100 text-wood-900 px-1.5 rounded font-bold">
-                                  送分题
-                                </span>
-                              )}
-                            </div>
-                            <span className={isRight ? 'text-bamboo-800 font-bold' : 'text-cinnabar-800 font-bold'}>
-                              {isRight ? '✓ 正确' : `✗ 选了: ${myAns || '未答'}`}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-bold font-mono text-wood-900">
+                              第 {blankNum} 题：
                             </span>
+                            <span className="font-bold text-bamboo-800 font-mono">
+                              正确 [{exp.correctLetter}] {exp.word}
+                            </span>
+                            <span className="text-[10px] text-wood-500">({exp.pos})</span>
                           </div>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                              exp.difficulty.includes('送分题')
+                                ? 'bg-cinnabar-100 text-cinnabar-800'
+                                : 'bg-paper-200 text-wood-600'
+                            }`}
+                          >
+                            {exp.difficulty}
+                          </span>
+                        </div>
 
-                          <p className="text-wood-700 leading-relaxed">{exp.analysis}</p>
+                        <div className="text-xs text-wood-700 leading-relaxed">
+                          {exp.analysis}
+                        </div>
 
-                          {!isRight && (
+                        <div className="flex justify-between items-center text-[11px] pt-1">
+                          <span
+                            className={
+                              isCorrect
+                                ? 'text-bamboo-800 font-bold'
+                                : 'text-cinnabar-700'
+                            }
+                          >
+                            你的选择: {userLetter || '未作答'}{' '}
+                            {isCorrect ? '✓ 答对' : '✗ 答错'}
+                          </span>
+                          {!isCorrect && (
                             <button
-                              onClick={() => handleSaveMistake(
-                                `选词填空第${b}空: ${exp.word}`,
-                                `第${b}空考点词: ${exp.word}`,
-                                myAns || '未作答',
-                                `${exp.correctLetter}. ${exp.word}`,
-                                exp.analysis
-                              )}
-                              className="text-[11px] text-bamboo-800 hover:underline flex items-center space-x-1 pt-1 cursor-pointer"
+                              onClick={() => handleSaveMistakeFromBlank(bNum)}
+                              className="text-wood-600 hover:text-wood-900 flex items-center space-x-1 underline cursor-pointer"
                             >
                               <BookMarked className="w-3 h-3" />
-                              <span>收进错题本</span>
+                              <span>收录到错题本</span>
                             </button>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* 右侧选项栏 */}
-              <div className="lg:col-span-4 bg-paper-card p-4 rounded-2xl border border-paper-border shadow-sm space-y-2 sticky top-24">
-                <div className="flex items-center justify-between pb-2 border-b border-paper-border font-serif">
-                  <span className="text-xs font-bold text-wood-900">15个单词选项池</span>
-                  <span className="text-[11px] text-wood-500">
-                    {activeBlank ? `当前正在填 [${activeBlank}] 空` : '请在左侧点空'}
-                  </span>
-                </div>
-
-                <div className="space-y-1 max-h-[460px] overflow-y-auto pr-1">
-                  {FULL_CLOZE_EXAM.options.map(opt => {
-                    const isUsed = Object.values(answers).includes(opt.letter);
-
-                    return (
-                      <button
-                        key={opt.letter}
-                        onClick={() => handleSelectOption(opt.letter)}
-                        disabled={submitted}
-                        className={`w-full text-left p-2 rounded-xl border text-xs font-serif transition cursor-pointer flex items-center justify-between ${
-                          isUsed
-                            ? 'bg-paper-100 text-wood-400 border-paper-border line-through'
-                            : activeBlank
-                            ? 'bg-paper-card hover:bg-bamboo-50 hover:border-bamboo-300 border-paper-border text-wood-900'
-                            : 'bg-paper-card border-paper-border/60 text-wood-700'
-                        }`}
-                      >
-                        <div>
-                          <strong className="font-mono text-wood-900 mr-1.5">{opt.letter}.</strong>
-                          <span className="font-bold mr-1">{opt.word}</span>
-                          <span className="text-[10px] text-wood-400">[{opt.pos}]</span>
-                        </div>
-                        <span className="text-[11px] text-wood-500">{opt.meaning}</span>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

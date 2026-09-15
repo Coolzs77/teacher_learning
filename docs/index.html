@@ -10,13 +10,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
 
-    <script type="module" crossorigin src="./assets/index-BJFH3aKz.js"></script>
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#2D241E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="语文教资试讲" />
+    <script type="module" crossorigin src="./assets/index-Cgmos52F.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/react-vendor-BqH9RPIO.js">
     <link rel="modulepreload" crossorigin href="./assets/lucide-vendor-aOnp7k9b.js">
     <link rel="modulepreload" crossorigin href="./assets/confetti-vendor-oQXWb4Lk.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-D9NSCoyv.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-BX0jCpbW.css">
   </head>
   <body class="bg-paper-100 text-wood-800 antialiased selection:bg-bamboo-200 selection:text-wood-900 min-h-screen">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    window.dispatchEvent(new CustomEvent('swUpdated', { detail: reg }));
+                  }
+                };
+              }
+            };
+          }).catch((err) => {
+            console.log('SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
+

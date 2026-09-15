@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lesson, StudyStatus, DailyPracticeItem } from './types';
 import { LESSONS_DATA } from './data/lessonsData';
 import { DEFAULT_EXAM_DATE, DEFAULT_DAILY_PRACTICE } from './data/defaultState';
@@ -9,7 +9,7 @@ import { Workbench } from './components/Workbench/Workbench';
 import { MethodologyView } from './components/Methodology/MethodologyView';
 import { ExamSimulatorModal } from './components/ExamSimulator/ExamSimulatorModal';
 import { FloatingTimer } from './components/FloatingTimer/FloatingTimer';
-import { CheckCircle2, Heart } from 'lucide-react';
+import { CheckCircle2, Heart, Sparkles, RotateCcw } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation
@@ -43,6 +43,22 @@ export const App: React.FC = () => {
   const [isExamModalOpen, setIsExamModalOpen] = useState<boolean>(false);
   const [isTimerOpen, setIsTimerOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [swUpdateRegistration, setSwUpdateRegistration] = useState<ServiceWorkerRegistration | null>(null);
+
+  useEffect(() => {
+    const handleSwUpdated = (e: any) => {
+      setSwUpdateRegistration(e.detail);
+    };
+    window.addEventListener('swUpdated', handleSwUpdated);
+    return () => window.removeEventListener('swUpdated', handleSwUpdated);
+  }, []);
+
+  const handleApplyUpdate = () => {
+    if (swUpdateRegistration?.waiting) {
+      swUpdateRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+    window.location.reload();
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -114,6 +130,25 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-wood-800 flex flex-col font-sans selection:bg-bamboo-200">
+      {/* Service Worker Update Notification Banner for 琪琪 */}
+      {swUpdateRegistration && (
+        <div className="bg-gradient-to-r from-emerald-800 to-bamboo-800 text-white px-4 py-2.5 text-xs font-serif shadow-lg flex items-center justify-between z-50 sticky top-0 animate-fadeIn border-b border-emerald-600">
+          <div className="flex items-center space-x-2">
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span className="font-medium">
+              🎉 <strong>备考台同步提示</strong>：检测到已发布最新版教学设计与课文！
+            </span>
+          </div>
+          <button
+            onClick={handleApplyUpdate}
+            className="flex items-center space-x-1 px-3 py-1 bg-white text-emerald-900 hover:bg-amber-50 rounded-lg font-bold text-xs transition cursor-pointer shadow-sm"
+          >
+            <RotateCcw className="w-3 h-3 text-emerald-700" />
+            <span>立即同步最新版</span>
+          </button>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-wood-900 text-paper-50 px-4 py-2 rounded-xl text-xs font-serif shadow-xl flex items-center space-x-2 border border-stone-700 animate-fadeIn">

@@ -1,0 +1,17 @@
+{
+  "name": "初中语文教资面试 · 10分钟试讲备战工作台",
+  "short_name": "语文教资试讲",
+  "description": "面向初中语文教资面试10分钟试讲专项的现代化备战工作台，含158篇统编教材、高分教案切片与板书设计",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#2D241E",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -111,6 +111,19 @@
     - 全量静态文件已同步推送至阿里云服务器 `/var/www/teacher_learning` 并清理过期哈希文件；
     - 浏览器打开 `http://47.93.28.243/`，选项卡 C 的 6 本教材原版 PDF 秒级正常渲染，画笔、高亮笔、橡皮擦与单课三维重点无缝联动。
 
+- **深度排查与双保险根治补充（针对二次访问未打开 PDF 的排查）**：
+  1. **Nginx 重复响应头（Duplicate Header）清洗**：
+     - 排查发现由于 Nginx 自身静态模块已下发 `Accept-Ranges: bytes` 与 `Content-Type: application/pdf`，配置中的 `add_header` 导致响应头输出双份 `bytes, bytes` 与双份 `application/pdf`，触发了 PDF.js 底层 `validateRangeRequestCapabilities` 判定失败（`responseHeaders.get('Accept-Ranges') !== 'bytes'`），导致分片请求被静默降级；已全面清理 Nginx 配置，消除重复标头。
+  2. **100% 本地化内置 CMap 字符集（消除境外 jsdelivr 依赖）**：
+     - 彻底切断任何针对 `cdn.jsdelivr.net` 的网络请求，将 PDF.js 官方全部 169 个汉字/日文字符映射集直接拷贝并打包进工程根目录 `/cmaps/`，部署至云服务器本地；
+  3. **三阶容错梯队加载器**：
+     - 阶梯一：优先采用本地内置 cmaps + 64KB HTTP Range 流式分片加载；
+     - 阶梯二：若环境不支持 cmaps，自动降级至无 cmaps 极速流式分片；
+     - 阶梯三：自动回退至浏览器原生单通道加载；
+     - 在界面提示中提供动态错误诊断与【重新尝试加载】重试按钮；
+  4. **Service Worker 透明旁路升级**：
+     - 升级至 `tl-pwa-cache-v4`，强制对所有 `/textbooks/`、`.pdf`、`pdf.worker` 及 `/cmaps/` 请求跳过缓存直接直连网络，杜绝任何旧版 SW 缓存拦截污染。
+
 ---
 
 ## 三、阿里云服务器（47.93.28.243）环境配置与架构细节

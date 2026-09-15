@@ -1,4 +1,4 @@
-﻿# UTF-8 BOM for PowerShell 5.1 compatibility
+# UTF-8 BOM for PowerShell 5.1 compatibility
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -48,7 +48,7 @@ Write-Host ""
 Write-Host "====================================================================" -ForegroundColor Green
 Write-Host "  ★ 阿里云服务器部署成功！" -ForegroundColor Green
 Write-Host "  阿里云服务器 200Mbps 极速公网访问地址：" -ForegroundColor White
-Write-Host "  主入口 (80端口):   http://47.93.28.243/" -ForegroundColor Yellow
-Write-Host "  备用口 (8899端口): http://47.93.28.243:8899/" -ForegroundColor Yellow
+Write-Host "  主入口 (80端口):     http://47.93.28.243/" -ForegroundColor Yellow
+Write-Host "  免备案端口 (8099端口): http://47.93.28.243:8099/" -ForegroundColor Yellow
 Write-Host "====================================================================" -ForegroundColor Green
 Write-Host ""

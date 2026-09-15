@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Lesson, Genre, StudyStatus, BookId } from '../../types';
 import { LESSONS_DATA } from '../../data/lessonsData';
+import { HENAN_EXAM_PAPERS, HENAN_STRUCTURED_QUESTIONS, HENAN_DEFENSE_QUESTIONS } from '../../data/henanInterviewData';
 import { Chalkboard } from '../Common/Chalkboard';
 import {
   LESSON_VARIANTS,
@@ -32,7 +33,10 @@ import {
   Sparkles,
   RotateCcw,
   BookmarkCheck,
-  X
+  X,
+  Award,
+  ShieldAlert,
+  HelpCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -142,7 +146,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   });
   const [fontToast, setFontToast] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'bible' | 'text' | 'pdf'>('bible');
+  const [activeTab, setActiveTab] = useState<'bible' | 'text' | 'pdf' | 'henanExam'>('bible');
   const [copiedPlan, setCopiedPlan] = useState(false);
   const [noteContent, setNoteContent] = useState<string>(userNotes[currentLesson.id] || '');
   const [noteSavedToast, setNoteSavedToast] = useState(false);
@@ -699,6 +703,19 @@ ${activeLesson.speedPlan.homework}`;
               <span className="hidden sm:inline">选项卡 3【统编原版教材 PDF】</span>
               <span className="sm:hidden">3. 原版教材</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('henanExam')}
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-serif text-xs md:text-sm transition cursor-pointer whitespace-nowrap ${
+                activeTab === 'henanExam'
+                  ? 'bg-amber-800 text-white font-bold shadow-sm'
+                  : 'text-amber-900 bg-amber-50/70 hover:bg-amber-100 font-medium'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-amber-300" />
+              <span className="hidden sm:inline">选项卡 4【河南省考真题与答辩】</span>
+              <span className="sm:hidden">4. 河南真题答辩</span>
+            </button>
           </div>
 
           {/* ================= TAB A: 10分钟教学设计 ================= */}
@@ -1160,6 +1177,154 @@ ${activeLesson.speedPlan.homework}`;
                   lessonTitle={currentLesson.title}
                 />
               </Suspense>
+            </div>
+          )}
+
+          {/* ================= TAB D: 河南省考真题规范与现场答辩 ================= */}
+          {activeTab === 'henanExam' && (
+            <div className="space-y-6 animate-fadeIn font-serif">
+              {/* 1. 河南省历年真题抽题纸典型真实要求 */}
+              <div className="bg-paper-card p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-paper-border pb-3">
+                  <div className="flex items-center space-x-2 text-wood-900 font-bold text-base">
+                    <Award className="w-5 h-5 text-amber-700" />
+                    <span>河南省历年面试抽题纸真实规范还原 · 《{currentLesson.title}》</span>
+                  </div>
+                  <span className="text-xs bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full border border-amber-300 font-bold shrink-0 self-start sm:self-auto">
+                    河南考区（郑州/洛阳/南阳等）严查纪律
+                  </span>
+                </div>
+
+                {/* 考题纸真实要求 */}
+                <div className="space-y-3">
+                  <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/70 space-y-2">
+                    <div className="text-xs font-bold text-amber-900 uppercase tracking-wide">
+                      📋 抽题纸选段与基本要求（真实考场抽题纸格式）：
+                    </div>
+                    <div className="text-xs text-wood-700 bg-white p-3 rounded-lg border border-amber-200">
+                      <strong>【教材选段】：</strong>
+                      {HENAN_EXAM_PAPERS[currentLesson.id]?.sourceTextSlice || `课文核心切片：${currentLesson.goldenSlice.sliceRange}`}
+                    </div>
+
+                    <div className="space-y-1.5 pt-1">
+                      <strong className="text-xs text-wood-900 block">【考题纸三条基本要求】：</strong>
+                      {(HENAN_EXAM_PAPERS[currentLesson.id]?.threeCoreRequirements || [
+                        "1. 在10分钟内完成试讲（河南考官严格掐表，8分30秒-9分30秒最佳，超时严厉扣分）；",
+                        `2. 重点引导学生品味与掌握核心语文要素（${currentLesson.speedPlan.keyPoints}）；`,
+                        "3. 教学过程体现学生主体地位，有明确的朗读与探究活动，并配合规范板书。"
+                      ]).map((req, rIdx) => (
+                        <div key={rIdx} className="text-xs text-wood-800 flex items-start space-x-1.5 pl-2">
+                          <span className="text-bamboo-700 font-bold">✓</span>
+                          <span>{req}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 河南考官扣分陷阱与黄金时间分配 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <div className="bg-rose-50/70 border border-rose-200 p-3.5 rounded-xl">
+                      <div className="text-xs font-bold text-rose-900 flex items-center space-x-1.5 mb-1">
+                        <ShieldAlert className="w-4 h-4 text-rose-600" />
+                        <span>河南考官扣分高压陷阱</span>
+                      </div>
+                      <p className="text-xs text-rose-950 leading-relaxed">
+                        {HENAN_EXAM_PAPERS[currentLesson.id]?.henanExaminerTrap ||
+                          "切忌通篇通读、平均用力！河南考官注重‘一课一得’的切片深度。若未在规定时间内聚焦核心段落展开具体的词句品读，扣分极重。"}
+                      </p>
+                    </div>
+
+                    <div className="bg-emerald-50/70 border border-emerald-200 p-3.5 rounded-xl">
+                      <div className="text-xs font-bold text-emerald-900 flex items-center space-x-1.5 mb-1">
+                        <Clock className="w-4 h-4 text-emerald-600" />
+                        <span>河南考场 10 分钟黄金时间切片</span>
+                      </div>
+                      <p className="text-xs text-emerald-950 leading-relaxed">
+                        {HENAN_EXAM_PAPERS[currentLesson.id]?.goldenTimeDistribution ||
+                          "导入1.5分钟 -> 初读圈画1.5分钟 -> 精读切片品味探究4.5分钟 -> 朗读指导与升华1.5分钟 -> 作业0.5分钟（总计9分钟离场最佳）"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. 河南省历年真题结构化问答精选（前5分钟回答规定问题） */}
+              <div className="bg-paper-card p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
+                <div className="flex items-center space-x-2 text-wood-900 font-bold text-base border-b border-paper-border pb-3">
+                  <MessageSquare className="w-5 h-5 text-bamboo-700" />
+                  <span>河南省考高频结构化问答真题精选（试讲前 5 分钟 · 拒绝 AI 假大空）</span>
+                </div>
+
+                <div className="space-y-4">
+                  {HENAN_STRUCTURED_QUESTIONS.map((sq) => (
+                    <div key={sq.id} className="border border-paper-border rounded-xl p-4 bg-paper-50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-bamboo-100 text-bamboo-800 border border-bamboo-200">
+                          {sq.category}真题
+                        </span>
+                        <span className="text-[11px] text-stone-500">河南历年真题抽检</span>
+                      </div>
+
+                      <div className="text-sm font-bold text-wood-900">
+                        问：{sq.question}
+                      </div>
+
+                      <div className="text-xs text-stone-600 bg-white p-3 rounded-lg border border-paper-border space-y-2">
+                        <div className="text-amber-800 font-medium">
+                          💡 <strong>考官评分心理：</strong>{sq.authenticAnswer.coreMindset}
+                        </div>
+                        <div className="space-y-1 text-stone-700">
+                          <strong>结构化答题逻辑：</strong>
+                          {sq.authenticAnswer.responseStructure.map((st, sIdx) => (
+                            <div key={sIdx} className="pl-2">{st}</div>
+                          ))}
+                        </div>
+                        <div className="pt-2 border-t border-paper-border text-wood-900 whitespace-pre-line leading-relaxed">
+                          <strong>现场高分回答示范：</strong>
+                          {sq.authenticAnswer.teacherLines}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. 河南省历年真题试讲后考官高频追问答辩库（后5分钟现场答辩） */}
+              <div className="bg-paper-card p-6 rounded-2xl border border-paper-border shadow-scholarly space-y-4">
+                <div className="flex items-center space-x-2 text-wood-900 font-bold text-base border-b border-paper-border pb-3">
+                  <HelpCircle className="w-5 h-5 text-bamboo-700" />
+                  <span>河南省考官现场犀利追问与答辩示范（试讲后 5 分钟现场追问）</span>
+                </div>
+
+                <div className="space-y-4">
+                  {HENAN_DEFENSE_QUESTIONS.map((dq) => (
+                    <div key={dq.id} className="border border-paper-border rounded-xl p-4 bg-paper-50 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-cinnabar-800 bg-cinnabar-50 border border-cinnabar-200 px-2 py-0.5 rounded">
+                          考官追问主题：{dq.relatedTopic}
+                        </span>
+                      </div>
+
+                      <div className="text-sm font-bold text-wood-900">
+                        考官提问：{dq.examinerQuestion}
+                      </div>
+
+                      <div className="text-xs text-stone-600 bg-white p-3 rounded-lg border border-paper-border space-y-2 leading-relaxed">
+                        <div className="text-indigo-900">
+                          🎯 <strong>考官意图剖析：</strong>{dq.examinerIntent}
+                        </div>
+                        <div className="text-wood-900 bg-paper-50 p-2.5 rounded-lg border border-paper-border whitespace-pre-line">
+                          <strong>落地高分应答示范：</strong>
+                          {dq.highScoreAnswer}
+                        </div>
+                        <div className="text-rose-700">
+                          ⚠️ <strong>考场禁忌雷区：</strong>{dq.avoidPitfalls}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

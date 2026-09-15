@@ -3,16 +3,20 @@ import { Lesson, StudyStatus, DailyPracticeItem } from './types';
 import { LESSONS_DATA } from './data/lessonsData';
 import { DEFAULT_EXAM_DATE, DEFAULT_DAILY_PRACTICE } from './data/defaultState';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Navbar } from './components/Common/Navbar';
+import { Navbar, AppMainModule } from './components/Common/Navbar';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { Workbench } from './components/Workbench/Workbench';
 import { MethodologyView } from './components/Methodology/MethodologyView';
 import { ExamSimulatorModal } from './components/ExamSimulator/ExamSimulatorModal';
 import { FloatingTimer } from './components/FloatingTimer/FloatingTimer';
+import { Cet6Workbench } from './components/Cet6Workbench/Cet6Workbench';
 import { CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
-  // Navigation
+  // Top-level Module: 语文教资 vs 英语六级
+  const [mainModule, setMainModule] = useLocalStorage<AppMainModule>('tl_main_module', 'chinese');
+
+  // Navigation (for Chinese module)
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'workbench' | 'methodology'>('dashboard');
   
   // Selected active lesson
@@ -124,6 +128,8 @@ export const App: React.FC = () => {
 
       {/* Main Navigation */}
       <Navbar
+        mainModule={mainModule}
+        onSelectMainModule={setMainModule}
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         onOpenExamSimulator={() => setIsExamModalOpen(true)}
@@ -132,66 +138,95 @@ export const App: React.FC = () => {
         onToggleTimer={() => setIsTimerOpen(!isTimerOpen)}
       />
 
-      {/* Main Body Content by Active Tab */}
+      {/* Main Body Content by Active Module */}
       <main className="flex-1">
-        {currentTab === 'dashboard' && (
-          <Dashboard
-            onSelectLesson={handleSelectLesson}
-            onOpenExamSimulator={() => setIsExamModalOpen(true)}
-            examDate={examDate}
-            onUpdateExamDate={setExamDate}
-            studyStatuses={studyStatuses}
-            dailyTasks={dailyTasks}
-            onToggleTask={handleToggleTask}
-            onAddTask={handleAddTask}
-            onDeleteTask={handleDeleteTask}
-          />
-        )}
+        {mainModule === 'cet6' ? (
+          <Cet6Workbench />
+        ) : (
+          <>
+            {currentTab === 'dashboard' && (
+              <Dashboard
+                onSelectLesson={handleSelectLesson}
+                onOpenExamSimulator={() => setIsExamModalOpen(true)}
+                examDate={examDate}
+                onUpdateExamDate={setExamDate}
+                studyStatuses={studyStatuses}
+                dailyTasks={dailyTasks}
+                onToggleTask={handleToggleTask}
+                onAddTask={handleAddTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            )}
 
-        {currentTab === 'workbench' && (
-          <Workbench
-            currentLesson={currentLesson}
-            onSelectLesson={setCurrentLesson}
-            studyStatuses={studyStatuses}
-            onUpdateStatus={handleUpdateStatus}
-            onAddToDaily={handleAddToDaily}
-            onStartTrialTimer={handleStartTrialTimer}
-            userNotes={userNotes}
-            onSaveNote={handleSaveNote}
-          />
-        )}
+            {currentTab === 'workbench' && (
+              <Workbench
+                currentLesson={currentLesson}
+                onSelectLesson={setCurrentLesson}
+                studyStatuses={studyStatuses}
+                onUpdateStatus={handleUpdateStatus}
+                onAddToDaily={handleAddToDaily}
+                onStartTrialTimer={handleStartTrialTimer}
+                userNotes={userNotes}
+                onSaveNote={handleSaveNote}
+              />
+            )}
 
-        {currentTab === 'methodology' && (
-          <MethodologyView onSelectLesson={handleSelectLesson} />
+            {currentTab === 'methodology' && (
+              <MethodologyView onSelectLesson={handleSelectLesson} />
+            )}
+          </>
         )}
       </main>
 
-      {/* Floating 10-Minute Trial Timer Widget */}
-      <FloatingTimer
-        isOpen={isTimerOpen}
-        onClose={() => setIsTimerOpen(false)}
-        activeLessonTitle={currentLesson.title}
-      />
+      {/* Floating 10-Minute Trial Timer Widget (For Chinese Mode) */}
+      {mainModule === 'chinese' && (
+        <FloatingTimer
+          isOpen={isTimerOpen}
+          onClose={() => setIsTimerOpen(false)}
+          activeLessonTitle={currentLesson.title}
+        />
+      )}
 
-      {/* Full Exam Simulation Lottery Modal */}
-      <ExamSimulatorModal
-        isOpen={isExamModalOpen}
-        onClose={() => setIsExamModalOpen(false)}
-        onSelectLesson={handleSelectLesson}
-        onStartTrialTimer={handleStartTrialTimer}
-      />
+      {/* Full Exam Simulation Lottery Modal (For Chinese Mode) */}
+      {mainModule === 'chinese' && (
+        <ExamSimulatorModal
+          isOpen={isExamModalOpen}
+          onClose={() => setIsExamModalOpen(false)}
+          onSelectLesson={handleSelectLesson}
+          onStartTrialTimer={handleStartTrialTimer}
+        />
+      )}
 
       {/* Scholarly Footer */}
       <footer className="border-t border-paper-border bg-paper-50 py-6 text-center text-xs text-wood-500 font-serif">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p className="flex items-center justify-center space-x-1">
-            <span>初中语文教师资格证面试（10分钟试讲专项）研修工作台</span>
-            <span>·</span>
-            <span>统编版初中语文 158 篇全景切片数据库</span>
-          </p>
-          <p className="text-[11px] text-stone-400">
-            纯前端离线可用 · 状态持久化于本地 · 支持 GitHub Pages 静态托管
-          </p>
+          {mainModule === 'chinese' ? (
+            <>
+              <p className="flex items-center justify-center space-x-1">
+                <span>初中语文教师资格证面试（10分钟试讲专项）研修工作台</span>
+                <span>·</span>
+                <span>统编版初中语文 158 篇全景切片数据库</span>
+                <span>·</span>
+                <span>河南省考真题答辩规范</span>
+              </p>
+              <p className="text-[11px] text-stone-400">
+                纯前端离线可用 · 状态持久化于本地 · 支持 200Mbps 云服务器极速秒开
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="flex items-center justify-center space-x-1 font-sans">
+                <span className="font-bold text-indigo-900">英语六级真题备考工作台</span>
+                <span>·</span>
+                <span className="text-rose-600 font-bold">琪琪专属 388 ➔ 425+ 分通关逆袭</span>
+                <span>·</span>
+                <span>选词填空秒杀 · ExamCraft真题语法树 · 5段万能作文 · 翻译语料</span>
+              </p>
+              <p className="text-[11px] text-stone-400">
+                纯前端架构 · 数据安全离线持久化 · 助力琪琪顺利拿下英语六级！
+              </p>
+            </>
+          )}
         </div>
       </footer>
     </div>
